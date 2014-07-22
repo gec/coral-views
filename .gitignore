@@ -1,0 +1,14 @@
+components/
+node_modules/
+coverage/
+bower_components/
+
+logs
+target
+tmp
+.history
+/.idea
+/*.iml
+/out
+/.idea_modules
+.DS_Store

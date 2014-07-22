@@ -1,0 +1,26 @@
+<table class="table table-condensed">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Type</th>
+        <th>Alarm</th>
+        <th>Sev</th>
+        <th>User</th>
+        <th>Entity</th>
+        <th>Message</th>
+        <th>Time</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr class="coral-event" ng-repeat="event in events">
+        <td>{{event.id}}</a></td>
+        <td>{{event.eventType}}</td>
+        <td>{{event.alarm}}</td>
+        <td>{{event.severity}}</td>
+        <td>{{event.agent}}</td>
+        <td><a href="#/entities/{{event.entity}}">{{event.entity}}</a></td>
+        <td>{{event.message}}</td>
+        <td>{{event.time | date:"h:mm:ss a, MM-dd-yyyy"}}</td>
+    </tr>
+    </tbody>
+</table>
