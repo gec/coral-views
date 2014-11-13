@@ -1,14 +1,15 @@
 /*global describe beforeEach it expect */
 
 describe('authentication.controller', function() {
-  var loginController, scope;
+  var loginController,
+      scope = {};
 
   var authenticationMock = {
     userName:         null,
     password:         null,
     redirectLocation: null,
     errorListener:    null,
-    getStatus:        function() { return "some status" },
+    getStatus:        function() { return 'some status' },
     login:            function(userName, password, redirectLocation, errorListener) {
       this.userName = userName
       this.password = password
@@ -18,7 +19,7 @@ describe('authentication.controller', function() {
   }
   var modalMock = {
     result:          null,
-    modalOptions:    "mOpts",
+    modalOptions:    'mOpts',
     modalController: null,
     handlePromise:   null,
     privateScope:    {},
@@ -45,13 +46,12 @@ describe('authentication.controller', function() {
       this.privateScope.login()
     }
   }
-  var scope = {}
 
   beforeEach(function() {
     module('coral.views.authentication');
-    spyOn(modalMock, "open").andCallThrough()
-    spyOn(modalMock, "close").andCallThrough()
-    spyOn(authenticationMock, "login").andCallThrough()
+    spyOn(modalMock, 'open').andCallThrough()
+    spyOn(modalMock, 'close').andCallThrough()
+    spyOn(authenticationMock, 'login').andCallThrough()
     inject(function($rootScope, $controller) {
       scope = $rootScope.$new();
       loginController = $controller('LoginController', {
@@ -63,27 +63,27 @@ describe('authentication.controller', function() {
   });
 
   it('should open modal dialog, handle login click, and authenticate successfully', function() {
-    expect(scope.status).toBe("some status")
+    expect(scope.status).toBe('some status')
     expect(modalMock.open).toHaveBeenCalled()
-    expect(modalMock.modalOptions.templateUrl).toBe("partials/loginmodal.html")
+    expect(modalMock.modalOptions.templateUrl).toBe('partials/loginmodal.html')
 
-    modalMock.clickLoginWith("userName1", "password1")
+    modalMock.clickLoginWith('userName1', 'password1')
     expect(modalMock.close).toHaveBeenCalled()
-    expect(authenticationMock.login).toHaveBeenCalledWith("userName1", "password1", null, jasmine.any(Function))
+    expect(authenticationMock.login).toHaveBeenCalledWith('userName1', 'password1', null, jasmine.any(Function))
   })
 
   it('should handle authentication error and show user name, password, and error', function() {
 
-    scope.error = "some error"
-    modalMock.clickLoginWith("userName1", "password1")
+    scope.error = 'some error'
+    modalMock.clickLoginWith('userName1', 'password1')
     expect(modalMock.close).toHaveBeenCalled()
-    expect(authenticationMock.login).toHaveBeenCalledWith("userName1", "password1", null, jasmine.any(Function))
+    expect(authenticationMock.login).toHaveBeenCalledWith('userName1', 'password1', null, jasmine.any(Function))
     expect(modalMock.privateScope.error).toBeUndefined()
 
-    authenticationMock.errorListener("some error")
+    authenticationMock.errorListener('some error')
     expect(modalMock.open.callCount).toEqual(2)
-    expect(modalMock.privateScope.error).toBe("some error")
-    expect(modalMock.privateScope.userName).toBe("userName1")
-    expect(modalMock.privateScope.password).toBe("password1")
+    expect(modalMock.privateScope.error).toBe('some error')
+    expect(modalMock.privateScope.userName).toBe('userName1')
+    expect(modalMock.privateScope.password).toBe('password1')
   })
 });
