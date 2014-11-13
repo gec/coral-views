@@ -19,7 +19,7 @@
 * Author: Flint O'Brien
 */
 
-angular.module('coral.views.subscription', ['coral.views.authentication']).
+angular.module('coral.subscription', ['coral.views.authentication']).
 
   factory('websocketFactory', ['$window', function($window) {
     var WebSocketClass;
@@ -39,7 +39,6 @@ angular.module('coral.views.subscription', ['coral.views.authentication']).
   factory('subscription', ['$rootScope', '$location', 'authentication', 'websocketFactory', function( $rootScope, $location, authentication, websocketFactory){
 
 
-    var self = this;
     var STATE = {
       NOT_CONNECTED: 'No connection to server',
       CONNECTION_FAILED: 'Connection to server failed. Your network connection is down or the application server appears to be down.',
@@ -65,7 +64,6 @@ angular.module('coral.views.subscription', ['coral.views.authentication']).
     var webSocketPendingTasks = []
 
     var subscription = {
-      idCounter: 0,
       listeners: {}   // { subscriptionId: { message: listener, error: listener}, ...}
     };
 
@@ -75,38 +73,33 @@ angular.module('coral.views.subscription', ['coral.views.authentication']).
       onmessage: function (event) {
         var message = JSON.parse(event.data)
 
-        $rootScope.$apply(function () {
+        if( message.type === 'ConnectionStatus') {
+          console.debug( 'onMessage.ConnectionStatus ' + message.data)
+          handleReefConnectionStatus( message.data)
+          return
+        }
 
-          if( message.type === 'ConnectionStatus') {
-            console.debug( 'onMessage.ConnectionStatus ' + message.data)
-            handleReefConnectionStatus( message.data)
-            return
-          }
-
-          // Handle errors
-          if(message.error) {
-            handleError( message)
-            return
-          }
+        // Handle errors
+        if(message.error) {
+          handleError( message)
+          return
+        }
 
 //                    console.debug( 'onMessage message.subscriptionId=' + message.subscriptionId + ', message.type=' + message.type)
 
-          var listener = getListenerForMessage( message)
-          if( listener && listener.message)
-            listener.message( message.subscriptionId, message.type, message.data)
-        })
+        var listener = getListenerForMessage( message)
+        if( listener && listener.message)
+          listener.message( message.subscriptionId, message.type, message.data)
       },
       onopen: function(event) {
         console.log( 'webSocket.onopen event: ' + event)
-        $rootScope.$apply(function () {
-          setStatus( STATE.CONNECTED)
+        setStatus( STATE.CONNECTED)
 
-          while( webSocketPendingTasks.length > 0) {
-            var data = webSocketPendingTasks.shift()
-            console.log( 'onopen: send( ' + data + ')')
-            webSocket.send( data)
-          }
-        })
+        while( webSocketPendingTasks.length > 0) {
+          var data = webSocketPendingTasks.shift()
+          console.log( 'onopen: send( ' + data + ')')
+          webSocket.send( data)
+        }
       },
       onclose: function(event) {
         var code = event.code;
@@ -115,10 +108,8 @@ angular.module('coral.views.subscription', ['coral.views.authentication']).
         console.log( 'webSocket.onclose code: ' + code + ', wasClean: ' + wasClean + ', reason: ' + reason)
         webSocket = null
 
-        $rootScope.$apply(function () {
-          setStatus( STATE.CONNECTION_FAILED)
-          removeAllSubscriptions( 'WebSocket onclose()')
-        })
+        setStatus( STATE.CONNECTION_FAILED)
+        removeAllSubscriptions( 'WebSocket onclose()')
 
         // Cannot redirect here because this webSocket thread fights with the get reply 401 thread.
         // Let the get handle the redirect. Might need to coordinate something with get in the future.
@@ -128,10 +119,8 @@ angular.module('coral.views.subscription', ['coral.views.authentication']).
         var name = event.name;
         var message = event.message;
         console.log( 'webSocket.onerror name: ' + name + ', message: ' + message + ', data: ' + data)
-        $rootScope.$apply(function () {
-          setStatus( STATE.CONNECTION_FAILED);
-          removeAllSubscriptions( 'WebSocket onerror()')
-        })
+        setStatus( STATE.CONNECTION_FAILED);
+        removeAllSubscriptions( 'WebSocket onerror()')
       }
     }
 
@@ -158,6 +147,13 @@ angular.module('coral.views.subscription', ['coral.views.authentication']).
       $rootScope.$broadcast( 'reef.status', json)
     }
 
+    function unsubscribe( subscriptionId) {
+      webSocket.send(JSON.stringify(
+        { unsubscribe: subscriptionId}
+      ))
+      delete subscription[ subscriptionId]
+    }
+
     function saveSubscriptionOnScope( $scope, subscriptionId) {
       if( ! $scope.subscriptionIds)
         $scope.subscriptionIds = []
@@ -174,7 +170,7 @@ angular.module('coral.views.subscription', ['coral.views.authentication']).
         if( $scope.subscriptionIds) {
           console.log( 'reef.subscribe $destroy ' + $scope.subscriptionIds.length);
           $scope.subscriptionIds.forEach( function( subscriptionId) {
-            self.unsubscribe( subscriptionId)
+            unsubscribe( subscriptionId)
             delete subscription.listeners[ subscriptionId]
           })
           $scope.subscriptionIds = []
@@ -196,11 +192,20 @@ angular.module('coral.views.subscription', ['coral.views.authentication']).
       }
     }
 
+    function generateUUID(){
+      var d = new Date().getTime();
+      var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = (d + Math.random()*16)%16 | 0;
+        d = Math.floor(d/16);
+        return (c=='x' ? r : (r&0x7|0x8)).toString(16);
+      });
+      return uuid;
+    }
+
     function makeSubscriptionId( json) {
       var messageKey = Object.keys( json)[0]
-      subscription.idCounter ++;
       // add the messageKey just for easier debugging.
-      return 'subscription.' + messageKey + '.' + subscription.idCounter;
+      return 'subscription.' + messageKey + '.' + generateUUID();
     }
 
     function addSubscriptionIdToMessage( json) {
@@ -295,12 +300,7 @@ angular.module('coral.views.subscription', ['coral.views.authentication']).
         return subscriptionId
       },
 
-      unsubscribe: function( subscriptionId) {
-        webSocket.send(JSON.stringify(
-          { unsubscribe: subscriptionId}
-        ))
-        delete subscription[ subscriptionId]
-      }
+      unsubscribe: unsubscribe
 
 
   }

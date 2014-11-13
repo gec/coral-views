@@ -26,7 +26,7 @@ describe('event', function () {
 
 
   beforeEach(module('coral.views.authentication'));
-  beforeEach(module('coral.views.subscription'));
+  beforeEach(module('coral.subscription'));
   beforeEach(module('coral.views.event'));
   beforeEach(module('template/event/events.html'));
   beforeEach(module('template/event/alarms.html'));

@@ -22,7 +22,6 @@
 angular.module('coral.views.authentication', []).
 
   factory('authentication', [ '$rootScope', '$timeout', '$http', '$location', '$cookies', '$window', function( $rootScope, $timeout, $http, $location, $cookies, $window){
-//factory('authentication', ['$rootScope', '$location', function( $rootScope, $location){
 
     var self = this;
 
@@ -263,7 +262,7 @@ angular.module('coral.views.authentication', []).
   // $modal is from ui-bootstrap
   controller('LoginController', ['$scope', 'authentication', '$modal', function($scope, authentication, $modal) {
 
-    $scope.error = null
+    $scope.error = undefined
     $scope.status = authentication.getStatus()
     $scope.userName = ''
     $scope.password = ''
@@ -277,7 +276,6 @@ angular.module('coral.views.authentication', []).
 
     // the dialog is injected in the specified controller
     var ModalController = ['$scope', '$modalInstance', 'userName', 'password', 'error', function($scope, $modalInstance, userName, password, error){
-//        var ModalController = function($scope, $modalInstance, userName, password, error){
       // private scope just for this controller.
       $scope.userName = userName
       $scope.password = password
@@ -287,7 +285,6 @@ angular.module('coral.views.authentication', []).
         // Angular-UI is not right. 'this' is where the scope variables are.
         $modalInstance.close( {userName: this.userName, password: this.password});   // calls then()
       };
-//        }
     }]
 
 

@@ -17,7 +17,7 @@ describe('authentication service with authToken cookie ', function() {
 
   describe('authentication tests', function() {
 
-    it('user should be logged in', angular.mock.inject(function(authentication) {
+    it('user should be logged in', inject(function(authentication) {
       cookies[authTokenName] = authTokenValue
       expect( authentication.isLoggedIn()).toBe(true);
     }));
@@ -62,7 +62,7 @@ describe('authentication service log in/out successfully', function() {
 
   describe('authentication tests', function() {
 
-    it('user should log in and out successfully', angular.mock.inject(function(authentication) {
+    it('user should log in and out successfully', inject(function(authentication) {
       expect( authentication.isLoggedIn()).toBe(false);
 
       authentication.login( 'userName', 'password', 'redirectLocation')
@@ -123,7 +123,7 @@ describe('authentication service log in failure', function() {
 
   describe('authentication tests', function() {
 
-    it('user should log in ', angular.mock.inject(function(authentication) {
+    it('user should log in ', inject(function(authentication) {
       expect( authentication.isLoggedIn()).toBe(false);
 
       authentication.login( 'userName', 'password', 'redirectLocation')

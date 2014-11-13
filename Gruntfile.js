@@ -130,7 +130,8 @@ module.exports = function(grunt) {
         background: true
       },
       continuous: {
-        singleRun: true
+        singleRun: false,
+        autoWatch: true
       },
       jenkins: {
         singleRun: true,
@@ -154,7 +155,7 @@ module.exports = function(grunt) {
       options: {
         dest: 'CHANGELOG.md',
         templateFile: 'misc/changelog.tpl.md',
-        github: 'gect/coral-views'
+        github: 'gec/coral-views'
       }
     },
     shell: {
