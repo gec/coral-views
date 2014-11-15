@@ -19,7 +19,7 @@
 * Author: Flint O'Brien
 */
 
-angular.module('coral.views.authentication', []).
+angular.module('gec.views.authentication', []).
 
   factory('authentication', [ '$rootScope', '$timeout', '$http', '$location', '$cookies', '$window', function( $rootScope, $timeout, $http, $location, $cookies, $window){
 

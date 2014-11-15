@@ -1,12 +1,12 @@
 var authTokenName = 'coralAuthToken'
 var authTokenValue = 'authTokenValue'
 
-describe('authentication service with authToken cookie ', function() {
+describe('authentication service with authToken cookie', function() {
 
   var cookies = [];
 
   //you need to indicate your module in a test
-  beforeEach(module('coral.views.authentication'));
+  beforeEach(module('gec.views.authentication'));
   beforeEach( function() {
     module(function($provide) {
       cookies[authTokenName] = authTokenValue
@@ -36,7 +36,7 @@ describe('authentication service log in/out successfully', function() {
     cookies = [];
 
   //you need to indicate your module in a test
-  beforeEach( module('coral.views.authentication'));
+  beforeEach( module('gec.views.authentication'));
   beforeEach( module(function($provide) {
     $provide.value( '$cookies', cookies)
     $provide.value( '$window', $window)
@@ -100,7 +100,7 @@ describe('authentication service log in failure', function() {
   var service, $httpBackend, cookies = [];
 
   //you need to indicate your module in a test
-  beforeEach( module('coral.views.authentication'));
+  beforeEach( module('gec.views.authentication'));
   beforeEach( module(function($provide) {
     $provide.value( '$cookies', cookies)
   }));

@@ -25,9 +25,9 @@ describe('event', function () {
   }
 
 
-  beforeEach(module('coral.views.authentication'));
-  beforeEach(module('coral.subscription'));
-  beforeEach(module('coral.views.event'));
+  beforeEach(module('gec.views.authentication'));
+  beforeEach(module('gec.views.subscription'));
+  beforeEach(module('gec.views.event'));
   beforeEach(module('template/event/events.html'));
   beforeEach(module('template/event/alarms.html'));
 

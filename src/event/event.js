@@ -18,7 +18,7 @@
 */
 
 
-angular.module('coral.views.event', ['coral.subscription']).
+angular.module('gec.views.event', ['gec.views.subscription']).
 
   controller('AlarmsController', ['$scope', '$attrs', 'subscription', function( $scope, $attrs, subscription) {
     $scope.loading = true

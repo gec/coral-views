@@ -26,9 +26,9 @@ module.exports = function(grunt) {
     filename: 'coral-views',
     filenamecustom: '<%= filename %>-custom',
     meta: {
-      modules: 'angular.module("coral.views", [<%= srcModules %>]);',
-      tplmodules: 'angular.module("coral.views.tpls", [<%= tplModules %>]);',
-      all: 'angular.module("coral.views", ["coral.views.tpls", <%= srcModules %>]);',
+      modules: 'angular.module("gec.views", [<%= srcModules %>]);',
+      tplmodules: 'angular.module("gec.views.tpls", [<%= tplModules %>]);',
+      all: 'angular.module("gec.views", ["gec.views.tpls", <%= srcModules %>]);',
       banner: ['/*',
                ' * <%= pkg.name %>',
                ' * <%= pkg.homepage %>\n',
@@ -221,7 +221,7 @@ module.exports = function(grunt) {
     }
   });
 
-  //Common coral.views module containing all modules for src and templates
+  //Common gec.views module containing all modules for src and templates
   //findModule: Adds a given module to config
   var foundModules = {};
   function findModule(name) {
@@ -244,7 +244,7 @@ module.exports = function(grunt) {
 
     var module = {
       name: name,
-      moduleName: enquote('coral.views.' + name),
+      moduleName: enquote('gec.views.' + name),
       displayName: ucwords(breakup(name, ' ')),
       srcFiles: grunt.file.expand('src/'+name+'/*.js'),
       tplFiles: grunt.file.expand('template/'+name+'/*.html'),
@@ -276,8 +276,8 @@ module.exports = function(grunt) {
       var depArrayEnd = contents.indexOf(']', depArrayStart);
       var dependencies = contents.substring(depArrayStart + 1, depArrayEnd);
       dependencies.split(',').forEach(function(dep) {
-        if (dep.indexOf('coral.views.') > -1) {
-          var depName = dep.trim().replace('coral.views.','').replace(/['"]/g,'');
+        if (dep.indexOf('gec.views.') > -1) {
+          var depName = dep.trim().replace('gec.views.','').replace(/['"]/g,'');
           if (deps.indexOf(depName) < 0) {
             deps.push(depName);
             //Get dependencies for this new dependency

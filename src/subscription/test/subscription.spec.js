@@ -33,16 +33,16 @@ describe('subscription', function () {
   }
 
   function resetAllMockSpies() {
-    mock.websocket.send.reset()
-    mock.websocket.close.reset()
-    mock.rootScope.$broadcast.reset()
-    mock.messageListener.reset()
-    mock.errorListener.reset()
+    mock.websocket.sendcalls.reset()
+    mock.websocket.closecalls.reset()
+    mock.rootScope.$broadcastcalls.reset()
+    mock.messageListenercalls.reset()
+    mock.errorListenercalls.reset()
     mock.onEvents = {}
   }
 
   //you need to indicate your module in a test
-  beforeEach(module('coral.subscription'));
+  beforeEach(module('gec.views.subscription'));
 //  beforeEach(module('ngMock'));
   beforeEach(function() {
     resetAllMockSpies()
@@ -53,12 +53,12 @@ describe('subscription', function () {
     })
 
     // override the default websocketFactory
-    angular.module('coral.subscription').
+    angular.module('gec.views.subscription').
       factory('websocketFactory', function($window) {
         return mock.websocketFactory
       })
 
-    spyOn(mock, 'websocketFactory').andCallThrough()
+    spyOn(mock, 'websocketFactory').and.callThrough()
   });
 
 
@@ -70,7 +70,7 @@ describe('subscription', function () {
     beforeEach(function() {
       resetAllMockSpies()
       spyOn(mock.authentication, 'isLoggedIn').andReturn(true)
-      spyOn(mock, 'on').andCallThrough()
+      spyOn(mock, 'on').and.callThrough()
 
       json = {subscribeToSomething: {}}
       scope = { $on: mock.on}
@@ -109,7 +109,7 @@ describe('subscription', function () {
 
       // next message should be for unknown subscriptionId, so it doesn't know the messageListener any more
       mock.websocket.onmessage(event)
-      expect(mock.messageListener.callCount).toBe(1)
+      expect(mock.messageListener.calls.count()).toBe(1)
 
     }));
 
@@ -119,15 +119,15 @@ describe('subscription', function () {
       expect(subscriptionId).toStartWith('subscription.subscribeToSomething.')
       expect(subscriptionId2).toStartWith('subscription.subscribeToSomething.')
       expect(subscriptionId === subscriptionId2).toBeFalse()
-      expect(mock.websocketFactory.callCount).toBe(1);
-      expect(mock.on.callCount).toBe(2);
+      expect(mock.websocketFactory.calls.count()).toBe(1);
+      expect(mock.on.calls.count()).toBe(2);
       expect(scope.subscriptionIds.length).toBe(2)
 
       // Don't call send until socket is open
       expect(mock.websocket.send).not.toHaveBeenCalled();
       mock.websocket.onopen('open event')
       expect(mock.websocket.send).toHaveBeenCalledWith(JSON.stringify(json));
-      expect(mock.websocket.send.callCount).toBe(2);
+      expect(mock.websocket.send.calls.count()).toBe(2);
 
       // Receive a message for subscriptionId
       var message = {
@@ -163,7 +163,7 @@ describe('subscription', function () {
 
       // next message should be for unknown subscriptionId, so it doesn't know the messageListener any more
       mock.websocket.onmessage(event)
-      expect(mock.messageListener.callCount).toBe(2)
+      expect(mock.messageListener.calls.count()).toBe(2)
 
     }));
 

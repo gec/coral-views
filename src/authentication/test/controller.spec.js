@@ -48,10 +48,10 @@ describe('authentication.controller', function() {
   }
 
   beforeEach(function() {
-    module('coral.views.authentication');
-    spyOn(modalMock, 'open').andCallThrough()
-    spyOn(modalMock, 'close').andCallThrough()
-    spyOn(authenticationMock, 'login').andCallThrough()
+    module('gec.views.authentication');
+    spyOn(modalMock, 'open').and.callThrough()
+    spyOn(modalMock, 'close').and.callThrough()
+    spyOn(authenticationMock, 'login').and.callThrough()
     inject(function($rootScope, $controller) {
       scope = $rootScope.$new();
       loginController = $controller('LoginController', {
@@ -81,7 +81,7 @@ describe('authentication.controller', function() {
     expect(modalMock.privateScope.error).toBeUndefined()
 
     authenticationMock.errorListener('some error')
-    expect(modalMock.open.callCount).toEqual(2)
+    expect(modalMock.open.calls.count()).toEqual(2)
     expect(modalMock.privateScope.error).toBe('some error')
     expect(modalMock.privateScope.userName).toBe('userName1')
     expect(modalMock.privateScope.password).toBe('password1')
