@@ -36,6 +36,7 @@ angular.module('gec.views.event', ['gec.views.subscription']).
       while( $scope.alarms.length > $scope.limit)
         $scope.alarms.pop()
       $scope.loading = false
+      $scope.$digest()
     }
 
     function onError( error, message) {
@@ -66,6 +67,7 @@ angular.module('gec.views.event', ['gec.views.subscription']).
       while( $scope.events.length > $scope.limit)
         $scope.events.pop()
       $scope.loading = false
+      $scope.$digest()
     }
 
     $scope.onError = function( error, message) {

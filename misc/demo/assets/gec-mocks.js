@@ -110,10 +110,149 @@ function makeSubscription() {
   }
 
   Subscription.pushMessage = function( subscriptionId, messageType, messageData) {
-    listeners[subscriptionId].message( subscriptionId, messageType, messageData)
+    setTimeout( function() {
+      listeners[subscriptionId].message( subscriptionId, messageType, messageData)
+    }, 0)
   }
 
   return Subscription
+}
+
+
+gecMock.RestProvider = function() {
+  this.$get = makeRest
+};
+
+function MockHttpExpectation(method, url, data, headers) {
+
+  this.data = data;
+  this.headers = headers;
+
+  this.match = function(m, u, d, h) {
+    if (method != m) return false;
+    if (!this.matchUrl(u)) return false;
+    if (angular.isDefined(d) && !this.matchData(d)) return false;
+    if (angular.isDefined(h) && !this.matchHeaders(h)) return false;
+    return true;
+  };
+
+  this.matchUrl = function(u) {
+    if (!url) return true;
+    if (angular.isFunction(url.test)) return url.test(u);
+    return url == u;
+  };
+
+  this.matchHeaders = function(h) {
+    if (angular.isUndefined(headers)) return true;
+    if (angular.isFunction(headers)) return headers(h);
+    return angular.equals(headers, h);
+  };
+
+  this.matchData = function(d) {
+    if (angular.isUndefined(data)) return true;
+    if (data && angular.isFunction(data.test)) return data.test(d);
+    if (data && angular.isFunction(data)) return data(d);
+    if (data && !angular.isString(data)) {
+      return angular.equals(angular.fromJson(angular.toJson(data)), angular.fromJson(d));
+    }
+    return data == d;
+  };
+
+  this.toString = function() {
+    return method + ' ' + url;
+  };
+}
+
+
+function makeRest() {
+  var definitions = [],
+      copy = angular.copy
+
+  function Rest() {
+
+  }
+
+  Rest.request = function(method, url, data, name, $scope, successListener) {
+
+    var definition,
+        i = -1,
+      headers = {};
+
+    while ((definition = definitions[++i])) {
+      if (definition.match(method, url, data, headers || {})) {
+        if (definition.response) {
+          setTimeout( function() {
+            $scope.$apply( function() {
+
+              var responseData = copy( definition.response()[1])
+
+              if( name )
+                $scope[name] = responseData
+
+              $scope.loading = false
+
+              if( successListener)
+                successListener( responseData)
+            })
+          })
+
+        } else
+          throw new Error('No response defined !');
+
+        return;
+      }
+    }
+  }
+
+  Rest.get = function(url, name, $scope, successListener) {
+    return Rest.request( 'GET', url, {}, name, $scope, successListener)
+  }
+  Rest.post = function(url, data, name, $scope, successListener, failureListener) {
+    return Rest.request( 'POST', url, data, name, $scope, successListener)
+  }
+  Rest['delete'] = function(url, name, $scope, successListener, failureListener) {
+    return Rest.request( 'DELETE', url, {}, name, $scope, successListener)
+  }
+
+  function createResponse(status, data, headers, statusText) {
+    if (angular.isFunction(status)) return status;
+
+    return function() {
+      return angular.isNumber(status)
+        ? [status, data, headers, statusText]
+        : [200, status, data];
+    };
+  }
+
+  Rest.when = function( method, url, data, headers) {
+    var definition = new MockHttpExpectation(method, url, data, headers),
+        chain = {
+          respond: function(status, data, headers, statusText) {
+            definition.response = createResponse(status, data, headers, statusText);
+          }
+        }
+
+    definitions.push(definition)
+    return chain
+  }
+
+  function createShortMethods(prefix) {
+    angular.forEach(['GET', 'DELETE', 'JSONP', 'HEAD'], function(method) {
+      Rest[prefix + method] = function(url, headers) {
+        return Rest[prefix](method, url, undefined, headers);
+      };
+    });
+
+    angular.forEach(['PUT', 'POST', 'PATCH'], function(method) {
+      Rest[prefix + method] = function(url, data, headers) {
+        return Rest[prefix](method, url, data, headers);
+      };
+    });
+  }
+
+  createShortMethods('when');
+
+  return Rest
 }
 
   /**
@@ -135,7 +274,8 @@ function makeSubscription() {
   angular.module('gecMock', ['ng']).
     provider({
       websocketFactory: gecMock.WebsocketFactoryProvider,
-      subscription: gecMock.SubscriptionProvider
+      subscription: gecMock.SubscriptionProvider,
+      rest: gecMock.RestProvider
     });
 
   /**

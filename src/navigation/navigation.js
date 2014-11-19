@@ -147,7 +147,7 @@ angular.module('gec.views.navigation', ['ui.bootstrap', 'gec.views.rest']).
        * @param notifyWhenAvailable
        * @returns The current value or null if not available yet.
        */
-      getTreeNodeByEquipmentId: equipmentIdToTreeNodeCache.get,
+      getTreeNodeByEquipmentId: function( equipmentId, notifyWhenAvailable) { return equipmentIdToTreeNodeCache.get( equipmentId, notifyWhenAvailable)},
 
       /**
        * Get the tree node by menu Id. This returns immediately with the value
@@ -158,14 +158,14 @@ angular.module('gec.views.navigation', ['ui.bootstrap', 'gec.views.rest']).
        * @param notifyWhenAvailable function( id, treeNode)
        * @returns TreeNode if available, otherwise null.
        */
-      getTreeNodeByMenuId: menuIdToTreeNodeCache.get,
+      getTreeNodeByMenuId: function( menuId, notifyWhenAvailable) { return menuIdToTreeNodeCache.get( menuId, notifyWhenAvailable)},
 
       /**
        *
        * @param menuId The menu id to put
        * @param treeNode
        */
-      putTreeNodeByMenuId: menuIdToTreeNodeCache.put,
+      putTreeNodeByMenuId: function( menuId, treeNode) { return menuIdToTreeNodeCache.put( menuId, treeNode)},
 
       getTreeNodes: function( sourceUrl, scope, parent, successListener) {
         rest.get( sourceUrl, null, scope, function( entityWithChildrenList) {
@@ -386,7 +386,8 @@ angular.module('gec.views.navigation', ['ui.bootstrap', 'gec.views.rest']).
     return {
       restrict: 'E', // Element name
       scope: true,
-      controller: 'NavTreeController'
+      controller: 'NavTreeController',
+      list: function(scope, element, $attrs) {}
     }
   } ).
 

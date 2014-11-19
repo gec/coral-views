@@ -1,4 +1,7 @@
-angular.module('gec.views.demo', ['ui.bootstrap', 'gec.views','plunker', 'ngTouch', 'gecMock'], function($httpProvider){
+
+document.cookie='coralAuthToken=auth1'
+
+angular.module('gec.views.demo', ['ui.bootstrap', 'gec.views','plunker', 'ngTouch', 'angularBootstrapNavTree', 'gecMock'], function($httpProvider){
   FastClick.attach(document.body);
   delete $httpProvider.defaults.headers.common['X-Requested-With'];
 }).run(['$location', function($location){

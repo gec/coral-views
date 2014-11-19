@@ -33,6 +33,8 @@ var position = function(start, end, elapsed, duration) {
 // if the first argument is numeric then scroll to this location
 // if the callback exist, it is called when the scrolling is finished
 var smoothScroll = function(el, duration, callback){
+    if( !el)
+      return
     duration = duration || 500;
     var start = window.pageYOffset;
 

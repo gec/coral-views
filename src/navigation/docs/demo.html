@@ -1,0 +1,10 @@
+<div ng-controller="NavigationDemoCtrl">
+
+    <nav-tree href="/coral/menus/operator">
+        <abn-tree tree-data="navTree"
+                  icon-expand       = "fa fa-caret-right"
+                  icon-collapse     = "fa fa-caret-down"
+                  initial-selection = "All Equipment"
+                  on-select         = "menuSelect(branch)"></abn-tree>
+    </nav-tree>
+</div>
