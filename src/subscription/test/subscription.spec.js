@@ -33,11 +33,11 @@ describe('subscription', function () {
   }
 
   function resetAllMockSpies() {
-    mock.websocket.sendcalls.reset()
-    mock.websocket.closecalls.reset()
-    mock.rootScope.$broadcastcalls.reset()
-    mock.messageListenercalls.reset()
-    mock.errorListenercalls.reset()
+    mock.websocket.send.calls.reset()
+    mock.websocket.close.calls.reset()
+    mock.rootScope.$broadcast.calls.reset()
+    mock.messageListener.calls.reset()
+    mock.errorListener.calls.reset()
     mock.onEvents = {}
   }
 
@@ -69,7 +69,7 @@ describe('subscription', function () {
 
     beforeEach(function() {
       resetAllMockSpies()
-      spyOn(mock.authentication, 'isLoggedIn').andReturn(true)
+      spyOn(mock.authentication, 'isLoggedIn').and.returnValue(true)
       spyOn(mock, 'on').and.callThrough()
 
       json = {subscribeToSomething: {}}
@@ -247,7 +247,7 @@ describe('subscription', function () {
 
     beforeEach(function() {
       //webSocketUrl = null
-      spyOn(mock.authentication, 'isLoggedIn').andReturn(false)
+      spyOn(mock.authentication, 'isLoggedIn').and.returnValue(false)
     })
 
     it('should open websocket and send subscription request', inject(function(subscription) {

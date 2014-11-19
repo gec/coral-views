@@ -62,7 +62,7 @@ describe('event', function () {
     scope = $rootScope;
     $compile = _$compile_;
 
-    element = angular.element( '<coral-events limit="40"  />');
+    element = angular.element( '<gec-events limit="40"  />');
   }));
 
 
@@ -73,7 +73,7 @@ describe('event', function () {
   }
 
   function findEvents() {
-    return element.find('.coral-event');
+    return element.find('.gec-event');
   }
 
   function findTd( event, tdIndex) {
@@ -107,11 +107,10 @@ describe('event', function () {
     expect( foundEvents.length).toEqual(1);
 
     var event = foundEvents.eq(0)
-    expect( findTd( event, 0).text()).toBe('id0');
-    expect( findTd( event, 1).text()).toBe('eventType0');
-    expect( findTd( event, 3).text()).toBe('0');
-    expect( findTd( event, 6).text()).toBe('message0');
-    expect( findTd( event, 7).text()).toBe('7:00:00 PM, 12-31-1969'); // 0: start of epoch
+    expect( findTd( event, 0).text()).toBe('eventType0');
+    expect( findTd( event, 2).text()).toBe('0');
+    expect( findTd( event, 4).text()).toBe('message0');
+    expect( findTd( event, 5).text()).toBe('7:00:00 PM, 12-31-1969'); // 0: start of epoch
   }));
 
   it('should create multiple events', inject( function () {

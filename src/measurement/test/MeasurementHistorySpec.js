@@ -16,8 +16,8 @@ var point, json,
     notify1 = jasmine.createSpy('notify1'),
     scope1 = {name: 'scope1'},
     constraints ={
-      time: 1,
-      size: 10,
+      time: 10000,
+      size: 10000,
       throttling: 0
     },
     timeNow = 10,
@@ -93,10 +93,11 @@ describe('subscription', function() {
           measurements: [ m1]
         }
     subscriptionMock.notifySuccess(subscriptionMock.id, 'pointWithMeasurements', pointWithMeasurements)
-    expect(measurements.length).toBe(1)
-    expect(measurements[0]).toBe(m1)
-    expect(measurements[0].value).toBeNumber()
-    expect(notify1.calls.length).toBe(1)
+    var sample = measurements.get()
+    expect(sample.data.length).toBe(1)
+    expect(sample.data[0].time.getTime()).toBe( 1)
+    expect(sample.data[0].value).toBeNumber()
+    expect(notify1.calls.count()).toBe(1)
 
     var m2 = {time: 2, value: '2.0'},
         incomingMeasurements = [
@@ -105,10 +106,10 @@ describe('subscription', function() {
           }
         ]
     subscriptionMock.notifySuccess(subscriptionMock.id, 'measurements', incomingMeasurements)
-    expect(measurements.length).toBe(2)
-    expect(measurements[1]).toBe(m2)
-    expect(measurements[1].value).toBe(2.0)
-    expect(notify1.calls.length).toBe(2)
+    expect(sample.data.length).toBe(2)
+    expect(sample.data[1].time.getTime()).toBe( 2)
+    expect(sample.data[1].value).toBe(2.0)
+    expect(notify1.calls.count()).toBe(2)
 
     var m3 = {time: 3, value: '3.0'},
         m4 = {time: 4, value: '4.0'}
@@ -121,12 +122,12 @@ describe('subscription', function() {
       }
     ]
     subscriptionMock.notifySuccess(subscriptionMock.id, 'measurements', incomingMeasurements)
-    expect(measurements.length).toBe(4)
-    expect(measurements[2]).toBe(m3)
-    expect(measurements[3]).toBe(m4)
-    expect(notify1.calls.length).toBe(3) // call once for last two measurements that came in together.
-
-    //jasmine.any(Function)
+    expect(sample.data.length).toBe(4)
+    expect(sample.data[2].time.getTime()).toBe( 3)
+    expect(sample.data[2].value).toBe(3.0)
+    expect(sample.data[3].time.getTime()).toBe( 4)
+    expect(sample.data[3].value).toBe(4.0)
+    expect(notify1.calls.count()).toBe(3) // call once for last two measurements that came in together.
   })
 
   it('should create just one subscription for two subscribers and only unsubscribe when both unsubscribe.', function() {
@@ -150,7 +151,7 @@ describe('subscription', function() {
     measurements = mh.subscribe(scope2, constraints, subscriber2, notify2)
     expect(measurements).toBe(mh.measurements)
     expect(mh.subscribers.length).toBe(2)
-    expect(subscriptionMock.subscribe.calls.length).toBe(1)  // not called again.
+    expect(subscriptionMock.subscribe.calls.count()).toBe(1)  // not called again.
 
 
     var m1 = {time: 1, value: '1.0'},
@@ -159,9 +160,10 @@ describe('subscription', function() {
           measurements: [ m1]
         }
     subscriptionMock.notifySuccess(subscriptionMock.id, 'pointWithMeasurements', pointWithMeasurements)
-    expect(measurements.length).toBe(1)
-    expect(measurements[0]).toBe(m1)
-    expect(measurements[0].value).toBeNumber()
+    var sample = measurements.get()
+    expect(sample.data.length).toBe(1)
+    expect(sample.data[0].time.getTime()).toBe(1)
+    expect(sample.data[0].value).toBeNumber()
 
     var m2 = {time: 2, value: '2.0'},
         incomingMeasurements = [
@@ -170,9 +172,9 @@ describe('subscription', function() {
           }
         ]
     subscriptionMock.notifySuccess(subscriptionMock.id, 'measurements', incomingMeasurements)
-    expect(measurements.length).toBe(2)
-    expect(measurements[1]).toBe(m2)
-    expect(measurements[1].value).toBe(2.0)
+    expect(sample.data.length).toBe(2)
+    expect(sample.data[1].time.getTime()).toBe(2)
+    expect(sample.data[1].value).toBe(2.0)
 
     var m3 = {time: 3, value: '3.0'},
         m4 = {time: 4, value: '4.0'}
@@ -185,21 +187,23 @@ describe('subscription', function() {
       }
     ]
     subscriptionMock.notifySuccess(subscriptionMock.id, 'measurements', incomingMeasurements)
-    expect(measurements.length).toBe(4)
-    expect(measurements[2]).toBe(m3)
-    expect(measurements[3]).toBe(m4)
+    expect(sample.data.length).toBe(4)
+    expect(sample.data[2].time.getTime()).toBe(3)
+    expect(sample.data[2].value).toBe(3.0)
+    expect(sample.data[3].time.getTime()).toBe(4)
+    expect(sample.data[3].value).toBe(4.0)
 
 
     mh.unsubscribe(subscriber1)
     expect(subscriptionMock.unsubscribe).not.toHaveBeenCalled()
     expect(mh.subscribers.length).toBe(1)
     expect(mh.subscribers[0].subscriber).toBe(subscriber2)
-    expect(measurements.length).toBe(4)
+    expect(sample.data.length).toBe(4)
 
     mh.unsubscribe(subscriber2)
     expect(subscriptionMock.unsubscribe).toHaveBeenCalledWith(subscriptionMock.id)
-    expect(measurements.length).toBe(4)     // Keep our copy of measurements
-    expect(mh.measurements.length).toBe(0)  // Internal measurements are gone.
+    expect(sample.data.length).toBe(4)     // Keep our copy of measurements
+    expect(mh.measurements.get().data.length).toBe(0)  // Internal measurements are gone.
 
     //jasmine.any(Function)
   })

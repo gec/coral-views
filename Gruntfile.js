@@ -23,12 +23,13 @@ module.exports = function(grunt) {
     modules: [],//to be filled in by build task
     pkg: grunt.file.readJSON('package.json'),
     dist: 'dist',
-    filename: 'coral-views',
+    rootModule: 'gec.views',
+    filename: 'gec-views',
     filenamecustom: '<%= filename %>-custom',
     meta: {
-      modules: 'angular.module("gec.views", [<%= srcModules %>]);',
-      tplmodules: 'angular.module("gec.views.tpls", [<%= tplModules %>]);',
-      all: 'angular.module("gec.views", ["gec.views.tpls", <%= srcModules %>]);',
+      modules: 'angular.module("<%= rootModule %>", [<%= srcModules %>]);',
+      tplmodules: 'angular.module("<%= rootModule %>.tpls", [<%= tplModules %>]);',
+      all: 'angular.module("<%= rootModule %>", ["<%= rootModule %>.tpls", <%= srcModules %>]);',
       banner: ['/*',
                ' * <%= pkg.name %>',
                ' * <%= pkg.homepage %>\n',
@@ -130,8 +131,7 @@ module.exports = function(grunt) {
         background: true
       },
       continuous: {
-        singleRun: false,
-        autoWatch: true
+        singleRun: true
       },
       jenkins: {
         singleRun: true,
@@ -221,7 +221,7 @@ module.exports = function(grunt) {
     }
   });
 
-  //Common gec.views module containing all modules for src and templates
+  //Common rootModule containing all modules for src and templates
   //findModule: Adds a given module to config
   var foundModules = {};
   function findModule(name) {
@@ -244,7 +244,7 @@ module.exports = function(grunt) {
 
     var module = {
       name: name,
-      moduleName: enquote('gec.views.' + name),
+      moduleName: enquote('<%= rootModule %>.' + name),
       displayName: ucwords(breakup(name, ' ')),
       srcFiles: grunt.file.expand('src/'+name+'/*.js'),
       tplFiles: grunt.file.expand('template/'+name+'/*.html'),
@@ -276,8 +276,8 @@ module.exports = function(grunt) {
       var depArrayEnd = contents.indexOf(']', depArrayStart);
       var dependencies = contents.substring(depArrayStart + 1, depArrayEnd);
       dependencies.split(',').forEach(function(dep) {
-        if (dep.indexOf('gec.views.') > -1) {
-          var depName = dep.trim().replace('gec.views.','').replace(/['"]/g,'');
+        if (dep.indexOf('<%= rootModule %>.') > -1) {
+          var depName = dep.trim().replace('<%= rootModule %>.','').replace(/['"]/g,'');
           if (deps.indexOf(depName) < 0) {
             deps.push(depName);
             //Get dependencies for this new dependency
@@ -338,16 +338,21 @@ module.exports = function(grunt) {
   grunt.registerTask('test', 'Run tests on singleRun karma server', function () {
     //this task can be executed in 3 different environments: local, Travis-CI and Jenkins-CI
     //we need to take settings for each one into account
+    console.log( '----------------------- run test ')
     if (process.env.TRAVIS) {
+      console.log( '----------------------- process.env.TRAVIS=' + process.env.TRAVIS)
       grunt.task.run('karma:travis');
     } else {
+      console.log( '----------------------- ! process.env.TRAVIS=' + process.env.TRAVIS)
       var isToRunJenkinsTask = !!this.args.length;
       if(grunt.option('coverage')) {
+        console.log( '----------------------- coverage ')
         var karmaOptions = grunt.config.get('karma.options'),
           coverageOpts = grunt.config.get('karma.coverage');
         grunt.util._.extend(karmaOptions, coverageOpts);
         grunt.config.set('karma.options', karmaOptions);
       }
+      console.log( '----------------------- this.args.length = ' + this.args.length)
       grunt.task.run(this.args.length ? 'karma:jenkins' : 'karma:continuous');
     }
   });

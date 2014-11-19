@@ -16,7 +16,8 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     files: [
       'bower_components/jquery/dist/jquery.min.js',
-      'bower_components/angular/angular.min.js',
+      'bower_components/angular/angular.js',
+      'bower_components/angular-cookies/angular-cookies.js',
       'bower_components/angular-mocks/angular-mocks.js',
       'bower_components/d3/d3.js',
       'misc/test-lib/helpers.js',
@@ -67,7 +68,12 @@ module.exports = function(config) {
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: true,
 
-    // Start these browsers, currently available:
+    // Continuous Integration mode
+    // if true, it capture browsers, run tests and exit
+    singleRun: false,
+
+
+  // Start these browsers, currently available:
     // - Chrome
     // - ChromeCanary
     // - Firefox

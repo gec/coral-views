@@ -1,4 +1,4 @@
-angular.module('coral.views.demo', ['ui.bootstrap', 'coral.views','plunker', 'ngTouch'], function($httpProvider){
+angular.module('gec.views.demo', ['ui.bootstrap', 'gec.views','plunker', 'ngTouch', 'gecMock'], function($httpProvider){
   FastClick.attach(document.body);
   delete $httpProvider.defaults.headers.common['X-Requested-With'];
 }).run(['$location', function($location){
@@ -73,7 +73,7 @@ var DownloadCtrl = function($scope, $modalInstance) {
   $scope.download = function (version) {
     var options = $scope.options;
 
-    var downloadUrl = ['coral-views-'];
+    var downloadUrl = ['gec-views-'];
     if (options.tpls) {
       downloadUrl.push('tpls-');
     }

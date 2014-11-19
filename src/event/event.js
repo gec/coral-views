@@ -55,7 +55,7 @@ angular.module('gec.views.event', ['gec.views.subscription']).
     $scope.events = []
     $scope.limit = Number( $attrs.limit || 20);
 
-    function onEvent( subscriptionId, type, event) {
+    $scope.onEvent = function( subscriptionId, type, event) {
       if( angular.isArray( event)) {
         console.log( 'eventService onEvent length=' + event.length)
         $scope.events = event.concat( $scope.events)
@@ -68,7 +68,7 @@ angular.module('gec.views.event', ['gec.views.subscription']).
       $scope.loading = false
     }
 
-    function onError( error, message) {
+    $scope.onError = function( error, message) {
 
     }
 
@@ -78,10 +78,10 @@ angular.module('gec.views.event', ['gec.views.subscription']).
         limit: $scope.limit
       }
     }
-    return subscription.subscribe( request, $scope, onEvent, onError)
+    return subscription.subscribe( request, $scope, $scope.onEvent, $scope.onError)
   }]).
 
-  directive('coralAlarms', function(){
+  directive('gecAlarms', function(){
     return {
       restrict: 'E', // Element name
       // This HTML will replace the alarmBanner directive.
@@ -112,7 +112,7 @@ angular.module('gec.views.event', ['gec.views.subscription']).
 
     }
   }).
-  directive('coralEvents', function(){
+  directive('gecEvents', function(){
     return {
       restrict: 'E', // Element name
       // This HTML will replace the alarmBanner directive.

@@ -1,4 +1,11 @@
 <div ng-controller="EventDemoCtrl">
-  <coral-events ></coral-events>
-  <button class='btn btn-default' ng-click="addEvent()">Add Event</button>
+
+    <button class='btn btn-default pull-right' ng-click="pushEvent()">Push Event</button>
+    <h2>events</h2>
+    <gec-events limit="3" style="margin-bottom: 50px;"></gec-events>
+
+
+    <button class='btn btn-default pull-right' ng-click="pushAlarm()">Push Alarm</button>
+    <h2>alarms</h2>
+    <gec-alarms limit="3"></gec-alarms>
 </div>

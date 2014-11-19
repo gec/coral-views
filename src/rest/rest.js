@@ -19,10 +19,7 @@
 
 
 
-
-
-
-angular.module('gecRest', ['gec.views.authentication']).
+angular.module('gec.views.rest', ['gec.views.authentication']).
   factory('rest', ['$rootScope', '$timeout', '$http', '$location', 'authentication', function($rootScope, $timeout, $http, $location, authentication) {
 
     var self = this;
