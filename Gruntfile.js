@@ -29,6 +29,7 @@ module.exports = function(grunt) {
     meta: {
       modules: 'angular.module("<%= rootModule %>", [<%= srcModules %>]);',
       tplmodules: 'angular.module("<%= rootModule %>.tpls", [<%= tplModules %>]);',
+      cssmodules: 'angular.module(""<%= rootModule %>.css", [<%= cssModules %>]);',
       all: 'angular.module("<%= rootModule %>", ["<%= rootModule %>.tpls", <%= srcModules %>]);',
       banner: ['/*',
                ' * <%= pkg.name %>',
@@ -66,6 +67,13 @@ module.exports = function(grunt) {
         },
         src: [], //src filled in by build task
         dest: '<%= dist %>/<%= filename %>-tpls-<%= pkg.version %>.js'
+      },
+      dist_css: {
+        options: {
+          banner: '<%= meta.banner %>\n'
+        },
+        src: [], //src filled in by build task
+        dest: '<%= dist %>/<%= filename %>-<%= pkg.version %>.css'
       }
     },
     copy: {
@@ -155,7 +163,7 @@ module.exports = function(grunt) {
       options: {
         dest: 'CHANGELOG.md',
         templateFile: 'misc/changelog.tpl.md',
-        github: 'gec/coral-views'
+        github: 'gec/greenbus-web-views'
       }
     },
     shell: {
@@ -183,7 +191,8 @@ module.exports = function(grunt) {
           '<%= concat.dist_tpls.dest %>'
         ],
         styles: [
-          'docs/css/style.css'
+          'docs/css/style.css',
+          '<%= concat.dist_css.dest %>'
         ],
         navTemplate: 'docs/nav.html',
         title: 'coral-views',
@@ -247,6 +256,7 @@ module.exports = function(grunt) {
       moduleName: enquote('<%= rootModule %>.' + name),
       displayName: ucwords(breakup(name, ' ')),
       srcFiles: grunt.file.expand('src/'+name+'/*.js'),
+      cssFiles: grunt.file.expand(['css/*.css', 'src/'+name+'/*.css']),
       tplFiles: grunt.file.expand('template/'+name+'/*.html'),
       tpljsFiles: grunt.file.expand('template/'+name+'/*.html.js'),
       tplModules: grunt.file.expand('template/'+name+'/*.html').map(enquote),
@@ -311,6 +321,7 @@ module.exports = function(grunt) {
 
     var modules = grunt.config('modules');
     grunt.config('srcModules', _.pluck(modules, 'moduleName'));
+    grunt.config('cssModules', _.pluck(modules, 'moduleName'));
     grunt.config('tplModules', _.pluck(modules, 'tplModules').filter(function(tpls) { return tpls.length > 0;} ));
     grunt.config('demoModules', modules
       .filter(function(module) {
@@ -324,6 +335,7 @@ module.exports = function(grunt) {
     );
 
     var srcFiles = _.pluck(modules, 'srcFiles');
+    var cssFiles = _.pluck(modules, 'cssFiles');
     var tpljsFiles = _.pluck(modules, 'tpljsFiles');
     //Set the concat task to concatenate the given src modules
     grunt.config('concat.dist.src', grunt.config('concat.dist.src')
@@ -331,6 +343,8 @@ module.exports = function(grunt) {
     //Set the concat-with-templates task to concat the given src & tpl modules
     grunt.config('concat.dist_tpls.src', grunt.config('concat.dist_tpls.src')
                  .concat(srcFiles).concat(tpljsFiles));
+    grunt.config('concat.dist_css.src', grunt.config('concat.dist_css.src')
+                 .concat(cssFiles));
 
     grunt.task.run(['concat', 'uglify']);
   });

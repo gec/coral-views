@@ -18,8 +18,8 @@
             </li>
         </ul>
         <ul class="nav navbar-nav navbar-right" ng-hide="loading">
-            <li class="dropdown">
-                <a class="dropdown-toggle">Logged in as {{ userName }} <b class="caret"></b></a>
+            <li class="dropdown" dropdown>
+                <a class="dropdown-toggle" dropdown-toggle href>Logged in as {{ userName }} <b class="caret"></b></a>
                 <ul class="dropdown-menu">
                     <li ng-repeat="item in sessionMenuItems"><a href="{{ item.route }}">{{ item.label }}</a></li>
                 </ul>

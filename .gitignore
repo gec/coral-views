@@ -3,6 +3,7 @@ node_modules/
 coverage/
 bower_components/
 dist/
+template/*/*.js
 logs
 target
 tmp
@@ -12,3 +13,4 @@ tmp
 /out
 /.idea_modules
 .DS_Store
+
