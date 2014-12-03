@@ -1,7 +1,7 @@
 {
-  "name": "d3-traits",
+  "name": "greenbus-web-views",
   "version": "0.1",
-  "main": "lib/d3-traits.js",
+  "main": "greenbus-web-views.js",
   "ignore": [
     "**/.*",
     "node_modules",

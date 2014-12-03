@@ -1,13 +1,18 @@
 {
   "author": "Flint O'Brien",
-  "name": "coral-views",
+  "name": "greenbus-web-views",
   "version": "0.1.0-SNAPSHOT",
-  "homepage": "https://github.com/gec/coral-views",
-  "licenses": {
-    "type": "MIT",
-    "url": "https://github.com/gec/coral-views/blob/master/LICENSE"
+  "homepage": "https://github.com/gec/greenbus-web-views",
+  "license": "Apache Version 2.0",
+  "licenses": [{
+    "type": "Apache Version 2.0",
+    "url": "https://github.com/gec/greenbus-web-views/blob/master/LICENSE"
+  }],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/gec/d3-traits"
   },
-  "bugs": "https://github.com/gec/coral-views/issues",
+  "bugs": "https://github.com/gec/greenbus-web-views/issues",
   "dependencies": {},
   "devDependencies": {
     "grunt": "~0.4.1",
@@ -30,10 +35,5 @@
     "node-markdown": "0.1.1",
     "semver": "~2.2.0",
     "shelljs": "~0.2.0"
-  },
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/gec/d3-traits"
   }
 }
