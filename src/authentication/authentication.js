@@ -313,4 +313,8 @@ angular.module('gec.views.authentication', ['ngCookies', 'ui.bootstrap', 'ui.key
     $scope.openDialog = openDialog
     openDialog()
 
+  }] ).
+
+  controller('LogoutController', ['$scope', 'authentication', function($scope, authentication) {
+    authentication.logout();
   }]);
