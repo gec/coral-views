@@ -65,7 +65,7 @@ describe('authentication.controller', function() {
   it('should open modal dialog, handle login click, and authenticate successfully', function() {
     expect(scope.status).toBe('some status')
     expect(modalMock.open).toHaveBeenCalled()
-    expect(modalMock.modalOptions.templateUrl).toBe('partials/loginmodal.html')
+    expect(modalMock.modalOptions.templateUrl).toBe('authentication-login-modal.html')
 
     modalMock.clickLoginWith('userName1', 'password1')
     expect(modalMock.close).toHaveBeenCalled()

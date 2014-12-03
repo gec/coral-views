@@ -218,7 +218,7 @@ angular.module('gec.views.navigation', ['ui.bootstrap', 'gec.views.rest']).
       replace: true,
       transclude: true,
       scope: true,
-      template: 'template/navigation/navBarTop.html',
+      templateUrl: 'template/navigation/navBarTop.html',
       controller: 'NavBarTopController'
     }
   }).
@@ -244,7 +244,7 @@ angular.module('gec.views.navigation', ['ui.bootstrap', 'gec.views.rest']).
       replace: true,
       transclude: true,
       scope: true,
-      template: 'template/navigation/navList.html',
+      templateUrl: 'template/navigation/navList.html',
       controller: 'NavListController'
     }
   }).

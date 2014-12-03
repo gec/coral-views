@@ -19,7 +19,7 @@
 * Author: Flint O'Brien
 */
 
-angular.module('gec.views.authentication', ['ngCookies']).
+angular.module('gec.views.authentication', ['ngCookies', 'ui.bootstrap', 'ui.keypress']).
 
   factory('authentication', [ '$rootScope', '$timeout', '$http', '$location', '$cookies', '$window', function( $rootScope, $timeout, $http, $location, $cookies, $window){
 
@@ -292,7 +292,7 @@ angular.module('gec.views.authentication', ['ngCookies']).
       var modalOptions = {
         backdrop: 'static', // don't close when clicking outside of model.
         keyboard: false, // escape does not close dialog
-        templateUrl:  'partials/loginmodal.html',
+        templateUrl:  'authentication-login-modal.html',
         controller: ModalController,
         resolve: {
           // Pass these to ModalController

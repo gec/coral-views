@@ -18,6 +18,8 @@ module.exports = function(config) {
       'bower_components/jquery/dist/jquery.min.js',
       'bower_components/angular/angular.js',
       'bower_components/angular-cookies/angular-cookies.js',
+      'bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js',
+      'bower_components/angular-ui-utils/ui-utils.min.js',
       'bower_components/angular-mocks/angular-mocks.js',
       'bower_components/d3/d3.js',
       'misc/test-lib/helpers.js',
