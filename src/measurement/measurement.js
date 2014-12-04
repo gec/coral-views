@@ -100,6 +100,12 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
       $scope.sortColumn = 'name'
       $scope.reverse = false
 
+      var CHECKMARK_UNCHECKED = 0,
+          CHECKMARK_CHECKED = 1,
+          CHECKMARK_PARTIAL = 2
+      var CHECKMARK_NEXT_STATE = [1, 0, 0]
+
+
       var navId = $routeParams.navId,
           depth = rest.queryParameterFromArrayOrString( 'depth', $routeParams.depth ),
           equipmentIdsQueryParams = rest.queryParameterFromArrayOrString( 'equipmentIds', $routeParams.equipmentIds )
@@ -756,5 +762,78 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
         })
       }
 
-    }])
+    }
+  ]).
+
+  directive( 'gbMeasurements', function(){
+    return {
+      restrict: 'E', // Element name
+      // The template HTML will replace the directive.
+      replace: true,
+      transclude: true,
+      scope: true,
+      templateUrl: 'template/measurement/measurements.html',
+      controller: 'gbMeasurementsController'
+    }
+  }).
+
+  filter('checkboxClass', function() {
+    return function(checked) {
+      switch( checked) {
+        case 0: return 'fa fa-square-o'
+        case 1: return 'fa fa-check-square-o'
+        case 2: return 'fa fa-minus-square-o'
+        default: return 'fa fa-square-o'
+      }
+    };
+  }).
+
+  filter('validityIcon', function() {
+    return function(validity) {
+      switch( validity) {
+        case 'GOOD': return 'glyphicon glyphicon-ok validity-good';
+        case 'QUESTIONABLE': return 'glyphicon glyphicon-question-sign validity-questionable';
+        case 'NOTLOADED': return 'validity-notloaded'
+        case 'INVALID':
+          return 'glyphicon glyphicon-exclamation-sign validity-invalid';
+        default:
+          return 'glyphicon glyphicon-exclamation-sign validity-invalid';
+      }
+    };
+  }).
+  filter('pointTypeImage', function() {
+    return function(type, unit) {
+      var image
+
+      if( unit === 'raw') {
+        image = '../../images/pointRaw.png'
+      } else {
+        switch( type) {
+          case 'ANALOG': image = '../../images/pointAnalog.png'; break;
+          case 'STATUS': image = '../../images/pointStatus.png'; break;
+          default: image = '../../images/pointRaw.png';
+        }
+      }
+
+      return image
+    };
+  }).
+  filter('pointTypeText', function() {
+    return function(type, unit) {
+      var text
+
+      if( unit === 'raw') {
+        text = 'raw point'
+      } else {
+        switch( type) {
+          case 'ANALOG': text = 'analog point'; break;
+          case 'STATUS': text = 'status point'; break;
+          default: text = 'point with unknown type';
+        }
+      }
+
+      return text
+    };
+  })
+
 

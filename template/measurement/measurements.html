@@ -1,0 +1,154 @@
+<div>
+    <div class="row">
+        <div class="col-md-3">
+            <h2>Measurements</h2>
+        </div>
+        <div class="col-md-7" style="margin-top: 12px;">
+            <input type="text"  class="form-control input-lg" placeholder="search any column" ng-model="searchText" style="height: 100%;">
+            <!--<button class="btn btn-info" ng-click="search()" style="height: 100%; width: 60px; margin-bottom: 10px;"><i class="glyphicon glyphicon-search icon-white"></i></button>-->
+        </div>
+    </div>
+
+    <div>
+        <table class="table table-condensed coral-row-radius" ng-show="points.length > 0">
+            <thead>
+                <tr>
+                    <th colspan="2" style="padding-bottom: 12px;">
+                        <button class="btn btn-default" ng-click="checkUncheckAll()">
+                            <div class="coral-checkbox-container" role="checkbox" aria-labelledby=":2f" dir="ltr" aria-checked="true" tabindex="-1">
+                                <i ng-class="checkAllState | checkboxClass"></i>
+                                <!--<div ng-class="checkAllState | checkboxClass"></div>-->
+                            </div>
+                        </button>
+                        <button class="btn btn-default text-muted" ng-click="chartAddSelectedPoints()" ng-show="checkCount>0" style="width: 60px; margin-left: 14px"><span class="glyphicon glyphicon-stats"></span></button>
+
+                    </th>
+                    <!--<th>Name</th>-->
+                    <th></th>
+                    <th style="text-align: right">Value</th>
+                    <th>Unit</th>
+                    <th>Quality</th>
+                    <th>Time</th>
+                    <th>type</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="point in pointsFiltered = (points | filter:search | orderBy:sortColumn)" ng-class="rowClasses(point)">
+                    <td ng-if="!point.rowDetail">
+                        <div class="coral-checkbox-container" ng-click="checkUncheck(point)" role="checkbox" aria-labelledby=":2f" dir="ltr" aria-checked="true" tabindex="-1">
+                            <i ng-class="checkAllState | checkboxClass"></i>
+                            <!--<div ng-class="point.checked | checkboxClass"></div>-->
+                        </div>
+                        <!--<div id=":2e" class="oZ-jc T-Jo J-J5-Ji T-Jo-Jp" role="checkbox" aria-labelledby=":2f" dir="ltr" aria-checked="true" tabindex="-1">-->
+                            <!--<div class="T-Jo-auh"></div>-->
+                        <!--</div>-->
+                    </td>
+                    <td ng-if="!point.rowDetail" ng-click="togglePointRowById(point.id)">
+                        <div class="coral-icon-text draggable" draggable ident="point.id">
+                            <img class="coral-icon" src="{{ point.pointType | pointTypeImage: point.unit }}" width="14px" height="14px" title="{{ point.pointType | pointTypeText: point.unit }}"/>
+                            {{point.name}}
+                        </div>
+                    </td>
+                    <td ng-if="!point.rowDetail" style="text-align: right">
+                        <a href="" ng-click="chartAddPointById(point.id)"><span class="glyphicon glyphicon-stats text-muted" title="Graph measurements"></span></a>
+                        <!--<i class="fa fa-refresh fa-spin"></i>-->
+                    </td>
+                    <td  ng-if="!point.rowDetail" class="coral-value" ng-click="togglePointRowById(point.id)">
+                        <span class="glyphicon glyphicon-edit pull-left text-muted" style="padding-right: 10px; opacity: {{ point.commandSet ? 1 : 0 }}" title="Control or Setpoint"></span>
+                        {{point.currentMeasurement.value}}
+                    </td>
+                    <td ng-if="!point.rowDetail" ng-click="togglePointRowById(point.id)">{{point.unit}}</td>
+                    <td ng-if="!point.rowDetail" ng-click="togglePointRowById(point.id)" style="padding-bottom: 0"><span ng-class="point.currentMeasurement.validity | validityIcon" title="{{point.currentMeasurement.longQuality}}"></span></td>
+                    <td ng-if="!point.rowDetail" ng-click="togglePointRowById(point.id)">{{point.currentMeasurement.time | date:'h:mm:ss a, MM-dd-yyyy'}}</td>
+                    <td ng-if="!point.rowDetail" ng-click="togglePointRowById(point.id)">{{ point.pointType }}</td>
+
+
+
+                    <td ng-if="point.rowDetail" colspan="8">
+
+                        <div class="row">
+                            <div class="col-md-1">
+
+                            </div>
+                            <div class="col-md-10">
+
+                                <form class="form-horizontal" role="form" name="form">
+                                    <div class="form-group" ng-repeat="command in point.commandSet.commands">
+                                        <label class="col-sm-5 control-label">
+                                            {{ command.displayName }}
+                                        </label>
+                                        <div class="col-sm-7">
+                                            <div class="btn-toolbar" role="toolbar">
+                                                <div class="btn-group">
+                                                    <!--<button type="button" class="btn btn-default"><i ng-class="command.blockClasses"></i> Block</button>-->
+                                                    <button type="button" class="btn btn-default" ng-click="point.commandSet.selectToggle( command)">Select <i ng-class="command.selectClasses"></i></button>
+                                                </div>
+
+                                                <button ng-if="!command.isSetpoint" type="button" class="btn btn-primary" ng-click="point.commandSet.execute( command, $index)" style="opacity: {{point.commandSet.selectedCommand === command ? 1 : 0}};">
+                                                    Execute <span style="padding-right: 0.5em;"> </span><i ng-class="command.executeClasses"></i>
+                                                </button>
+
+                                                <div ng-if="command.isSetpoint" class="input-group input-group-sm-  {{form.setpoint_value.$error.pattern ? 'has-error' : ''}}" style="opacity: {{point.commandSet.selectedCommand === command ? 1 : 0}};">
+                                                    <input type="text" class="form-control" ng-model="command.setpointValue" name="setpoint_value" ng-pattern="command.pattern" style="width:6em;" placeholder="{{ command.placeHolder}}">
+                                                    <button type="button" class="btn btn-primary" ng-click="point.commandSet.execute( command, $index)" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                                        Set
+                                                        <span style="padding-right: 0.5em;"> </span><i ng-class="command.executeClasses"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+
+                            </div>
+                            <div class="col-md-1">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-1">
+                            </div>
+                            <div class="col-md-10">
+                                <alert ng-repeat="alert in point.commandSet.alerts" type="alert.type" close="point.commandSet.closeAlert($index)" style="text-align: left; white-space: normal;">{{alert.message}}</alert>
+                            </div>
+                            <div class="col-md-1">
+                            </div>
+                        </div>
+
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div ng-include src="'/partials/loadingprogress.html'"></div>
+
+    <!--<div class="navbar-fixed-bottom invisible">-->
+        <!--<div class="coral-chart" ng-repeat="chart in charts">-->
+            <!--<div class="coral-win" >-->
+                <!--<div class="coral-win-titlebar clearfix">-->
+                    <!--<p class="coral-win-title"><span class="glyphicon glyphicon-stats" style="top: 0; vertical-align: top; margin-right:4px"></span> <span>{{ chart.name }}</span></p>-->
+                    <!--<div class="coral-win-actions">-->
+                        <!--<a href="" ng-click=""><i class="glyphicon glyphicon-minus icon-white" style="margin-top: 5px"></i></a>-->
+                        <!--<a href="" ng-click="chartPopout($index)"><i class="glyphicon glyphicon-share-alt icon-white"></i></a>-->
+                        <!--<a href="" ng-click="chartRemove($index)"><i class="glyphicon glyphicon-remove icon-white"></i></a>-->
+                    <!--</div>-->
+                <!--</div>-->
+                <!--<ul class="nav nav-pills" style="margin-bottom: 5px; font-size: 86%">-->
+                    <!--<li class="coral-legend" ng-repeat="point in chart.points">-->
+                        <!--<div class="coral-icon-text draggable" draggable ident="point.id" source="chart" on-drag-success="onDragSuccess">-->
+                            <!--<span class="coral-legend-text" style="border-bottom-color: {{ $parent.chart.traits.color(point) }}">{{point.name}}</span>-->
+                            <!--<a class="coral-remove" href="" ng-click="removePoint( chart, point)"><span class="glyphicon glyphicon-remove"></span></a>-->
+                        <!--</div>-->
+                    <!--</li>-->
+                <!--</ul>-->
+                <!--<div class="coral-win-container">-->
+                    <!--<div class="coral-win-content" droppable target="chart" on-drop="onDropPoint">-->
+                        <!--<div chart="chart.traits" data="chart.points" selection="chart.selection"  style="height: 150px"></div>-->
+                    <!--</div>-->
+                <!--</div>-->
+            <!--</div>-->
+        <!--</div>-->
+    <!--</div>-->
+</div>
+

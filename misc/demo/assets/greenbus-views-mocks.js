@@ -2,11 +2,11 @@
 
 'use strict';
 
-var gecMock = []
+var gbMock = []
 
 /**
  * @ngdoc service
- * @name gecMock.websocketFactoryProvider
+ * @name gbMock.websocketFactoryProvider
  *
  * @description
  * Mock implementation of the $interval service.
@@ -23,12 +23,12 @@ var gecMock = []
  *   will invoke `fn` within the {@link ng.$rootScope.Scope#$apply $apply} block.
  * @returns {promise} A promise which will be notified on each iteration.
  */
-gecMock.WebsocketFactoryProvider = function() {
+gbMock.WebsocketFactoryProvider = function() {
   var ws = undefined
   this.$get = function() {
     return function( url) {
       if( ! ws) {
-        ws = new gecMock.Websocket( url)
+        ws = new gbMock.Websocket( url)
       } else {
         if(url)
           ws.url = url
@@ -40,24 +40,24 @@ gecMock.WebsocketFactoryProvider = function() {
 };
 
 
-gecMock.Websocket = function( url) {
+gbMock.Websocket = function( url) {
   this.isMock = true
   this.url = url
   this.sendFrames = []
   this.isOpen = false
 }
 
-gecMock.Websocket.prototype.send = function( frame) {
+gbMock.Websocket.prototype.send = function( frame) {
   this.sendFrames.push( frame)
 }
-gecMock.Websocket.prototype.pushMessage = function( event) {
+gbMock.Websocket.prototype.pushMessage = function( event) {
   if( this.hasOwnProperty( 'onmessage')) {
     this.onmessage( {data: JSON.stringify( event) })
     return true
   }
   return false
 }
-gecMock.Websocket.prototype.pushOpen = function( event) {
+gbMock.Websocket.prototype.pushOpen = function( event) {
   if( this.hasOwnProperty( 'onopen')) {
     this.onopen( event)
     this.isOpen = true
@@ -65,14 +65,14 @@ gecMock.Websocket.prototype.pushOpen = function( event) {
   }
   return false
 }
-gecMock.Websocket.prototype.pushClose = function( event) {
+gbMock.Websocket.prototype.pushClose = function( event) {
   if( this.hasOwnProperty( 'onclose')) {
     this.onclose( event)
     return true
   }
   return false
 }
-gecMock.Websocket.prototype.pushError = function( event) {
+gbMock.Websocket.prototype.pushError = function( event) {
   if( this.hasOwnProperty( 'onerror')) {
     this.onerror( event)
     return true
@@ -83,7 +83,7 @@ gecMock.Websocket.prototype.pushError = function( event) {
 
 
 
-gecMock.SubscriptionProvider = function() {
+gbMock.SubscriptionProvider = function() {
   this.$get = makeSubscription
 };
 
@@ -119,7 +119,7 @@ function makeSubscription() {
 }
 
 
-gecMock.RestProvider = function() {
+gbMock.RestProvider = function() {
   this.$get = makeRest
 };
 
@@ -214,6 +214,24 @@ function makeRest() {
     return Rest.request( 'DELETE', url, {}, name, $scope, successListener)
   }
 
+  Rest.queryParameterFromArrayOrString = function(parameter, arrayOrString) {
+    var parameterEqual = parameter + '='
+    var query = ''
+    if( angular.isArray(arrayOrString) ) {
+      arrayOrString.forEach(function(value, index) {
+        if( index === 0 )
+          query = parameterEqual + value
+        else
+          query = query + '&' + parameterEqual + value
+      })
+    } else {
+      if( arrayOrString && arrayOrString.length > 0 )
+        query = parameterEqual + arrayOrString
+    }
+    return query
+  }
+
+
   function createResponse(status, data, headers, statusText) {
     if (angular.isFunction(status)) return status;
 
@@ -255,6 +273,24 @@ function makeRest() {
   return Rest
 }
 
+
+gbMock.RouteParamsProvider = function() {
+  this.$get = makeRouteParams
+};
+
+function makeRouteParams() {
+  var listeners = {}
+
+  function RouteParams() {
+
+  }
+
+  RouteParams.navId = ''
+  RouteParams.sourceUrl = ''
+
+  return RouteParams
+}
+
   /**
    * @ngdoc module
    * @name ngMock
@@ -271,18 +307,19 @@ function makeRest() {
    * <div doc-module-components="ngMock"></div>
    *
    */
-  angular.module('gecMock', ['ng']).
+  angular.module('gbMock', ['ng']).
     provider({
-      websocketFactory: gecMock.WebsocketFactoryProvider,
-      subscription: gecMock.SubscriptionProvider,
-      rest: gecMock.RestProvider
+      websocketFactory: gbMock.WebsocketFactoryProvider,
+      subscription: gbMock.SubscriptionProvider,
+      rest: gbMock.RestProvider,
+      $routeParams: gbMock.RouteParamsProvider
     });
 
   /**
    * Export
    * @type {Array}
    */
-  window.gecMock = gecMock
+  window.gbMock = gbMock
 
 
 })(window, window.angular);

@@ -1,4 +1,4 @@
-###gec-events
+###gb-events
 A tabular view of recent events.
 
 #### Attributes
@@ -11,7 +11,7 @@ A tabular view of recent events.
     }
       
 
-###gec-alarms
+###gb-alarms
 A tabular view of active alarms.
 
 

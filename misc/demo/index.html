@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Coral-view AngularJS directives for Coral Applications</title>
-    <meta name="description" content="Coral Views AngularJS (Angular) native directives for Coral Apps. Small footprint (5kB gzipped!), no 3rd party JS dependencies (jQuery, bootstrap JS) required! Widgets: <% demoModules.forEach(function(module) { %><%= module.displayName %>, <% }); %>">
+    <title>GreenBus Web Views - AngularJS components for GreenBus Applications</title>
+    <meta name="description" content="Greenbus Web Views AngularJS (Angular) native directives for GreenBus Apps. Small footprint (5kB gzipped!), no 3rd party JS dependencies (jQuery, bootstrap JS) required! Widgets: <% demoModules.forEach(function(module) { %><%= module.displayName %>, <% }); %>">
     <meta name="google-site-verification" content="7lc5HyceLDqpV_6oNHteYFfxDJH7-S3DwnJKtNUKcRg" />
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/fastclick/0.6.7/fastclick.min.js"></script>
@@ -13,9 +13,10 @@
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/<%= ngversion %>/angular-cookies.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/<%= ngversion %>/angular-touch.min.js"></script>
     <script src="assets/ui-bootstrap-tpls-<%= uibsversion%>.min.js"></script>
+    <script src="assets/ui-utils.min.js"></script>
     <script src="assets/angular-bootstrap-nav-tree/abn_tree_directive.js"></script>
-    <script src="assets/gec-mocks.js"></script>
-    <script src="gec-views-tpls-<%= pkg.version%>.js"></script>
+    <script src="assets/greenbus-views-mocks.js"></script>
+    <script src="greenbus-views-tpls-<%= pkg.version%>.js"></script>
     <script src="assets/plunker.js"></script>
     <script src="assets/app.js"></script>
 
@@ -23,6 +24,7 @@
     <link rel="stylesheet" href="assets/rainbow.css"/>
     <link rel="stylesheet" href="assets/font-awesome/css/font-awesome.css"/>
     <link rel="stylesheet" href="assets/angular-bootstrap-nav-tree/abn_tree.css"/>
+    <link rel="stylesheet" href="greenbus-views-<%= pkg.version%>.css"/>
     <link rel="stylesheet" href="assets/demo.css"/>
 </head>
 <body class="ng-cloak" ng-controller="MainCtrl">
@@ -75,7 +77,7 @@
                     href="http://angular-ui.github.io">AngularUI Team</a></p>
 
             <p>
-                <a class="btn btn-outline-inverse btn-lg" href="https://github.com/gec/coral-views"><i class="icon-github"></i>Code on Github</a>
+                <a class="btn btn-outline-inverse btn-lg" href="https://github.com/gec/greenbus-web-views"><i class="icon-github"></i>Code on Github</a>
                 <button type="button" class="btn btn-outline-inverse btn-lg" ng-click="showDownloadModal()">
                     <i class="glyphicon glyphicon-download-alt"></i> Download <small>(<%= pkg.version%>)</small>
                 </button>
@@ -109,7 +111,7 @@
                         <li><a href="http://getbootstrap.com" target="_blank">Bootstrap CSS</a> (tested with version <%= bsversion %>).
                             This version of the library (<%= pkg.version%>) works only with Bootstrap CSS in version 3.x.
                         </li>
-                        <li><a href="https://github.com/gec/coral">Coral (for server REST services)</a></li>
+                        <li><a href="https://github.com/gec/greenbus-web-views">Coral (for server REST services)</a></li>
                         <li><a href="https://github.com/gec/reefport">REEF</a></li>
                     </ul>
                     <h3>Files to download</h3>
@@ -179,8 +181,8 @@
 <footer class="footer">
     <div class="container">
         <p>Designed and built by <a href="https://github.com/angular-ui?tab=members" target="_blank">Angular-UI team</a> and <a href="https://github.com/angular-ui/bootstrap/graphs/contributors" target="_blank">contributors</a>.</p>
-        <p>Code licensed under <a href="https://github.com/gec/coral-views/blob/master/LICENSE"><%= pkg.license %> License</a>.</p>
-        <p><a href="https://github.com/gec/coral-views/issues?state=open">Issues</a></p>
+        <p>Code licensed under <a href="https://github.com/gec/greenbus-web-views/blob/master/LICENSE"><%= pkg.license %> License</a>.</p>
+        <p><a href="https://github.com/gec/greenbus-web-views/issues?state=open">Issues</a></p>
     </div>
 </footer>
 <script src="assets/rainbow.js"></script>
