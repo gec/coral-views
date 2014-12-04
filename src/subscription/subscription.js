@@ -19,7 +19,7 @@
 * Author: Flint O'Brien
 */
 
-angular.module('gec.views.subscription', ['gec.views.authentication']).
+angular.module('greenbus.views.subscription', ['greenbus.views.authentication']).
 
   factory('websocketFactory', ['$window', function($window) {
     var WebSocketClass;

@@ -39,7 +39,7 @@
  * @constructor
  */
 
-angular.module('gec.views.request', []).
+angular.module('greenbus.views.request', []).
 
 /**
  * Multiple clients can subscribe to measurements for the same point using one server subscription.

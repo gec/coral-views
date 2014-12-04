@@ -18,9 +18,10 @@
 */
 
 
-angular.module('gec.views.event', ['gec.views.subscription']).
 
-  controller('AlarmsController', ['$scope', '$attrs', 'subscription', function( $scope, $attrs, subscription) {
+angular.module('greenbus.views.event', ['greenbus.views.subscription']).
+
+  controller('gbAlarmsController', ['$scope', '$attrs', 'subscription', function( $scope, $attrs, subscription) {
     $scope.loading = true
     $scope.alarms = []
     $scope.limit = Number( $attrs.limit || 20);
@@ -51,7 +52,7 @@ angular.module('gec.views.event', ['gec.views.subscription']).
     return subscription.subscribe( request, $scope, onAlarm, onError)
   }]).
 
-  controller('EventsController', ['$scope', '$attrs', 'subscription', function( $scope, $attrs, subscription) {
+  controller('gbEventsController', ['$scope', '$attrs', 'subscription', function( $scope, $attrs, subscription) {
     $scope.loading = true
     $scope.events = []
     $scope.limit = Number( $attrs.limit || 20);
@@ -83,7 +84,7 @@ angular.module('gec.views.event', ['gec.views.subscription']).
     return subscription.subscribe( request, $scope, $scope.onEvent, $scope.onError)
   }]).
 
-  directive('gecAlarms', function(){
+  directive( 'gbAlarms', function(){
     return {
       restrict: 'E', // Element name
       // This HTML will replace the alarmBanner directive.
@@ -91,7 +92,7 @@ angular.module('gec.views.event', ['gec.views.subscription']).
       transclude: true,
       scope: true,
       templateUrl: 'template/event/alarms.html',
-      controller: 'AlarmsController',
+      controller: 'gbAlarmsController',
       link: function(scope, element, attrs) {
         // Title element
         var title = angular.element(element.children()[0]),
@@ -114,7 +115,7 @@ angular.module('gec.views.event', ['gec.views.subscription']).
 
     }
   }).
-  directive('gecEvents', function(){
+  directive( 'gbEvents', function(){
     return {
       restrict: 'E', // Element name
       // This HTML will replace the alarmBanner directive.
@@ -122,7 +123,7 @@ angular.module('gec.views.event', ['gec.views.subscription']).
       transclude: true,
       scope: true,
       templateUrl: 'template/event/events.html',
-      controller: 'EventsController'
+      controller: 'gbEventsController'
     }
   });
 

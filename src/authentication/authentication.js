@@ -19,7 +19,7 @@
 * Author: Flint O'Brien
 */
 
-angular.module('gec.views.authentication', ['ngCookies', 'ui.bootstrap', 'ui.keypress']).
+angular.module('greenbus.views.authentication', ['ngCookies', 'ui.bootstrap', 'ui.keypress']).
 
   factory('authentication', [ '$rootScope', '$timeout', '$http', '$location', '$cookies', '$window', function( $rootScope, $timeout, $http, $location, $cookies, $window){
 

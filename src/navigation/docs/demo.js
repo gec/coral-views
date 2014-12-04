@@ -1,4 +1,4 @@
-angular.module('gec.views.demo').controller('NavigationDemoCtrl', function ($scope, rest) {
+angular.module('greenbus.views.demo').controller('NavigationDemoCtrl', function ($scope, rest) {
   var eventId = 0
 
   rest.whenGET( '/coral/menus/operator').

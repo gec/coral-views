@@ -23,8 +23,8 @@ module.exports = function(grunt) {
     modules: [],//to be filled in by build task
     pkg: grunt.file.readJSON('package.json'),
     dist: 'dist',
-    rootModule: 'gec.views',
-    filename: 'gec-views',
+    rootModule: 'greenbus.views',
+    filename: 'greenbus-views',
     filenamecustom: '<%= filename %>-custom',
     meta: {
       modules: 'angular.module("<%= rootModule %>", [<%= srcModules %>]);',

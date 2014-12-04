@@ -1,4 +1,4 @@
-angular.module('gec.views.demo').controller('EventDemoCtrl', function ($scope, subscription) {
+angular.module('greenbus.views.demo').controller('EventDemoCtrl', function ($scope, subscription) {
   var eventId = 0,
       alarmId = 0
 

@@ -42,7 +42,7 @@ describe('subscription', function () {
   }
 
   //you need to indicate your module in a test
-  beforeEach(module('gec.views.subscription'));
+  beforeEach(module('greenbus.views.subscription'));
 //  beforeEach(module('ngMock'));
   beforeEach(function() {
     resetAllMockSpies()
@@ -53,7 +53,7 @@ describe('subscription', function () {
     })
 
     // override the default websocketFactory
-    angular.module('gec.views.subscription').
+    angular.module('greenbus.views.subscription').
       factory('websocketFactory', function($window) {
         return mock.websocketFactory
       })

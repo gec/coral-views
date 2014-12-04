@@ -18,7 +18,7 @@
  * the License.
  */
 
-angular.module('gec.views.navigation', ['ui.bootstrap', 'gec.views.rest']).
+angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.rest']).
   factory('navigation', ['rest', function( rest){   // was navigation
 
     function NotifyCache() {

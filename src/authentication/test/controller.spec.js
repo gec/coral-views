@@ -48,7 +48,7 @@ describe('authentication.controller', function() {
   }
 
   beforeEach(function() {
-    module('gec.views.authentication');
+    module('greenbus.views.authentication');
     spyOn(modalMock, 'open').and.callThrough()
     spyOn(modalMock, 'close').and.callThrough()
     spyOn(authenticationMock, 'login').and.callThrough()

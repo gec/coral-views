@@ -25,9 +25,9 @@ describe('event', function () {
   }
 
 
-  beforeEach(module('gec.views.authentication'));
-  beforeEach(module('gec.views.subscription'));
-  beforeEach(module('gec.views.event'));
+  beforeEach(module('greenbus.views.authentication'));
+  beforeEach(module('greenbus.views.subscription'));
+  beforeEach(module('greenbus.views.event'));
   beforeEach(module('template/event/events.html'));
   beforeEach(module('template/event/alarms.html'));
 
@@ -62,7 +62,7 @@ describe('event', function () {
     scope = $rootScope;
     $compile = _$compile_;
 
-    element = angular.element( '<gec-events limit="40"  />');
+    element = angular.element( '<gb-events limit="40"  />');
   }));
 
 
@@ -73,7 +73,7 @@ describe('event', function () {
   }
 
   function findEvents() {
-    return element.find('.gec-event');
+    return element.find('.gb-event');
   }
 
   function findTd( event, tdIndex) {

@@ -20,7 +20,7 @@
  */
 
 
-angular.module('gec.views.measurement', ['gec.views.subscription', 'gec.views.navigation', 'gec.views.rest']).
+angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'greenbus.views.navigation', 'greenbus.views.rest']).
   factory('pointIdToMeasurementHistoryMap', function() {
     return {};
   }).
@@ -87,7 +87,7 @@ angular.module('gec.views.measurement', ['gec.views.subscription', 'gec.views.na
     }
   }]).
 
-  controller( 'MeasurementsController', ['$rootScope', '$scope', '$window', '$routeParams', '$filter', 'rest', 'navigation', 'subscription', 'measurement', 'request', '$timeout',
+  controller( 'gbMeasurementsController', ['$rootScope', '$scope', '$window', '$routeParams', '$filter', 'rest', 'navigation', 'subscription', 'measurement', 'request', '$timeout',
     function( $rootScope, $scope, $window, $routeParams, $filter, rest, navigation, subscription, measurement, request, $timeout) {
       $scope.points = []
       $scope.pointsFiltered = []
