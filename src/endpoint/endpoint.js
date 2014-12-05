@@ -118,8 +118,8 @@ angular.module('greenbus.views.endpoint', ['greenbus.views.rest', 'greenbus.view
         $scope,
         function( subscriptionId, messageType, endpointNotification){
           switch( messageType) {
-            case "endpoints": messageEndpoints( endpointNotification); break; // subscription return.
-            case "endpoint": messageEndpoint( endpointNotification); break;   // subscribe push
+            case 'endpoints': messageEndpoints( endpointNotification); break; // subscription return.
+            case 'endpoint': messageEndpoint( endpointNotification); break;   // subscribe push
             default:
               console.error( 'EndpointController.subscription unknown message type "' + messageType + '"')
           }
