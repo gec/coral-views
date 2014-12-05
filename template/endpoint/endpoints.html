@@ -1,0 +1,27 @@
+<div>
+    <h3>Endpoints</h3>
+
+    <div class="table-responsive" style="overflow-x: auto">
+        <table class="table table-condensed">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Protocol</th>
+                <th>Enabled</th>
+                <th>Comms Status</th>
+                <th>Last Heartbeat</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr class="gb-endpoint" ng-repeat="ep in endpoints">
+                <td>{{ep.name}}</td>
+                <td>{{ep.protocol}}</td>
+                <td>{{ep.enabled}}</td>
+                <td><span ng-class="ep.commStatus.status | gbCommStatusIcon: ep.enabled"></span> {{ep.commStatus.status}}</td>
+                <td>{{ep.commStatus.lastHeartbeat | date:"hh:mm:ss a, MM-dd-yyyy"}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+

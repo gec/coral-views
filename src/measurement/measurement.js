@@ -87,8 +87,8 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
     }
   }]).
 
-  controller( 'gbMeasurementsController', ['$rootScope', '$scope', '$window', '$routeParams', '$filter', 'rest', 'navigation', 'subscription', 'measurement', 'request', '$timeout',
-    function( $rootScope, $scope, $window, $routeParams, $filter, rest, navigation, subscription, measurement, request, $timeout) {
+  controller( 'gbMeasurementsController', ['$scope', '$window', '$routeParams', '$filter', 'rest', 'navigation', 'subscription', 'measurement', 'request', '$timeout',
+    function( $scope, $window, $routeParams, $filter, rest, navigation, subscription, measurement, request, $timeout) {
       $scope.points = []
       $scope.pointsFiltered = []
       $scope.checkAllState = CHECKMARK_UNCHECKED
@@ -102,23 +102,14 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
 
       var CHECKMARK_UNCHECKED = 0,
           CHECKMARK_CHECKED = 1,
-          CHECKMARK_PARTIAL = 2
-      var CHECKMARK_NEXT_STATE = [1, 0, 0]
-
+          CHECKMARK_PARTIAL = 2,
+          CHECKMARK_NEXT_STATE = [1, 0, 0]
 
       var navId = $routeParams.navId,
           depth = rest.queryParameterFromArrayOrString( 'depth', $routeParams.depth ),
-          equipmentIdsQueryParams = rest.queryParameterFromArrayOrString( 'equipmentIds', $routeParams.equipmentIds )
+          equipmentIdsQueryParams = rest.queryParameterFromArrayOrString( 'equipmentIds', $routeParams.equipmentIds),
+          number = $filter( 'number' )
 
-
-
-      $rootScope.currentMenuItem = 'measurements'
-      $rootScope.breadcrumbs = [
-        { name: 'Reef', url: '#/'},
-        { name: 'Measurements' }
-      ]
-
-      var number = $filter( 'number' )
 
       function formatMeasurementValue( value ) {
         if( typeof value === 'boolean' || isNaN( value ) || !isFinite( value ) ) {
@@ -476,9 +467,9 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
 
 
       $scope.rowClasses = function( point) {
-        return point.rowDetail ? 'coral-row-selected-detail animate-repeat'
-          : point.rowSelected ? 'coral-row-selected animate-repeat'
-          : point.commandSet ? 'coral-row-selectable animate-repeat'
+        return point.rowDetail ? 'gb-row-selected-detail animate-repeat'
+          : point.rowSelected ? 'gb-row-selected animate-repeat'
+          : point.commandSet ? 'gb-row-selectable animate-repeat'
           : 'animate-repeat'
       }
       $scope.togglePointRowById = function( id) {

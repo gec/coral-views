@@ -12,12 +12,12 @@
     <div class="row">
         <div class="col-md-12">
             <div class="table-responsive" style="overflow-x: auto">
-                <table class="table table-condensed coral-row-radius" ng-show="points.length > 0">
+                <table class="table table-condensed gb-row-radius" ng-show="points.length > 0">
                     <thead>
                     <tr>
                         <th colspan="2" style="padding-bottom: 12px;">
                             <button class="btn btn-default" ng-click="checkUncheckAll()">
-                                <div class="coral-checkbox-container" role="checkbox" aria-labelledby=":2f" dir="ltr" aria-checked="true" tabindex="-1">
+                                <div class="gb-checkbox-container" role="checkbox" aria-labelledby=":2f" dir="ltr" aria-checked="true" tabindex="-1">
                                     <i ng-class="checkAllState | checkboxClass"></i>
                                     <!--<div ng-class="checkAllState | checkboxClass"></div>-->
                                 </div>
@@ -37,7 +37,7 @@
                     <tbody>
                     <tr ng-repeat="point in pointsFiltered = (points | filter:search | orderBy:sortColumn)" ng-class="rowClasses(point)">
                         <td ng-if="!point.rowDetail">
-                            <div class="coral-checkbox-container" ng-click="checkUncheck(point)" role="checkbox" aria-labelledby=":2f" dir="ltr" aria-checked="true" tabindex="-1">
+                            <div class="gb-checkbox-container" ng-click="checkUncheck(point)" role="checkbox" aria-labelledby=":2f" dir="ltr" aria-checked="true" tabindex="-1">
                                 <i ng-class="point.checked | checkboxClass"></i>
                                 <!--<div ng-class="point.checked | checkboxClass"></div>-->
                             </div>
@@ -46,8 +46,8 @@
                             <!--</div>-->
                         </td>
                         <td ng-if="!point.rowDetail" ng-click="togglePointRowById(point.id)">
-                            <div class="coral-icon-text draggable" draggable ident="point.id">
-                                <img class="coral-icon" ng-src="{{ point.pointType | pointTypeImage: point.unit }}" width="14px" height="14px" title="{{ point.pointType | pointTypeText: point.unit }}"/>
+                            <div class="gb-icon-text draggable" draggable ident="point.id">
+                                <img class="gb-icon" ng-src="{{ point.pointType | pointTypeImage: point.unit }}" width="14px" height="14px" title="{{ point.pointType | pointTypeText: point.unit }}"/>
                                 {{point.name}}
                             </div>
                         </td>
@@ -55,7 +55,7 @@
                             <a href="" ng-click="chartAddPointById(point.id)"><span class="glyphicon glyphicon-stats text-muted" title="Graph measurements"></span></a>
                             <!--<i class="fa fa-refresh fa-spin"></i>-->
                         </td>
-                        <td  ng-if="!point.rowDetail" class="coral-value" ng-click="togglePointRowById(point.id)">
+                        <td  ng-if="!point.rowDetail" class="gb-value" ng-click="togglePointRowById(point.id)">
                             <span class="glyphicon glyphicon-edit pull-left text-muted" style="padding-right: 10px; opacity: {{ point.commandSet ? 1 : 0 }}" title="Control or Setpoint"></span>
                             {{point.currentMeasurement.value}}
                         </td>
@@ -128,26 +128,26 @@
     <!--<div ng-include src="'/partials/loadingprogress.html'"></div>-->
 
     <!--<div class="navbar-fixed-bottom invisible">-->
-        <!--<div class="coral-chart" ng-repeat="chart in charts">-->
-            <!--<div class="coral-win" >-->
-                <!--<div class="coral-win-titlebar clearfix">-->
-                    <!--<p class="coral-win-title"><span class="glyphicon glyphicon-stats" style="top: 0; vertical-align: top; margin-right:4px"></span> <span>{{ chart.name }}</span></p>-->
-                    <!--<div class="coral-win-actions">-->
+        <!--<div class="gb-chart" ng-repeat="chart in charts">-->
+            <!--<div class="gb-win" >-->
+                <!--<div class="gb-win-titlebar clearfix">-->
+                    <!--<p class="gb-win-title"><span class="glyphicon glyphicon-stats" style="top: 0; vertical-align: top; margin-right:4px"></span> <span>{{ chart.name }}</span></p>-->
+                    <!--<div class="gb-win-actions">-->
                         <!--<a href="" ng-click=""><i class="glyphicon glyphicon-minus icon-white" style="margin-top: 5px"></i></a>-->
                         <!--<a href="" ng-click="chartPopout($index)"><i class="glyphicon glyphicon-share-alt icon-white"></i></a>-->
                         <!--<a href="" ng-click="chartRemove($index)"><i class="glyphicon glyphicon-remove icon-white"></i></a>-->
                     <!--</div>-->
                 <!--</div>-->
                 <!--<ul class="nav nav-pills" style="margin-bottom: 5px; font-size: 86%">-->
-                    <!--<li class="coral-legend" ng-repeat="point in chart.points">-->
-                        <!--<div class="coral-icon-text draggable" draggable ident="point.id" source="chart" on-drag-success="onDragSuccess">-->
-                            <!--<span class="coral-legend-text" style="border-bottom-color: {{ $parent.chart.traits.color(point) }}">{{point.name}}</span>-->
-                            <!--<a class="coral-remove" href="" ng-click="removePoint( chart, point)"><span class="glyphicon glyphicon-remove"></span></a>-->
+                    <!--<li class="gb-legend" ng-repeat="point in chart.points">-->
+                        <!--<div class="gb-icon-text draggable" draggable ident="point.id" source="chart" on-drag-success="onDragSuccess">-->
+                            <!--<span class="gb-legend-text" style="border-bottom-color: {{ $parent.chart.traits.color(point) }}">{{point.name}}</span>-->
+                            <!--<a class="gb-remove" href="" ng-click="removePoint( chart, point)"><span class="glyphicon glyphicon-remove"></span></a>-->
                         <!--</div>-->
                     <!--</li>-->
                 <!--</ul>-->
-                <!--<div class="coral-win-container">-->
-                    <!--<div class="coral-win-content" droppable target="chart" on-drop="onDropPoint">-->
+                <!--<div class="gb-win-container">-->
+                    <!--<div class="gb-win-content" droppable target="chart" on-drop="onDropPoint">-->
                         <!--<div chart="chart.traits" data="chart.points" selection="chart.selection"  style="height: 150px"></div>-->
                     <!--</div>-->
                 <!--</div>-->

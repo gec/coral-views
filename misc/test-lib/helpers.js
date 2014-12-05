@@ -6,11 +6,11 @@ var customMatchers = {
     return {
       compare: function(actual, expected) {
         var result = {};
-        results.pass = actual.hasClass(expected)
+        result.pass = actual.hasClass(expected)
         if (result.pass) {
-          result.message = 'Expected ' + actual + ' to be class "' + expected + '" and it was';
+          result.message = 'Expected ' + actual + ' to have class "' + expected + '" and it was';
         } else {
-          result.message = 'Expected ' + actual + ' to be class "' + expected + '"';
+          result.message = 'Expected ' + actual + ' to have class "' + expected + '"';
         }
         return result;
       }
