@@ -97,6 +97,14 @@ module.exports = function(grunt) {
           cwd: 'misc/demo',
           dest: 'dist/'
         }]
+      },
+      imageassets: {
+        files: [{
+          expand: true,
+          src: ['images/*'],
+          cwd: 'assets',
+          dest: 'dist/'
+        }]
       }
     },
     uglify: {
@@ -256,7 +264,7 @@ module.exports = function(grunt) {
       moduleName: enquote('<%= rootModule %>.' + name),
       displayName: ucwords(breakup(name, ' ')),
       srcFiles: grunt.file.expand('src/'+name+'/*.js'),
-      cssFiles: grunt.file.expand(['css/*.css', 'src/'+name+'/*.css']),
+      cssFiles: grunt.file.expand(['assets/css/*.css', 'src/'+name+'/*.css']),
       tplFiles: grunt.file.expand('template/'+name+'/*.html'),
       tpljsFiles: grunt.file.expand('template/'+name+'/*.html.js'),
       tplModules: grunt.file.expand('template/'+name+'/*.html').map(enquote),

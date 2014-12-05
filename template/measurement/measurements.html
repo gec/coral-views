@@ -9,7 +9,7 @@
         </div>
     </div>
 
-    <div>
+    <div class="ng-cloak">
         <table class="table table-condensed coral-row-radius" ng-show="points.length > 0">
             <thead>
                 <tr>
@@ -36,7 +36,7 @@
                 <tr ng-repeat="point in pointsFiltered = (points | filter:search | orderBy:sortColumn)" ng-class="rowClasses(point)">
                     <td ng-if="!point.rowDetail">
                         <div class="coral-checkbox-container" ng-click="checkUncheck(point)" role="checkbox" aria-labelledby=":2f" dir="ltr" aria-checked="true" tabindex="-1">
-                            <i ng-class="checkAllState | checkboxClass"></i>
+                            <i ng-class="point.checked | checkboxClass"></i>
                             <!--<div ng-class="point.checked | checkboxClass"></div>-->
                         </div>
                         <!--<div id=":2e" class="oZ-jc T-Jo J-J5-Ji T-Jo-Jp" role="checkbox" aria-labelledby=":2f" dir="ltr" aria-checked="true" tabindex="-1">-->
@@ -45,7 +45,7 @@
                     </td>
                     <td ng-if="!point.rowDetail" ng-click="togglePointRowById(point.id)">
                         <div class="coral-icon-text draggable" draggable ident="point.id">
-                            <img class="coral-icon" src="{{ point.pointType | pointTypeImage: point.unit }}" width="14px" height="14px" title="{{ point.pointType | pointTypeText: point.unit }}"/>
+                            <img class="coral-icon" ng-src="{{ point.pointType | pointTypeImage: point.unit }}" width="14px" height="14px" title="{{ point.pointType | pointTypeText: point.unit }}"/>
                             {{point.name}}
                         </div>
                     </td>
@@ -121,7 +121,7 @@
         </table>
     </div>
 
-    <div ng-include src="'/partials/loadingprogress.html'"></div>
+    <!--<div ng-include src="'/partials/loadingprogress.html'"></div>-->
 
     <!--<div class="navbar-fixed-bottom invisible">-->
         <!--<div class="coral-chart" ng-repeat="chart in charts">-->

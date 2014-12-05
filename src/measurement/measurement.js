@@ -627,13 +627,13 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
               $scope.points = $scope.points.concat( data[equipmentId])
             }
           }
-          var pointIds = processPointsAndReturnPointIds()
+          var pointIds = processPointsAndReturnPointIds( $scope.points)
           subscribeToMeasurements( pointIds)
           getPointsCommands( pointIds)
         })
       }
 
-      function processPointsAndReturnPointIds() {
+      function processPointsAndReturnPointIds( points) {
         var pointIds = [],
             currentMeasurement = {
               value: '-',
@@ -644,7 +644,7 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
               expandRow: false,
               commandSet: undefined
             }
-        $scope.points.forEach( function ( point ) {
+        points.forEach( function ( point ) {
           point.checked = CHECKMARK_UNCHECKED
           point.currentMeasurement = currentMeasurement
           pointIds.push( point.id )
@@ -756,7 +756,7 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
             }
           }
 
-          var pointIds = processPointsAndReturnPointIds()
+          var pointIds = processPointsAndReturnPointIds( $scope.points)
           subscribeToMeasurements( pointIds)
           getPointsCommands( pointIds)
         })
@@ -780,7 +780,7 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
   filter('checkboxClass', function() {
     return function(checked) {
       switch( checked) {
-        case 0: return 'fa fa-square-o'
+        case 0: return 'fa fa-square-o text-muted'
         case 1: return 'fa fa-check-square-o'
         case 2: return 'fa fa-minus-square-o'
         default: return 'fa fa-square-o'
@@ -809,9 +809,9 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
         image = '../../images/pointRaw.png'
       } else {
         switch( type) {
-          case 'ANALOG': image = '../../images/pointAnalog.png'; break;
-          case 'STATUS': image = '../../images/pointStatus.png'; break;
-          default: image = '../../images/pointRaw.png';
+          case 'ANALOG': image = '/images/pointAnalog.png'; break;
+          case 'STATUS': image = '/images/pointStatus.png'; break;
+          default: image = '/images/pointRaw.png';
         }
       }
 
