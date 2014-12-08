@@ -36,7 +36,16 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
    * @param pointIdToMeasurementHistoryMap - Map of point.id to MeasurementHistory
    * @constructor
    */
-  factory('measurement', ['subscription', 'pointIdToMeasurementHistoryMap', function(subscription, pointIdToMeasurementHistoryMap) {
+  factory('measurement', ['subscription', 'pointIdToMeasurementHistoryMap', '$filter', function( subscription, pointIdToMeasurementHistoryMap, $filter) {
+    var number = $filter( 'number' )
+
+    function formatMeasurementValue( value ) {
+      if( typeof value === 'boolean' || isNaN( value ) || !isFinite( value ) ) {
+        return value
+      } else {
+        return number( value )
+      }
+    }
 
     /**
      *
@@ -78,17 +87,65 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
         console.error('ERROR: meas.unsubscribe point.id: ' + point.id + ' was never subscribed.')
     }
 
+    function onMeasurements( measurements, subscriber, notify) {
+      measurements.forEach( function( pm) {
+        pm.measurement.value = formatMeasurementValue( pm.measurement.value )
+      })
+      notify.call( subscriber, measurements)
+    }
+
+    /**
+     * Subscribe to measurements.
+     *
+     * @param scope The scope of the controller requesting the subscription.
+     * @param pointIds Array of point IDs
+     * @param constraints size: Maximum number of measurements to query from the server
+     *                          Maximum measurements to keep in Murts.dataStore
+     * @param subscriber The subscriber object is used as 'this' for calls to notify.
+     * @param notify Optional function to be called each time one measurement is received.
+     *               The function is called with subscriber as 'this'.
+     * @returns A subscription ID which can be used to unsubscribe.
+     */
+    function subscribe(scope, pointIds, constraints, subscriber, notify) {
+      //console.log('measurement.subscribe')
+      return subscription.subscribe(
+        {
+          subscribeToMeasurements: { 'pointIds': pointIds }
+        },
+        scope,
+        function ( subscriptionId, type, measurements ) {
+          if( type === 'measurements')
+            onMeasurements( measurements, subscriber, notify)
+          else
+            console.error( 'measurement.subscribe message of unknown type: "' + type + '"' )
+          scope.$digest()
+        },
+        function ( error, message ) {
+          console.error( 'measurement.subscribe ERROR: ' + error + ', message: ' + message)
+        }
+      )
+    }
+
+    function unsubscribe( subscriptionId) {
+      subscription.unsubscribe( subscriptionId)
+    }
+
+
+
     /**
      * Public API
      */
     return {
       subscribeWithHistory:   subscribeWithHistory,
-      unsubscribeWithHistory: unsubscribeWithHistory
+      unsubscribeWithHistory: unsubscribeWithHistory,
+      subscribe: subscribe,
+      unsubscribe: unsubscribe
     }
   }]).
 
-  controller( 'gbMeasurementsController', ['$scope', '$window', '$routeParams', '$filter', 'rest', 'navigation', 'subscription', 'measurement', 'request', '$timeout',
-    function( $scope, $window, $routeParams, $filter, rest, navigation, subscription, measurement, request, $timeout) {
+  controller( 'gbMeasurementsController', ['$scope', '$window', '$routeParams'/*, '$filter'*/, 'rest', 'navigation', 'subscription', 'measurement', 'request', '$timeout',
+    function( $scope, $window, $routeParams,/*$filter,*/ rest, navigation, subscription, measurement, request, $timeout) {
+      var self = this
       $scope.points = []
       $scope.pointsFiltered = []
       $scope.checkAllState = CHECKMARK_UNCHECKED
@@ -107,17 +164,17 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
 
       var navId = $routeParams.navId,
           depth = rest.queryParameterFromArrayOrString( 'depth', $routeParams.depth ),
-          equipmentIdsQueryParams = rest.queryParameterFromArrayOrString( 'equipmentIds', $routeParams.equipmentIds),
-          number = $filter( 'number' )
+          equipmentIdsQueryParams = rest.queryParameterFromArrayOrString( 'equipmentIds', $routeParams.equipmentIds)//,
+//          number = $filter( 'number' )
 
 
-      function formatMeasurementValue( value ) {
-        if( typeof value === 'boolean' || isNaN( value ) || !isFinite( value ) ) {
-          return value
-        } else {
-          return number( value )
-        }
-      }
+//      function formatMeasurementValue( value ) {
+//        if( typeof value === 'boolean' || isNaN( value ) || !isFinite( value ) ) {
+//          return value
+//        } else {
+//          return number( value )
+//        }
+//      }
 
       function findPoint( id ) {
         var index = findPointIndex( id)
@@ -521,61 +578,38 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
       }
 
 
-      function onArrayOfPointMeasurement( arrayOfPointMeasurement ) {
-//    console.debug( 'onArrayOfPointMeasurement arrayOfPointMeasurement.length=' + arrayOfPointMeasurement.length)
-        arrayOfPointMeasurement.forEach( function ( pm ) {
+      function onMeasurements( measurements ) {
+        measurements.forEach( function( pm){
           var point = findPoint( pm.point.id )
           if( point ) {
-            pm.measurement.value = formatMeasurementValue( pm.measurement.value )
+            //pm.measurement.value = formatMeasurementValue( pm.measurement.value )
             point.currentMeasurement = pm.measurement
           } else {
-            console.error( 'onArrayOfPointMeasurement could not find point.id = ' + pm.point.id )
+            console.error( 'MeasurementsController.onPointMeasurement could not find point.id = ' + pm.point.id )
           }
-        } )
-
-      }
-
-      // Subscribed to measurements for tabular. Expect an array of pointMeasurement
-      $scope.onMeasurement = function ( subscriptionId, type, measurements ) {
-
-        switch( type ) {
-          case 'measurements': onArrayOfPointMeasurement( measurements ); break;
-//      case 'pointWithMeasurements': onPointWithMeasurements( measurements); break;
-          default:
-            console.error( 'MeasurementController.onMeasurement unknown type: "' + type + '"' )
-        }
-      }
-
-      $scope.onError = function ( error, message ) {
-
-      }
-
-      function compareByName( a, b ) {
-        if( a.name < b.name )
-          return -1
-        if( a.name > b.name )
-          return 1
-        return 0
+        })
+        $scope.$digest()
       }
 
       function subscribeToMeasurements( pointIds) {
-        subscription.subscribe(
-          {
-            subscribeToMeasurements: { 'pointIds': pointIds }
-          },
-          $scope,
-          function ( subscriptionId, type, measurements ) {
-            switch( type ) {
-              case 'measurements': onArrayOfPointMeasurement( measurements ); break;
-              //case 'pointWithMeasurements': onPointWithMeasurements( measurements); break;
-              default:
-                console.error( 'MeasurementController.onMeasurement unknown type: "' + type + '"' )
-            }
-            $scope.$digest()
-          },
-          function ( error, message ) {
-          }
-        )
+        measurement.subscribe( $scope, pointIds, {}, self, onMeasurements)
+
+//        subscription.subscribe(
+//          {
+//            subscribeToMeasurements: { 'pointIds': pointIds }
+//          },
+//          $scope,
+//          function ( subscriptionId, type, measurements ) {
+//            switch( type ) {
+//              case 'measurements': measurements.forEach( onPointMeasurement); break;
+//              default:
+//                console.error( 'MeasurementsController.subscribeToMeasurements unknown type: "' + type + '"' )
+//            }
+//            $scope.$digest()
+//          },
+//          function ( error, message ) {
+//          }
+//        )
       }
 
 

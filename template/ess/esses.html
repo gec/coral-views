@@ -1,0 +1,53 @@
+<div>
+    <div class="row">
+        <div class="col-md-5">
+            <h3>All Energy Storage</h3>
+        </div>
+        <div class="col-md-7" style="margin-top: 1.2em;">
+            <input type="text" class="form-control" placeholder="search any column" ng-model="searchText" style="height: 100%;">
+            <!--<button class="btn btn-info" ng-click="search()" style="height: 100%; width: 60px; margin-bottom: 10px;"><i class="glyphicon glyphicon-search icon-white"></i></button>-->
+        </div>
+    </div>
+
+
+    <div ng-cloak style="margin-top: 1.4em">
+        <table class="table table-condensed gb-table-2header" style="border-collapse: separate">
+            <thead>
+            <tr>
+                <th></th>
+                <th>Charge / Discharge</th>
+                <th colspan="3"></th>
+                <th colspan="2" class="gb-cell-highlight gb-cell-highlight-top">Nameplate Capacity</a></th>
+            </tr>
+            <tr>
+                <th><a href="" ng-click="sortColumn = 'name'; reverse=!reverse">Device Name</a></th>
+                <th>Rate</th>
+                <th><a href="" ng-click="sortColumn = 'state'; reverse=!reverse">State</a></th>
+                <th title="State of Charge %" style="text-align: center">SOC %</th>
+                <th></th>
+                <th class="gb-cell-highlight gb-cell-highlight-left"><a href="" ng-click="sortColumn = 'CapacityPower'; reverse=!reverse">Power</a></th>
+                <th class="gb-cell-highlight gb-cell-highlight-right"><a href="" ng-click="sortColumn = 'CapacityEnergy'; reverse=!reverse">Energy</a></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="ces in ceses | filter:searchText | orderBy:sortColumn:reverse">
+                <td>{{ces.name}}</td>
+                <td>{{ces.Charging}}</td>
+                <td><img class="ces-state-icon" ng-src="{{ces.state | essStateIcon}}" title="{{ces.state | essStateDescription}}" style="margin-top:2px"/></td>
+                <td style="width: 60px">
+                    <div class="battery-wrapper" title="{{ces.state | essStateDescription}}" >
+                        <div class="{{ces['%SOC'] | essBatterySocChargedClass: ces.state}}" style="width:{{ces.percentSocMax100}}%"></div>
+                        <div class="{{ces['%SOC'] | essBatterySocUnchargedClass: ces.state}}" style="width:{{100-ces.percentSocMax100}}%"></div>
+                        <div class="battery-overlay"></div>
+                    </div>
+                </td>
+                <td>{{ces['%SOC']}}%</td>
+                <td class="gb-cell-highlight gb-cell-highlight-left">{{ces.CapacityPower}}</td>
+                <td class="gb-cell-highlight gb-cell-highlight-right">{{ces.CapacityEnergy}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
