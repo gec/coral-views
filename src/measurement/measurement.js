@@ -593,23 +593,6 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
 
       function subscribeToMeasurements( pointIds) {
         measurement.subscribe( $scope, pointIds, {}, self, onMeasurements)
-
-//        subscription.subscribe(
-//          {
-//            subscribeToMeasurements: { 'pointIds': pointIds }
-//          },
-//          $scope,
-//          function ( subscriptionId, type, measurements ) {
-//            switch( type ) {
-//              case 'measurements': measurements.forEach( onPointMeasurement); break;
-//              default:
-//                console.error( 'MeasurementsController.subscribeToMeasurements unknown type: "' + type + '"' )
-//            }
-//            $scope.$digest()
-//          },
-//          function ( error, message ) {
-//          }
-//        )
       }
 
 

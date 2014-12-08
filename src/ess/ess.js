@@ -70,12 +70,8 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
       return value
     }
 
-    function processValue( info, measurement) {
-      var value = measurement.value
-//        if( measurement.name.indexOf( 'PowerHub') >= 0)
-//            console.log( 'gbEssesController.processValue measurement ' + measurement.name + ', value:"'+measurement.value+'"' + ' info.type: ' + info.type)
-//        if( measurement.name.indexOf( 'Sunverge') >= 0)
-//            console.log( 'gbEssesController.processValue measurement ' + measurement.name + ', value:"'+measurement.value+'"' + ' info.type: ' + info.type)
+    function processValue( info, pointMeasurement) {
+      var value = pointMeasurement.value
 
       switch (info.type) {
         case '%SOC':
