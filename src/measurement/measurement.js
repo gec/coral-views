@@ -143,8 +143,8 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
     }
   }]).
 
-  controller( 'gbMeasurementsController', ['$scope', '$window', '$routeParams'/*, '$filter'*/, 'rest', 'navigation', 'subscription', 'measurement', 'request', '$timeout',
-    function( $scope, $window, $routeParams,/*$filter,*/ rest, navigation, subscription, measurement, request, $timeout) {
+  controller( 'gbMeasurementsController', ['$scope', '$window', '$routeParams', 'rest', 'navigation', 'subscription', 'measurement', 'request', '$timeout',
+    function( $scope, $window, $routeParams, rest, navigation, subscription, measurement, request, $timeout) {
       var self = this
       $scope.points = []
       $scope.pointsFiltered = []
@@ -164,17 +164,7 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
 
       var navId = $routeParams.navId,
           depth = rest.queryParameterFromArrayOrString( 'depth', $routeParams.depth ),
-          equipmentIdsQueryParams = rest.queryParameterFromArrayOrString( 'equipmentIds', $routeParams.equipmentIds)//,
-//          number = $filter( 'number' )
-
-
-//      function formatMeasurementValue( value ) {
-//        if( typeof value === 'boolean' || isNaN( value ) || !isFinite( value ) ) {
-//          return value
-//        } else {
-//          return number( value )
-//        }
-//      }
+          equipmentIdsQueryParams = rest.queryParameterFromArrayOrString( 'equipmentIds', $routeParams.equipmentIds)
 
       function findPoint( id ) {
         var index = findPointIndex( id)
@@ -237,7 +227,7 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
         var point = findPoint( id)
 
         if( point )
-          request.push( 'coral.request.addChart', [point])
+          request.push( 'gb-chart.addChart', [point])
         else
           console.error( 'Can\'t find point by id: ' + id)
       }
@@ -249,7 +239,7 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
         } )
 
         if( points.length > 0 ) {
-          request.push( 'coral.request.addChart', points)
+          request.push( 'gb-chart.addChart', points)
         }
       }
 
@@ -654,7 +644,7 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
             }
         points.forEach( function ( point ) {
           point.checked = CHECKMARK_UNCHECKED
-          point.currentMeasurement = currentMeasurement
+          point.currentMeasurement = angular.extend( {}, currentMeasurement)
           pointIds.push( point.id )
           if( typeof point.pointType !== 'string')
             console.error( '------------- point: ' + point.name + ' point.pointType "' + point.pointType + '" is empty or null.' )
