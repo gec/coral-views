@@ -1,4 +1,4 @@
-angular.module('greenbus.views.demo').controller('ChartDemoCtrl', function ($scope, $routeParams, subscription, rest, request) {
+angular.module('greenbus.views.demo').controller('ChartDemoCtrl', function ($scope, $location, subscription, rest, request) {
 
 
   var point = {
@@ -9,7 +9,9 @@ angular.module('greenbus.views.demo').controller('ChartDemoCtrl', function ($sco
     'unit': 'kW',
     'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6'
   }
-  $routeParams.pids = [ point.id]
+  $location.search = function() {
+    return { pids: point.id }
+  }
 
   rest.whenGET( '/models/1/points?pids=' + point.id).
     respond([

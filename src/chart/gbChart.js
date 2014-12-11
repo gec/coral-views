@@ -24,7 +24,8 @@
  * @param _points  Array of points
  * @param _brushChart Boolean True if brush chart should be created
  */
-function GBChart( _points, _brushChart) {
+function GBChart( _points, _brushChart, $timeout) {
+  console.log( 'new GBChart $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
   var self = this
   self.points = copyPoints( _points)
   self.unitMap = getChartUnits( self.points )
@@ -101,7 +102,7 @@ function GBChart( _points, _brushChart) {
         chartTraits = d3.trait( d3.trait.chart.base, config )
           .trait( d3.trait.scale.time, makeChartConfigScaleX1())
 
-
+    console.log( 'makeChartTraits unitMapKeys ' + unitMapKeys)
     unitMapKeys.forEach( function ( unit, index ) {
       var axis = 'y' + (index + 1),
           filter = function ( s ) {
@@ -181,6 +182,20 @@ function GBChart( _points, _brushChart) {
     return self.getPointByid( pointId) != null
   }
 
+  self.callTraits = function( ) {
+    if( $timeout) {
+      $timeout( function() {
+        self.traits.call( self.selection )
+//        if( self.brushTraits)
+//          self.brushTraits.call( self.selection )
+      })
+    } else {
+      self.traits.call( self.selection )
+//      if( self.brushTraits)
+//        self.brushTraits.call( self.selection )
+    }
+  }
+
   self.addPoint = function( point) {
     if( !point.measurements )
       point.measurements = []
@@ -190,15 +205,16 @@ function GBChart( _points, _brushChart) {
     self.uniqueNames()
 
     if( self.unitMap.hasOwnProperty( point.unit ) ) {
+      console.log( 'GBChart.addPoint has unit scale .................')
       self.unitMap[point.unit].push( point )
     } else {
+      console.log( 'GBChart.addPoint new unit scale ++++++++++++++')
       self.unitMap[point.unit] = [point]
       self.traits.remove()
       self.traits = makeChartTraits( self.unitMap )
     }
 
-    self.traits.call( self.selection )
-
+    self.callTraits()
   }
 
 //      self.removePointById = function( pointId) {
@@ -223,7 +239,7 @@ function GBChart( _points, _brushChart) {
         self.traits = makeChartTraits( self.unitMap )
       }
 
-      self.traits.call( self.selection )
+      self.callTraits()
     }
 
     self.uniqueNames()
