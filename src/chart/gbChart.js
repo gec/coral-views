@@ -24,8 +24,8 @@
  * @param _points  Array of points
  * @param _brushChart Boolean True if brush chart should be created
  */
-function GBChart( _points, _brushChart, $timeout) {
-  console.log( 'new GBChart $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
+function GBChart( _points, _brushChart) {
+
   var self = this
   self.points = copyPoints( _points)
   self.unitMap = getChartUnits( self.points )
@@ -56,13 +56,19 @@ function GBChart( _points, _brushChart, $timeout) {
     }
   }
 
-  function makeChartConfig( unitMapKeys ) {
+  function makeChartConfig( unitMapKeys, size ) {
     var axis,
         config = {
           x1: function ( d ) { return d.time; },
           seriesData: function ( s ) { return s.measurements },
           seriesLabel: function ( s ) { return s.uniqueName }
         }
+
+    if( size)
+      config.size = {
+        width: size.width,
+        height: size.height
+      }
 
     unitMapKeys.forEach( function ( key, index ) {
       axis = 'y' + (index + 1)
@@ -93,12 +99,10 @@ function GBChart( _points, _brushChart, $timeout) {
     }
       : {axis: 'x1'}
   }
-  function makeChartTraits( unitMap ) {
-    var unit,
-        gridLines = true,
+  function makeChartTraits( unitMap, size ) {
+    var gridLines = true,
         unitMapKeys = Object.keys( unitMap ),
-        config = makeChartConfig( unitMapKeys ),
-        x1config = {},
+        config = makeChartConfig( unitMapKeys, size ),
         chartTraits = d3.trait( d3.trait.chart.base, config )
           .trait( d3.trait.scale.time, makeChartConfigScaleX1())
 
@@ -144,18 +148,18 @@ function GBChart( _points, _brushChart, $timeout) {
     return chartTraits
   }
 
-  function makeBrushTraits() {
+  function makeBrushTraits( size) {
     var brushTraits
 
-//        var brushConfig = {
-//          x1: function(d) { return d.date; },
-//          y1: function(d) { return d.value; },
-//          seriesData: function(s) { return s.values},
-//          seriesLabel: function(s) { return s.uniqueName},
-//          chartClass: 'brush-chart'
-//        }
+    var config = angular.extend( {}, self.config)
+    if( size)
+      config.size = {
+        width: size.width,
+        height: size.height
+      }
 
-    brushTraits = d3.trait( d3.trait.chart.base, self.config )
+
+    brushTraits = d3.trait( d3.trait.chart.base, config )
       .trait( d3.trait.scale.time, { axis: 'x1'})
       .trait( d3.trait.scale.linear, { axis: 'y1' })
       .trait( d3.trait.chart.line, { interpolate: 'step-after' })
@@ -183,17 +187,18 @@ function GBChart( _points, _brushChart, $timeout) {
   }
 
   self.callTraits = function( ) {
-    if( $timeout) {
-      $timeout( function() {
-        self.traits.call( self.selection )
+//    if( $timeout) {
+//      // Use timeout so the digest cycle can update the css width/height
+//      $timeout( function() {
+//        self.traits.call( self.selection )
 //        if( self.brushTraits)
-//          self.brushTraits.call( self.selection )
-      })
-    } else {
+//          self.brushTraits.call( self.brushSelection )
+//      })
+//    } else {
       self.traits.call( self.selection )
-//      if( self.brushTraits)
-//        self.brushTraits.call( self.selection )
-    }
+      if( self.brushTraits)
+        self.brushTraits.call( self.brushSelection )
+//    }
   }
 
   self.addPoint = function( point) {
@@ -205,21 +210,21 @@ function GBChart( _points, _brushChart, $timeout) {
     self.uniqueNames()
 
     if( self.unitMap.hasOwnProperty( point.unit ) ) {
-      console.log( 'GBChart.addPoint has unit scale .................')
       self.unitMap[point.unit].push( point )
     } else {
-      console.log( 'GBChart.addPoint new unit scale ++++++++++++++')
       self.unitMap[point.unit] = [point]
-      self.traits.remove()
-      self.traits = makeChartTraits( self.unitMap )
     }
+
+    var size = self.traits.size()
+    self.traits.remove()
+    self.traits = makeChartTraits( self.unitMap, size )
+
+    size = self.brushTraits.size()
+    self.brushTraits.remove()
+    self.brushTraits = makeBrushTraits( size)
 
     self.callTraits()
   }
-
-//      self.removePointById = function( pointId) {
-//        self.removePoint( self.getPointByid( pointId))
-//      }
 
   self.removePoint = function( point) {
     if( ! point)

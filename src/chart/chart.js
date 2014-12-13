@@ -135,18 +135,14 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
   /**
    * Controller for a single chart (like inside the pop-out window).
    */
-  controller( 'gbChartController', ['$scope', '$timeout', '$window', '$location', 'measurement', 'rest', function( $scope, $timeout, $window, $location, measurement, rest) {
-    console.log( 'gbChartController begin scope.id' + $scope.$id + ' ###############################################')
+  controller( 'gbChartController', ['$scope', '$window', '$location', 'measurement', 'rest', function( $scope, $window, $location, measurement, rest) {
+
     var queryObject = $location.search()
     if( ! queryObject.hasOwnProperty( 'pids'))
       return
 
     var pointIds = angular.isArray( queryObject.pids) ? queryObject.pids : [queryObject.pids],
-        //chartSource = $window.opener.coralChart,
         documentElement = $window.document.documentElement,
-        windowSize = new d3.trait.Size( documentElement.clientWidth, documentElement.clientHeight),
-        _chartContainer = null,
-        chartSize = new d3.trait.Size(),
         firstPointLoaded = false,
         historyConstraints ={
           time: 1000 * 60 * 60 * 4, // 4 hours
@@ -159,7 +155,7 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
     $window.document.body.scroll = 'no'; // ie only
 
     $scope.loading = true
-    $scope.chart = new GBChart( [], true, $timeout)  // t: zoomSlider
+    $scope.chart = new GBChart( [], true)  // t: zoomSlider
     console.log( 'gbChartController query params: ' + pointIds)
 
     var url = '/models/1/points?' + rest.queryParameterFromArrayOrString( 'pids', pointIds)
@@ -175,10 +171,10 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
       if( !firstPointLoaded) {
         firstPointLoaded = true
         $scope.loading = false
-        onResize()
         $scope.$digest()
+        $scope.chart.traits.invalidate( 'resize', 0)
+        $scope.chart.brushTraits.invalidate( 'resize', 0)
       }
-      //console.log( 'ChartController.notifyMeasurements height:' + chartSize.height + ' chart.invalidate(\'trend\')')
       $scope.chart.invalidate( 'trend')
     }
 
@@ -241,65 +237,6 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
       delete $scope.chart;
     }
 
-
-    function chartContainer() {
-      if( ! _chartContainer) {
-        _chartContainer = $window.document.getElementById('chart-container')
-      }
-      return _chartContainer
-    }
-
-    $scope.chartHeight = {
-      main: '100px',
-      brush: '0px'
-    }
-
-    function onResize( event) {
-      console.log( 'onResize ---------------------------------------')
-      $scope.chart.traits.invalidate( 'resize', 0)
-      $scope.chart.brushTraits.invalidate( 'resize', 0)
-
-//      // Need the timeout because we don't get the correct size if we ask right away.
-//      $timeout( function() {
-//        console.log( 'onResize =======================================')
-//
-//        windowSize.width = documentElement.clientWidth
-//        windowSize.height = documentElement.clientHeight
-//        var heightTop, heightBot,
-//            offsetTop = chartContainer().offsetTop,
-//            offsetLeft = chartContainer().offsetLeft,
-//            size = new d3.trait.Size( windowSize.width - offsetLeft, windowSize.height - offsetTop)
-//
-//        if( size.width !== chartSize.width || size.height !== chartSize.height) {
-//          chartSize.width = size.width
-//          chartSize.height = size.height
-//
-//          if( size.height <= 150) {
-//            heightTop = size.height
-//            heightBot = 0
-//          } else {
-//            heightBot = Math.floor( size.height * 0.18)
-//            if( heightBot < 50)
-//              heightBot = 50
-//            else if( heightBot > 100)
-//              heightBot = 100
-//            heightTop = size.height - heightBot
-//          }
-//
-//          $scope.chartHeight.main = heightTop + 'px'
-//          $scope.chartHeight.brush = heightBot + 'px'
-//          console.log( 'window resize w=' + windowSize.width + ', h=' + windowSize.height + ' offset.top=' + offsetTop)
-//
-//          size.height = heightTop
-//          $scope.chart.traits.size( size)
-//          size.height = heightBot
-//          $scope.chart.brushTraits.size( size)
-//        }
-//      })
-    }
-//    $window.onresize = onResize
-//    onResize()
-
     $window.addEventListener( 'unload', function( event) {
       $scope.chartRemove()
     })
@@ -337,109 +274,72 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
       }
     }
 
-//    function getHeights( divs) {
-//      return {
-//        title:      divs.titlebar.prop('offsetHeight'),
-//        labels:     divs.labels.prop('offsetHeight'),
-//        chartMain:  divs.chartMain.prop('offsetHeight'),
-//        chartBrush: divs.chartBrush.prop('offsetHeight')
-//      }
-//    }
 
     function gbChartLink(scope, element, attrs) {
-      console.log( 'gbChartLink ++++++++++++++++++++++++++++++++')
+
       var w = angular.element($window),
-//          documentElement = $window.document.documentElement,
-//          windowSize = new d3.trait.Size( documentElement.clientWidth, documentElement.clientHeight),
           windowSize = new d3.trait.Size( w.width(), w.height()),
           divs = getDivs( element),
-          containerSize = new d3.trait.Size(),
-          heights = { main: 0, brush: 0}
+          sizes = {
+            container: new d3.trait.Size(),
+            main: new d3.trait.Size(),
+            brush: new d3.trait.Size()
+          }
 
       scope.getSize = function () {
         windowSize.width = w.width()    //documentElement.clientWidth
         windowSize.height = w.height()  //documentElement.clientHeight
 
-//        var size = '' + element.prop( 'offsetWidth') + ' ' + element.prop( 'offsetHeight')
         var size = '' + windowSize.width + ' ' + windowSize.height
-        console.log( 'gbChart getSize ' + size +
-            ', title: '+ divs.titlebar.prop( 'offsetHeight') +
-            ', labels: '+ divs.labels.prop( 'offsetHeight') +
-            ', chartMain: '+ divs.chartMain.prop( 'offsetHeight') +
-            ', chartBrush: '+ divs.chartBrush.prop( 'offsetHeight')
-        )
         return size
       };
-//      scope.getHeight = function () {
-//        console.log( 'gbChart getHeight ' + element.Height())
-//        return element.prop('offsetHeight')
-//      };
 
       function invalidateDo() {
         var top = divs.chartContainer.prop('offsetTop'),
             left = divs.chartContainer.prop('offsetLeft'),
-            //            newSize = new d3.trait.Size( divs.chartContainer.prop('offsetWidth'), divs.chartContainer.prop('offsetHeight'))
             newSize = new d3.trait.Size( windowSize.width - left, windowSize.height - top)
-//            el = {
-//              l: element.prop('offsetLeft'),
-//              w: element.prop('offsetWidth'),
-//              h: element.prop('offsetHeight')
-//            },
-//            c = {
-//              l: divs.chartContainer.prop('offsetLeft'),
-//              t: divs.chartContainer.prop('offsetTop'),
-//              w: divs.chartContainer.prop('offsetWidth'),
-//              h: divs.chartContainer.prop('offsetHeight')
-//            },
 
-        if( containerSize.width !== newSize.width || containerSize.height !== newSize.height) {
-          containerSize.width = newSize.width
-          containerSize.height = newSize.height
+        if( sizes.container.width !== newSize.width || sizes.container.height !== newSize.height) {
+          sizes.container.width = newSize.width
+          sizes.container.height = newSize.height
+          sizes.main.width = newSize.width
+          sizes.brush.width = newSize.width
 
-          if( newSize.height <= 150) {
-            heights.main = Math.max( newSize.height, 20)
-            heights.brush = 0
+          if( sizes.container.height <= 150) {
+            sizes.main.height = Math.max( sizes.container.height, 20)
+            sizes.brush.width = 0
+            sizes.brush.height = 0
           } else {
-            heights.brush = Math.floor( newSize.height * 0.18)
-            if( heights.brush < 50)
-              heights.brush = 50
-            else if( heights.brush > 100)
-              heights.brush = 100
-            heights.main = newSize.height - heights.brush
+            sizes.brush.height = Math.floor( sizes.container.height * 0.18)
+            if( sizes.brush.height < 50)
+              sizes.brush.height = 50
+            else if( sizes.brush.height > 100)
+              sizes.brush.height = 100
+            sizes.main.height = sizes.container.height - sizes.brush.height
           }
 
-          console.log( 'gbChart scope.watch size change main=' + heights.main + ' brush=' + heights.brush + ' ********************')
+          //console.log( 'gbChart scope.watch size change main=' + sizes.main.height + ' brush=' + sizes.brush.height + ' ********************')
 
           scope.styleMain = function () {
             return {
-              'height': heights.main + 'px',
+              'height': sizes.main.height + 'px',
               'width': '100%'
             };
           }
 
           scope.styleBrush = function () {
             return {
-              'height': heights.brush + 'px',
-              'width': '100%',
-              'background-color': 'lightblue'
+              'height': sizes.brush.height + 'px',
+              'width': '100%'
             };
           }
 
-
-//          divs.chartMain.css( 'height', heights.main + 'px')
-//          divs.chartBrush.css( 'height', heights.brush + 'px')
-//
-//          newSize.height = heights.main
-//          scope.chart.traits.size( newSize)
-//          newSize.height = heights.brush
-//          scope.chart.brushTraits.size( newSize)
-
-//          scope.chart.traits.invalidate( 'resize', 0)
-//          scope.chart.brushTraits.invalidate( 'resize', 0)
-
           scope.$digest()
+          scope.chart.traits.size( sizes.main)
+          scope.chart.brushTraits.size( sizes.brush)
+
         } else {
-          console.log( 'gbChart scope.watch size change none')
+          //console.log( 'gbChart scope.watch size change none')
         }
 
       }
