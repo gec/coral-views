@@ -1,4 +1,4 @@
-angular.module('greenbus.views.demo').controller('ChartDemoCtrl', function ($scope, $location, subscription, rest, request) {
+angular.module('greenbus.views.demo').controller('ChartDemoCtrl', function ($scope, $location, subscription, rest, request, gbChartDivSize) {
 
 
   var point = {
@@ -12,6 +12,9 @@ angular.module('greenbus.views.demo').controller('ChartDemoCtrl', function ($sco
   $location.search = function() {
     return { pids: point.id }
   }
+
+  gbChartDivSize.width = function() { return 300}
+  gbChartDivSize.height = function() { return 200}
 
   rest.whenGET( '/models/1/points?pids=' + point.id).
     respond([
