@@ -1,10 +1,20 @@
 <div>
     <h3>Alarms</h3>
+    <gb-select-all model="model" selection-changed="selectionChanged(state)"></gb-select-all>
+    <div ng-show="selectionState!==0">Show more</div>
     <div class="table-responsive" style="overflow-x: auto">
         <table class="table table-condensed">
             <thead>
             <tr>
-                <th>State</th>
+                <th colspan="3" style="padding-bottom: 12px;">
+                    <button class="btn btn-default" ng-click="checkUncheckAll()">
+                        <div class="gb-checkbox-container" role="checkbox" aria-labelledby=":2f" dir="ltr" aria-checked="true" tabindex="-1">
+                            <i ng-class="checkAllState | checkboxClass"></i>
+                            <!--<div ng-class="checkAllState | checkboxClass"></div>-->
+                        </div>
+                    </button>
+                    <button class="btn btn-default text-muted" ng-click="chartAddSelectedPoints()" ng-show="checkCount>0" style="width: 60px; margin-left: 14px"><span class="glyphicon glyphicon-stats"></span></button>
+                </th>
                 <th>Type</th>
                 <th>Sev</th>
                 <th>User</th>
@@ -14,7 +24,13 @@
             </thead>
             <tbody>
             <tr ng-repeat="alarm in alarms">
-                <td>{{alarm.state}}</td>
+                <td>
+                    <div class="gb-checkbox-container" ng-click="checkUncheck(alarm)" role="checkbox" aria-labelledby=":2f" dir="ltr" aria-checked="true" tabindex="-1">
+                        <i ng-class="alarm.checked | checkboxClass"></i>
+                    </div>
+                </td>
+                <td><i ng-class="alarm.state | alarmStateClass" title="{{alarm.state | alarmStateTitle}}"></i></td>
+                <td><i ng-class="alarm.state | alarmAudibleClass" title="{{alarm.state | alarmAudibleTitle}}"></i></td>
                 <td>{{alarm.event.eventType}}</td>
                 <td>{{alarm.event.severity}}</td>
                 <td>{{alarm.event.agent}}</td>

@@ -128,5 +128,48 @@ angular.module('greenbus.views.event', ['greenbus.views.subscription']).
       templateUrl: 'template/event/events.html',
       controller: 'gbEventsController'
     }
-  });
+  }).
+
+  filter('alarmStateClass', function() {
+    return function(state) {
+      switch( state) {
+        case 'UNACK_AUDIBLE': return 'fa fa-bell'
+        case 'UNACK': return 'fa fa-bell'
+        case 'ACK': return 'fa fa-bell-slash-o text-muted'
+        default: return 'fa fa-question-circle'
+      }
+    };
+  }).
+  filter('alarmStateTitle', function() {
+    return function(state) {
+      switch( state) {
+        case 'UNACK_AUDIBLE': return 'Unacknowledged audible'
+        case 'UNACK': return 'Unacknowledged'
+        case 'ACK': return 'Acknowledged'
+        default: return 'Unknown state: ' + state
+      }
+    };
+  }).
+
+  filter('alarmAudibleClass', function() {
+    return function(state) {
+      switch( state) {
+        case 'UNACK_AUDIBLE': return 'fa fa-volume-up'
+        case 'UNACK': return 'fa fa-volume-off text-muted'
+        case 'ACK': return 'fa fa-volume-off text-muted'
+        default: return 'fa fa-question-circle'
+      }
+    };
+  }).
+  filter('alarmAudibleTitle', function() {
+    return function(state) {
+      switch( state) {
+        case 'UNACK_AUDIBLE': return 'Unacknowledged audible'
+        case 'UNACK': return 'Unacknowledged'
+        case 'ACK': return 'Acknowledged'
+        default: return 'Unknown state: ' + state
+      }
+    };
+  })
+;
 

@@ -39,11 +39,7 @@
                         <td ng-if="!point.rowDetail">
                             <div class="gb-checkbox-container" ng-click="checkUncheck(point)" role="checkbox" aria-labelledby=":2f" dir="ltr" aria-checked="true" tabindex="-1">
                                 <i ng-class="point.checked | checkboxClass"></i>
-                                <!--<div ng-class="point.checked | checkboxClass"></div>-->
                             </div>
-                            <!--<div id=":2e" class="oZ-jc T-Jo J-J5-Ji T-Jo-Jp" role="checkbox" aria-labelledby=":2f" dir="ltr" aria-checked="true" tabindex="-1">-->
-                            <!--<div class="T-Jo-auh"></div>-->
-                            <!--</div>-->
                         </td>
                         <td ng-if="!point.rowDetail" ng-click="togglePointRowById(point.id)">
                             <div class="gb-icon-text draggable" draggable ident="point.id">
@@ -53,7 +49,6 @@
                         </td>
                         <td ng-if="!point.rowDetail" style="text-align: right">
                             <a href="" ng-click="chartAddPointById(point.id)"><span class="glyphicon glyphicon-stats text-muted" title="Graph measurements"></span></a>
-                            <!--<i class="fa fa-refresh fa-spin"></i>-->
                         </td>
                         <td  ng-if="!point.rowDetail" class="gb-value" ng-click="togglePointRowById(point.id)">
                             <span class="glyphicon glyphicon-edit pull-left text-muted" style="padding-right: 10px; opacity: {{ point.commandSet ? 1 : 0 }}" title="Control or Setpoint"></span>
