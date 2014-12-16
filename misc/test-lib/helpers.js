@@ -8,9 +8,9 @@ var customMatchers = {
         var result = {};
         result.pass = actual.hasClass(expected)
         if (result.pass) {
-          result.message = 'Expected ' + actual + ' to have class "' + expected + '" and it was';
+          result.message = 'Expected element with classes "' + actual[0].className + '" to have class "' + expected + '" and it was';
         } else {
-          result.message = 'Expected ' + actual + ' to have class "' + expected + '"';
+          result.message = 'Expected element with classes "' + actual[0].className + '" to have class "' + expected + '"';
         }
         return result;
       }
