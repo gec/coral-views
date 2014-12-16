@@ -42,7 +42,7 @@ angular.module('greenbus.views.selection', []).
       var oldSelectAllState = $scope.selectAllState
       if( $scope.selectCount === 0 )
         $scope.selectAllState = SELECT_UNCHECKED
-      else if( $scope.selectCount >= $scope.model.length - 1 )
+      else if( $scope.selectCount >= $scope.model.length )
         $scope.selectAllState = SELECT_CHECKED
       else
         $scope.selectAllState = SELECT_PARTIAL
