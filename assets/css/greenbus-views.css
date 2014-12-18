@@ -31,6 +31,9 @@
 .validity-questionable {color: #f57900; font-size:1.4em;}
 .validity-notloaded {font-size:1.4em;}
 
+.gb-alarm-ack {color: darkgray}
+.gb-alarm-unack {color: red}
+
 .gb-comms-enabled-up {color: green}
 .gb-comms-enabled-down {color: #b22222}
 .gb-comms-enabled-error {color: #b22222}
@@ -39,6 +42,10 @@
 .gb-comms-disabled-down {color: darkgray}
 .gb-comms-disabled-error {color: darkslategray}
 .gb-comms-disabled-unknown {color: darkslategray}
+
+.gb-toolbar button i {
+  color: #444;
+}
 
 /*.T-Jo {*/
 .gb-checkbox-container {

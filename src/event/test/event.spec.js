@@ -1,4 +1,4 @@
-describe('event', function () {
+describe('gb-events', function () {
   var scope, $compile, _subscription, _authentication,
     subscribeInstance = {};
   var element,
@@ -26,6 +26,7 @@ describe('event', function () {
 
 
   beforeEach(module('greenbus.views.authentication'));
+  beforeEach(module('greenbus.views.rest'));
   beforeEach(module('greenbus.views.subscription'));
   beforeEach(module('greenbus.views.event'));
   beforeEach(module('template/event/events.html'));
@@ -66,7 +67,7 @@ describe('event', function () {
   }));
 
 
-  function initCoralEventsElement() {
+  function initGbEventsElement() {
     $compile(element)(scope);
     scope.$digest();
     return findEvents();
@@ -81,7 +82,7 @@ describe('event', function () {
   }
 
   it('should start with 0 events', inject( function () {
-    var foundEvents = initCoralEventsElement();
+    var foundEvents = initGbEventsElement();
     expect( foundEvents.length).toEqual(0);
   }));
 
@@ -92,14 +93,14 @@ describe('event', function () {
         limit: 40
       }
     }
-    initCoralEventsElement();
+    initGbEventsElement();
     expect( subscribeInstance.onSuccess ).toBeDefined()
     expect( subscribeInstance.onError ).toBeDefined()
     expect( subscribeInstance.request ).toEqual( request)
   }));
 
   it('should create one event', inject( function () {
-    initCoralEventsElement();
+    initGbEventsElement();
     subscribeInstance.onSuccess( subscribeInstance.id, 'event', events[0])
     scope.$digest();
 
@@ -114,7 +115,7 @@ describe('event', function () {
   }));
 
   it('should create multiple events', inject( function () {
-    initCoralEventsElement();
+    initGbEventsElement();
     subscribeInstance.onSuccess( subscribeInstance.id, 'event', events)
     scope.$digest();
     var foundEvents = findEvents()

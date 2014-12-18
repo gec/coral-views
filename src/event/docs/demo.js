@@ -1,4 +1,4 @@
-angular.module('greenbus.views.demo').controller('EventDemoCtrl', function ($scope, subscription) {
+angular.module('greenbus.views.demo').controller('EventDemoCtrl', function ($scope, rest, subscription) {
   var eventId = 0,
       alarmId = 0
 
@@ -13,14 +13,22 @@ angular.module('greenbus.views.demo').controller('EventDemoCtrl', function ($sco
   }
 
   $scope.pushAlarm = function() {
+    var alarm  = {'id': ++alarmId, 'state': 'UNACK_AUDIBLE', 'event': {'id': '17', 'deviceTime': 0, 'eventType': 'Scada.Breaker', 'alarm': true, 'severity': 3, 'agent': 'system', 'entity': '218bf05f-b479-49b6-99aa-c2803419d31f', 'message': 'Breaker Opened: Openstatus validity GOOD', 'time': Date.now()}}
     subscription.pushMessage(
       'subscription.subscribeToActiveAlarms',
-      'event',
-      [
-        {'id': ++alarmId, 'state': 'UNACK_AUDIBLE', 'event': {'id': '17', 'deviceTime': 0, 'eventType': 'Scada.Breaker', 'alarm': true, 'severity': 3, 'agent': 'system', 'entity': '218bf05f-b479-49b6-99aa-c2803419d31f', 'message': 'Breaker Opened: Openstatus validity GOOD', 'time': Date.now()}}
-      ]
+      'event', [ alarm ]
     )
+
+    var a2 = angular.extend( {}, alarm),
+        a3 = angular.extend( {}, alarm)
+    a2.state = 'UNACK_SILENT'
+    a3.state = 'ACKNOWLEDGED'
+
+    rest.whenPOST( '/models/1/alarms', { state: 'UNACK_SILENT', ids: [alarmId]}).respond([ a2 ])
+    rest.whenPOST( '/models/1/alarms', { state: 'ACKNOWLEDGED', ids: [alarmId]}).respond([ a3 ])
   }
+
+
 
   var subscribeEvents = {
     'subscribeToRecentEvents':{

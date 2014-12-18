@@ -7,8 +7,6 @@ angular.module('greenbus.views.demo').controller('SelectionDemoCtrl', function (
 
   $scope.selectAllState = 0
 
-  $scope.hey = 'hey!'
-
   $scope.selectAllChanged = function( state) {
     $scope.selectAllState = state
   }

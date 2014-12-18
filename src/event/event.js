@@ -22,19 +22,41 @@
 
 
 
-angular.module('greenbus.views.event', ['greenbus.views.subscription']).
+angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.subscription']).
 
-  controller('gbAlarmsController', ['$scope', '$attrs', 'subscription', function( $scope, $attrs, subscription) {
+  controller('gbAlarmsController', ['$scope', '$attrs', 'rest', 'subscription', function( $scope, $attrs, rest, subscription) {
     $scope.loading = true
     $scope.alarms = []
+//    $scope.alarmsFiltered = []
     $scope.limit = Number( $attrs.limit || 20);
+    $scope.selectAllState = 0
+    $scope.searchText = ''
+
+
+    function findById( id ) {
+      var i, item,
+          length = $scope.alarms.length
+
+      for( i = 0; i < length; i++ ) {
+        item = $scope.alarms[i]
+        if( item.id === id )
+          return item
+      }
+      return undefined
+    }
+
+    function initForClient( alarm) {
+      alarm.updateState = 'none'
+    }
 
     function onAlarm( subscriptionId, type, alarm) {
       if( angular.isArray( alarm)) {
         console.log( 'alarmService onAlarm length=' + alarm.length)
+        alarm.forEach( function( a) { initForClient( a)})
         $scope.alarms = alarm.concat( $scope.alarms)
       } else {
         console.log( 'alarmService onAlarm ' + alarm.id + ' "' + alarm.state + '"' + ' "' + alarm.event.message + '"')
+        initForClient( a)
         $scope.alarms.unshift( alarm)
       }
       while( $scope.alarms.length > $scope.limit)
@@ -45,6 +67,50 @@ angular.module('greenbus.views.event', ['greenbus.views.subscription']).
 
     function onError( error, message) {
 
+    }
+
+    function onUpdate( alarms) {
+      alarms.forEach( function( a) {
+        var alarm = findById( a.id)
+        if( alarm) {
+          alarm.state = a.state
+          alarm.event = a.event
+          alarm.updateState = 'none'
+        }
+      })
+    }
+
+    function updateRequest( alarm, newState) {
+      alarm.updateState = 'updating' // TODO: what if already updating?
+      var arg = {
+        state: newState,
+        ids: [alarm.id]
+      }
+      rest.post( '/models/1/alarms', arg, null, $scope,
+        function( alarms) {
+          onUpdate( alarms)
+        },
+        function( ex, statusCode, headers, config) {
+          console.log( 'gbAlarmsController.updateRequest' + newState + ' error ' + ex)
+          alarm.updateState = 'error'
+        }
+      )
+    }
+
+    $scope.acknowledge = function( alarm) {
+      if( alarm.state === 'UNACK_AUDIBLE' || alarm.state === 'UNACK_SILENT')
+        updateRequest( alarm, 'ACKNOWLEDGED')
+    }
+
+    $scope.silence = function( alarm) {
+      if( alarm.state === 'UNACK_AUDIBLE')
+        updateRequest( alarm, 'UNACK_SILENT')
+    }
+
+    // Called by selection
+    $scope.selectAllChanged = function( state) {
+      $scope.selectAllState = state
+      return state
     }
 
     var request = {
@@ -131,21 +197,28 @@ angular.module('greenbus.views.event', ['greenbus.views.subscription']).
   }).
 
   filter('alarmStateClass', function() {
-    return function(state) {
+    return function(state, updateState) {
+      var s
       switch( state) {
-        case 'UNACK_AUDIBLE': return 'fa fa-bell'
-        case 'UNACK': return 'fa fa-bell'
-        case 'ACK': return 'fa fa-bell-slash-o text-muted'
-        default: return 'fa fa-question-circle'
+        case 'UNACK_AUDIBLE': s = 'fa fa-bell gb-alarm-unack'; break;
+        case 'UNACK_SILENT': s = 'fa fa-bell gb-alarm-unack'; break;
+        case 'ACKNOWLEDGED': s = 'fa fa-bell-slash-o  gb-alarm-ack'; break;
+        case 'REMOVED': s = 'fa fa-trash-o  gb-alarm-ack'; break;
+        default: s = 'fa fa-question-circle gb-alarm-unack'; break;
       }
+
+      if( updateState === 'updating')
+        s += ' fa-spin'
+      return s
     };
   }).
   filter('alarmStateTitle', function() {
     return function(state) {
       switch( state) {
         case 'UNACK_AUDIBLE': return 'Unacknowledged audible'
-        case 'UNACK': return 'Unacknowledged'
-        case 'ACK': return 'Acknowledged'
+        case 'UNACK_SILENT': return 'Unacknowledged'
+        case 'ACKNOWLEDGED': return 'Acknowledged'
+        case 'REMOVED': return 'Removed'
         default: return 'Unknown state: ' + state
       }
     };
@@ -154,10 +227,11 @@ angular.module('greenbus.views.event', ['greenbus.views.subscription']).
   filter('alarmAudibleClass', function() {
     return function(state) {
       switch( state) {
-        case 'UNACK_AUDIBLE': return 'fa fa-volume-up'
-        case 'UNACK': return 'fa fa-volume-off text-muted'
-        case 'ACK': return 'fa fa-volume-off text-muted'
-        default: return 'fa fa-question-circle'
+        case 'UNACK_AUDIBLE': return 'fa fa-volume-up gb-alarm-unack'
+        case 'UNACK_SILENT': return 'fa'
+        case 'ACKNOWLEDGED': return 'fa'
+        case 'REMOVED': return 'fa fa-trash-o  gb-alarm-ack'
+        default: return 'fa fa-question-circle gb-alarm-unack'
       }
     };
   }).
@@ -165,8 +239,9 @@ angular.module('greenbus.views.event', ['greenbus.views.subscription']).
     return function(state) {
       switch( state) {
         case 'UNACK_AUDIBLE': return 'Unacknowledged audible'
-        case 'UNACK': return 'Unacknowledged'
-        case 'ACK': return 'Acknowledged'
+        case 'UNACK_SILENT': return 'Unacknowledged'
+        case 'ACKNOWLEDGED': return 'Acknowledged'
+        case 'REMOVED': return 'Removed'
         default: return 'Unknown state: ' + state
       }
     };
