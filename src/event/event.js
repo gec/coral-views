@@ -32,6 +32,8 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     $scope.selectAllState = 0
     $scope.searchText = ''
 
+    var alarmIdMap = {}
+
 
     function findById( id ) {
       var i, item,
@@ -45,67 +47,139 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
       return undefined
     }
 
-    function initForClient( alarm) {
-      alarm.updateState = 'none'
+    function sortByTime() {
+      $scope.alarms.sort( function( a, b) { return b.event.time - a.event.time})
     }
 
+    // alarm can be an array or one alarm.
+    //
     function onAlarm( subscriptionId, type, alarm) {
+      var existing
+
       if( angular.isArray( alarm)) {
+        var newAlarms = []
         console.log( 'alarmService onAlarm length=' + alarm.length)
-        alarm.forEach( function( a) { initForClient( a)})
-        $scope.alarms = alarm.concat( $scope.alarms)
+        alarm.forEach( function( a) {
+          a.updateState = 'none'
+          existing = alarmIdMap[a.id]
+          if( existing)
+            onUpdate( existing, a)
+          else {
+            newAlarms.push( a)
+            alarmIdMap[a.id] = a
+          }
+        })
+        $scope.alarms = newAlarms.concat( $scope.alarms)
       } else {
         console.log( 'alarmService onAlarm ' + alarm.id + ' "' + alarm.state + '"' + ' "' + alarm.event.message + '"')
-        initForClient( a)
-        $scope.alarms.unshift( alarm)
+        alarm.updateState = 'none'
+        existing = alarmIdMap[alarm.id]
+        if( existing)
+          onUpdate( existing, alarm)
+        else {
+          $scope.alarms.unshift( alarm)
+          alarmIdMap[alarm.id] = alarm
+        }
       }
-      while( $scope.alarms.length > $scope.limit)
-        $scope.alarms.pop()
+
+      while( $scope.alarms.length > $scope.limit) {
+        var removed = $scope.alarms.pop();
+        delete alarmIdMap[removed.id];
+      }
+
+      sortByTime()
+
       $scope.loading = false
       $scope.$digest()
     }
 
     function onError( error, message) {
+      console.error( 'gbAlarmsController.onError ' + error + ', message: ' + message)
 
     }
 
-    function onUpdate( alarms) {
-      alarms.forEach( function( a) {
-        var alarm = findById( a.id)
-        if( alarm) {
-          alarm.state = a.state
-          alarm.event = a.event
+    function onUpdate( alarm, update) {
+      if( alarm) {
+
+        if( update.state === 'REMOVED') {
+          var i = $scope.alarms.indexOf( alarm)
+          if( i >= 0)
+            $scope.alarms.splice( i, 1);
+          delete alarmIdMap[alarm.id];
+        } else {
+          alarm.state = update.state
+          alarm.event = update.event
           alarm.updateState = 'none'
         }
+      }
+    }
+    function onUpdates( alarms) {
+      alarms.forEach( function( a) {
+        onUpdate( findById( a.id), a)
       })
+      sortByTime()
     }
 
-    function updateRequest( alarm, newState) {
-      alarm.updateState = 'updating' // TODO: what if already updating?
+    function updateRequest( ids, newState) {
+      if( ! ids || ids.length === 0)
+        return
+
       var arg = {
         state: newState,
-        ids: [alarm.id]
+        ids: ids
       }
       rest.post( '/models/1/alarms', arg, null, $scope,
         function( alarms) {
-          onUpdate( alarms)
+          onUpdates( alarms)
         },
         function( ex, statusCode, headers, config) {
-          console.log( 'gbAlarmsController.updateRequest' + newState + ' error ' + ex)
-          alarm.updateState = 'error'
+          console.log( 'gbAlarmsController.updateRequest ERROR updating alarms with ids: ' + ids.join() + ' to state "' + newState + '". Exception: ' + ex.exception + ' - ' + ex.message)
         }
       )
     }
 
-    $scope.acknowledge = function( alarm) {
-      if( alarm.state === 'UNACK_AUDIBLE' || alarm.state === 'UNACK_SILENT')
-        updateRequest( alarm, 'ACKNOWLEDGED')
+    $scope.silence = function( alarm) {
+      if( alarm.state === 'UNACK_AUDIBLE') {
+        alarm.updateState = 'updating' // TODO: what if already updating?
+        updateRequest( [alarm.id], 'UNACK_SILENT')
+      }
     }
 
-    $scope.silence = function( alarm) {
-      if( alarm.state === 'UNACK_AUDIBLE')
-        updateRequest( alarm, 'UNACK_SILENT')
+    $scope.acknowledge = function( alarm) {
+      if( alarm.state === 'UNACK_AUDIBLE' || alarm.state === 'UNACK_SILENT') {
+        updateRequest( [alarm.id], 'ACKNOWLEDGED')
+        alarm.updateState = 'updating' // TODO: what if already updating?
+      }
     }
+
+    function isSelectedAndUnackAudible( alarm) {
+      return alarm.checked && alarm.state === 'UNACK_AUDIBLE'
+    }
+    function isSelectedAndUnack( alarm) {
+      return alarm.checked && ( alarm.state === 'UNACK_AUDIBLE' || alarm.state === 'UNACK_SILENT')
+    }
+    function isSelectedAndNotRemoving( alarm) {
+      return alarm.checked && alarm.state !== 'REMOVED' && alarm.updateState !== 'removing'
+    }
+    function getId( alarm) { return alarm.id }
+
+    function updateSelected( filter, newState, newUpdateState) {
+      var selected = $scope.alarms.filter( filter),
+          ids = selected.map( getId)
+      selected.forEach( function( a) { a.updateState = newUpdateState})
+      updateRequest( ids, newState)
+    }
+    $scope.silenceSelected = function() { updateSelected( isSelectedAndUnackAudible, 'UNACK_SILENT', 'updating') }
+    $scope.acknowledgeSelected = function() { updateSelected( isSelectedAndUnack, 'ACKNOWLEDGED', 'updating') }
+    $scope.removeSelected = function() { updateSelected( isSelectedAndNotRemoving, 'REMOVED', 'removing') }
+//    $scope.hitIt = function() {
+//      var selected = $scope.alarms.filter( isSelectedAndUnack),
+//          ids = selected.map( getId),
+//          newState = 'ACKNOWLEDGED'
+//      ids.push( '1234567890')
+//      selected.forEach( function( a) { a.updateState = 'updating'})
+//      updateRequest( ids, newState)
+//    }
 
     // Called by selection
     $scope.selectAllChanged = function( state) {
@@ -207,7 +281,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
         default: s = 'fa fa-question-circle gb-alarm-unack'; break;
       }
 
-      if( updateState === 'updating')
+      if( updateState !== 'none')
         s += ' fa-spin'
       return s
     };
@@ -230,7 +304,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
         case 'UNACK_AUDIBLE': return 'fa fa-volume-up gb-alarm-unack'
         case 'UNACK_SILENT': return 'fa'
         case 'ACKNOWLEDGED': return 'fa'
-        case 'REMOVED': return 'fa fa-trash-o  gb-alarm-ack'
+        case 'REMOVED': return 'fa'
         default: return 'fa fa-question-circle gb-alarm-unack'
       }
     };
