@@ -254,21 +254,4 @@ describe('gb-alarms', function () {
 
   }));
 
-  var subResponse = {
-    "subscriptionId": "subscription.subscribeToActiveAlarms.e6721611-bdd0-432f-a301-094a9c6f1627", "type": "alarm", "data": [
-      {"id": "16", "state": "ACKNOWLEDGED", "event": {"id": "764", "deviceTime": 0, "eventType": "Scada.Breaker", "alarm": true, "severity": 3, "agent": "system", "entity": "218bf05f-b479-49b6-99aa-c2803419d31f", "message": "Breaker Opened: Openstatus validity GOOD", "time": 1418783041335}},
-      {"id": "15", "state": "UNACK_SILENT", "event": {"id": "723", "deviceTime": 0, "eventType": "Scada.Breaker", "alarm": true, "severity": 3, "agent": "system", "entity": "218bf05f-b479-49b6-99aa-c2803419d31f", "message": "Breaker Opened: Openstatus validity GOOD", "time": 1418764619159}},
-      {"id": "14", "state": "UNACK_SILENT", "event": {"id": "689", "deviceTime": 0, "eventType": "Scada.Breaker", "alarm": true, "severity": 3, "agent": "system", "entity": "218bf05f-b479-49b6-99aa-c2803419d31f", "message": "Breaker Opened: Openstatus validity GOOD", "time": 1418752436508}},
-      {"id": "13", "state": "REMOVED", "event": {"id": "673", "deviceTime": 0, "eventType": "Scada.Breaker", "alarm": true, "severity": 3, "agent": "system", "entity": "218bf05f-b479-49b6-99aa-c2803419d31f", "message": "Breaker Opened: Openstatus validity GOOD", "time": 1418751959186}},
-      {"id": "12", "state": "ACKNOWLEDGED", "event": {"id": "660", "deviceTime": 0, "eventType": "Scada.Breaker", "alarm": true, "severity": 3, "agent": "system", "entity": "218bf05f-b479-49b6-99aa-c2803419d31f", "message": "Breaker Opened: Openstatus validity GOOD", "time": 1418749142013}},
-      {"id": "11", "state": "UNACK_SILENT", "event": {"id": "657", "deviceTime": 0, "eventType": "Scada.Breaker", "alarm": true, "severity": 3, "agent": "system", "entity": "218bf05f-b479-49b6-99aa-c2803419d31f", "message": "Breaker Opened: Openstatus validity GOOD", "time": 1418749012579}},
-      {"id": "8", "state": "UNACK_SILENT", "event": {"id": "511", "deviceTime": 0, "eventType": "Scada.Breaker", "alarm": true, "severity": 3, "agent": "system", "entity": "218bf05f-b479-49b6-99aa-c2803419d31f", "message": "Breaker Opened: Openstatus validity GOOD", "time": 1417712605267}},
-      {"id": "7", "state": "UNACK_AUDIBLE", "event": {"id": "468", "deviceTime": 0, "eventType": "Scada.Breaker", "alarm": true, "severity": 3, "agent": "system", "entity": "218bf05f-b479-49b6-99aa-c2803419d31f", "message": "Breaker Opened: Openstatus validity GOOD", "time": 1417556630846}},
-      {"id": "4", "state": "ACKNOWLEDGED", "event": {"id": "184", "deviceTime": 0, "eventType": "Scada.Breaker", "alarm": true, "severity": 3, "agent": "system", "entity": "218bf05f-b479-49b6-99aa-c2803419d31f", "message": "Breaker Opened: Openstatus validity GOOD", "time": 1416429297224}},
-      {"id": "3", "state": "ACKNOWLEDGED", "event": {"id": "48", "deviceTime": 0, "eventType": "Scada.Breaker", "alarm": true, "severity": 3, "agent": "system", "entity": "218bf05f-b479-49b6-99aa-c2803419d31f", "message": "Breaker Opened: Openstatus validity GOOD", "time": 1415304360269}},
-      {"id": "2", "state": "UNACK_AUDIBLE", "event": {"id": "22", "deviceTime": 0, "eventType": "Scada.Breaker", "alarm": true, "severity": 3, "agent": "system", "entity": "218bf05f-b479-49b6-99aa-c2803419d31f", "message": "Breaker Opened: Openstatus validity GOOD", "time": 1415288035666}},
-      {"id": "1", "state": "UNACK_AUDIBLE", "event": {"id": "17", "deviceTime": 0, "eventType": "Scada.Breaker", "alarm": true, "severity": 3, "agent": "system", "entity": "218bf05f-b479-49b6-99aa-c2803419d31f", "message": "Breaker Opened: Openstatus validity GOOD", "time": 1415287958571}}
-    ]
-  }
-
 });
