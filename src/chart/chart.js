@@ -42,7 +42,13 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
 
 
       function subscribeToMeasurementHistory( chart, point ) {
-        var notify = function () { chart.update( 'trend' ) }
+        var firstNotify = true,
+            notify = function () {
+              if( firstNotify) {
+                firstNotify = false
+                chart.trendStart( 300)
+              }
+            }
 
         point.measurements = measurement.subscribeWithHistory( $scope, point, historyConstraints, chart, notify )
       }

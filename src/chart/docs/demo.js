@@ -1,7 +1,9 @@
 angular.module('greenbus.views.demo').controller('ChartDemoCtrl', function ($scope, $location, subscription, rest, request, gbChartDivSize) {
 
 
-  var point = {
+  var measurementValue = 0,
+      measurementDelta = 10,
+      point = {
     'name': 'Eugene.Grid.kW_tot',
     'id': '1770ee28-fb60-4aab-9a46-a1af345cbc22',
     'pointType': 'ANALOG',
@@ -26,22 +28,23 @@ angular.module('greenbus.views.demo').controller('ChartDemoCtrl', function ($sco
     request.push( 'gb-chart.addChart', [point])
   }
   $scope.pushMessage = function() {
+
+    var now = Date.now()
+    if( measurementValue > 50)
+      measurementDelta = -10
+    else if( measurementValue <= 0)
+      measurementDelta = 10
+    measurementValue += measurementDelta
     subscription.pushMessage(
       'subscription.subscribeToMeasurementHistory',
       'pointWithMeasurements',
       {
         'point':        {'id': point.id},
         'measurements': [
-          {'value': '132.411334', 'type': 'DOUBLE', 'unit': 'kW', 'time': 1418135847082, 'validity': 'GOOD', 'shortQuality': '', 'longQuality': 'Good'},
-          {'value': '132.430658', 'type': 'DOUBLE', 'unit': 'kW', 'time': 1418136055162, 'validity': 'GOOD', 'shortQuality': '', 'longQuality': 'Good'},
-          {'value': '132.425595', 'type': 'DOUBLE', 'unit': 'kW', 'time': 1418136520282, 'validity': 'GOOD', 'shortQuality': '', 'longQuality': 'Good'},
-          {'value': '132.423960', 'type': 'DOUBLE', 'unit': 'kW', 'time': 1418136979282, 'validity': 'GOOD', 'shortQuality': '', 'longQuality': 'Good'},
-          {'value': '132.388818', 'type': 'DOUBLE', 'unit': 'kW', 'time': 1418137570882, 'validity': 'GOOD', 'shortQuality': '', 'longQuality': 'Good'},
-          {'value': '132.361062', 'type': 'DOUBLE', 'unit': 'kW', 'time': 1418137888102, 'validity': 'GOOD', 'shortQuality': '', 'longQuality': 'Good'},
-          {'value': '132.400026', 'type': 'DOUBLE', 'unit': 'kW', 'time': 1418138399122, 'validity': 'GOOD', 'shortQuality': '', 'longQuality': 'Good'},
-          {'value': '132.418443', 'type': 'DOUBLE', 'unit': 'kW', 'time': 1418138779583, 'validity': 'GOOD', 'shortQuality': '', 'longQuality': 'Good'},
-          {'value': '132.393553', 'type': 'DOUBLE', 'unit': 'kW', 'time': 1418139002962, 'validity': 'GOOD', 'shortQuality': '', 'longQuality': 'Good'},
-          {'value': '132.394244', 'type': 'DOUBLE', 'unit': 'kW', 'time': 1418139443602, 'validity': 'GOOD', 'shortQuality': '', 'longQuality': 'Good'}
+          {'value': measurementValue, 'type': 'DOUBLE', 'unit': 'kW', 'time': now, 'validity': 'GOOD', 'shortQuality': '', 'longQuality': 'Good'}
+//          {'value': '100', 'type': 'DOUBLE', 'unit': 'kW', 'time': now - 3000, 'validity': 'GOOD', 'shortQuality': '', 'longQuality': 'Good'},
+//          {'value': '200', 'type': 'DOUBLE', 'unit': 'kW', 'time': now - 2000, 'validity': 'GOOD', 'shortQuality': '', 'longQuality': 'Good'},
+//          {'value': '150', 'type': 'DOUBLE', 'unit': 'kW', 'time': now - 1000, 'validity': 'GOOD', 'shortQuality': '', 'longQuality': 'Good'}
         ]
       }
     )

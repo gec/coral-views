@@ -35,6 +35,8 @@ function GBChart( _points, _brushChart) {
   self.brushChart = _brushChart
   self.brushTraits = _brushChart ? makeBrushTraits() : undefined
   self.brushSelection = null
+  self.trendTimer = null
+
 
   self.isEmpty = function() {
     return self.points.length <= 0
@@ -93,12 +95,25 @@ function GBChart( _points, _brushChart) {
   }
 
   function makeChartConfigScaleX1() {
-    return self.brushChart ? {
-      axis: 'x1',
-      trend: { track: 'domain-max', domain: { interval: d3.time.hour, count: 2 } }
-    }
-      : {axis: 'x1'}
+    var intervalCount = self.brushChart ? 4 : 2
+    if( self.brushChart)
+      return {
+          axis: 'x1',
+          trend: { track: 'domain-max', domain: { interval: d3.time.hour, count: 2 } }
+        }
+    else
+      return {
+        axis: 'x1',
+        trend: {
+          track:  'current-time',
+          domain: {
+            interval: d3.time.hour,
+            count: intervalCount
+          }
+        }
+      }
   }
+
   function makeChartTraits( unitMap, size ) {
     var gridLines = true,
         unitMapKeys = Object.keys( unitMap ),
@@ -128,6 +143,7 @@ function GBChart( _points, _brushChart) {
       chartTraits = chartTraits.trait( d3.trait.scale.linear, scaleConfig )
         .trait( d3.trait.chart.line, {
           interpolate: interpolate,
+          trend: true,
           seriesFilter: filter,
           yAxis: axis,
           focus: {distance: 1000, axis: 'x'}
@@ -248,6 +264,24 @@ function GBChart( _points, _brushChart) {
     }
 
     self.uniqueNames()
+  }
+
+  self.trendStart = function( interval, duration) {
+    if( duration === undefined)
+      duration = interval * 0.95
+
+    self.traits.update( 'trend', duration)
+
+    self.trendTimer = setInterval( function() {
+      self.traits.update( 'trend', duration)
+    }, interval)
+  }
+
+  self.trendStop = function( ) {
+    if( self.trendTimer) {
+      clearInterval( self.trendTimer)
+      self.trendTimer = null
+    }
   }
 
   // typ is usually 'trend'

@@ -91,7 +91,8 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
       measurements.forEach( function( pm) {
         pm.measurement.value = formatMeasurementValue( pm.measurement.value )
       })
-      notify.call( subscriber, measurements)
+      if( notify)
+        notify.call( subscriber, measurements)
     }
 
     /**
