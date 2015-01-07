@@ -105,6 +105,14 @@ module.exports = function(grunt) {
           cwd: 'assets',
           dest: 'dist/'
         }]
+      },
+      bowerassets: {
+        files: [{
+          expand: true,
+          src: ['moment/moment.js'],
+          cwd: 'bower_components',
+          dest: 'dist/assets'
+        }]
       }
     },
     uglify: {
