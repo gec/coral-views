@@ -40,21 +40,23 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
 
 
     var STATE = {
-      NOT_CONNECTED: 'No connection to server',
-      CONNECTION_FAILED: 'Connection to server failed. Your network connection is down or the application server appears to be down.',
-      CONNECTING: 'Connecting to server...',
-      CONNECTED: 'Connected to server'
+      UNOPENED: 'UNOPENED',
+      CLOSED: 'CLOSED',
+      OPENING: 'OPENING',
+      UP: 'UP'
     }
 
     var status = {
-      state: STATE.NOT_CONNECTED,
-      reinitializing: false
+      state: STATE.UNOPENED,
+      reinitializing: false,
+      description: 'WebSocket unopened'
     }
-    function setStatus( state, reinitializing) {
+    function setStatus( state, description, reinitializing) {
       status.state = state
+      status.description = description
       if( reinitializing)
         status.reinitializing = reinitializing
-      console.log( 'setStatus: ' + status.state)
+      console.log( 'setStatus: ' + status.state + ', ' + description)
       $rootScope.$broadcast( 'subscription.status', status);
     }
 
@@ -93,7 +95,7 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
       },
       onopen: function(event) {
         console.log( 'webSocket.onopen event: ' + event)
-        setStatus( STATE.CONNECTED)
+        setStatus( STATE.UP, '')
 
         while( webSocketPendingTasks.length > 0) {
           var data = webSocketPendingTasks.shift()
@@ -108,7 +110,7 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
         console.log( 'webSocket.onclose code: ' + code + ', wasClean: ' + wasClean + ', reason: ' + reason)
         webSocket = null
 
-        setStatus( STATE.CONNECTION_FAILED)
+        setStatus( STATE.CLOSED, 'WebSocket closed. Your network connection is down or the application server appears to be down.')
         removeAllSubscriptions( 'WebSocket onclose()')
 
         // Cannot redirect here because this webSocket thread fights with the get reply 401 thread.
@@ -119,7 +121,7 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
         var name = event.name;
         var message = event.message;
         console.log( 'webSocket.onerror name: ' + name + ', message: ' + message + ', data: ' + data)
-        setStatus( STATE.CONNECTION_FAILED);
+        setStatus( STATE.CLOSED, 'WebSocket closed with error. Your network connection is down or the application server appears to be down.');
         removeAllSubscriptions( 'WebSocket onerror()')
       }
     }
@@ -145,13 +147,6 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
     function handleReefConnectionStatus( json) {
       // TODO! this is a reef status, not connection
       $rootScope.$broadcast( 'reef.status', json)
-    }
-
-    function unsubscribe( subscriptionId) {
-      webSocket.send(JSON.stringify(
-        { unsubscribe: subscriptionId}
-      ))
-      delete subscription[ subscriptionId]
     }
 
     function saveSubscriptionOnScope( $scope, subscriptionId) {
@@ -237,75 +232,76 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
       subscription.listeners[ subscriptionId] = { 'message': messageListener, 'error': errorListener}
     }
 
+
+    function subscribe( json, $scope, messageListener, errorListener) {
+
+      var subscriptionId = addSubscriptionIdToMessage( json)
+      var request = JSON.stringify( json)
+
+      // Lazy init of webSocket
+      if( status.state == STATE.UP) {
+
+        try {
+          webSocket.send( request)
+
+          // We're good, so save request for WebSocket.onmessage()
+          console.log( 'subscribe: send( ' + request + ')')
+          registerSubscriptionOnScope( $scope, subscriptionId);
+          subscription.listeners[ subscriptionId] = { 'message': messageListener, 'error': errorListener}
+        } catch( ex) {
+          if( errorListener)
+            errorListener( 'Could not send subscribe request to server. Exception: ' + ex)
+          subscriptionId = null
+        }
+
+      } else{
+
+        if( status.state != STATE.OPENING) {
+          setStatus( STATE.OPENING, 'Initializing WebSocket for subscription services.')
+
+          try {
+            if( ! authentication.isLoggedIn())  // TODO: Should we redirect to login?
+              throw 'Not logged in.'
+            webSocket = makeWebSocket()
+            if( ! webSocket)
+              throw 'WebSocket create failed.'
+
+            pushPendingSubscription( subscriptionId, $scope, request, messageListener, errorListener)
+
+          } catch( ex) {
+            setStatus( STATE.CLOSED, 'Unable to open WebSocket. Your network connection is down or the application server appears to be down.')
+            webSocket = null
+            if( errorListener)
+              errorListener( 'Could not create connection to server. Exception: ' + ex)
+            subscriptionId = null
+          }
+
+        } else {
+          // Already opening WebSocket, STATE.OPENING. Just push pending.
+          pushPendingSubscription( subscriptionId, $scope, request, messageListener, errorListener)
+        }
+
+      }
+
+      return subscriptionId
+    }
+
+    function unsubscribe( subscriptionId) {
+      webSocket.send(JSON.stringify(
+        { unsubscribe: subscriptionId}
+      ))
+      delete subscription[ subscriptionId]
+    }
+
+
     /**
      * Public API
      */
     return {
       STATE: STATE, // publish STATE enum
-
-      getStatus: function() {
-        return status;
-      },
-
-      subscribe: function( json, $scope, messageListener, errorListener) {
-
-        var subscriptionId = addSubscriptionIdToMessage( json)
-        var request = JSON.stringify( json)
-
-        // Lazy init of webSocket
-        if( status.state == STATE.CONNECTED) {
-
-          try {
-            webSocket.send( request)
-
-            // We're good, so save request for WebSocket.onmessage()
-            console.log( 'subscribe: send( ' + request + ')')
-            registerSubscriptionOnScope( $scope, subscriptionId);
-            subscription.listeners[ subscriptionId] = { 'message': messageListener, 'error': errorListener}
-          } catch( ex) {
-            if( errorListener)
-              errorListener( 'Could not send subscribe request to server. Exception: ' + ex)
-            subscriptionId = null
-          }
-
-        } else{
-
-          if( status.state != STATE.CONNECTING) {
-            setStatus( STATE.CONNECTING)
-
-            try {
-              if( ! authentication.isLoggedIn())  // TODO: Should we redirect to login?
-                throw 'Not logged in.'
-              webSocket = makeWebSocket()
-              if( ! webSocket)
-                throw 'WebSocket create failed.'
-
-              pushPendingSubscription( subscriptionId, $scope, request, messageListener, errorListener)
-
-            } catch( ex) {
-              setStatus( STATE.CONNECTION_FAILED)
-              webSocket = null
-              if( errorListener)
-                errorListener( 'Could not create connection to server. Exception: ' + ex)
-              subscriptionId = null
-            }
-
-          } else {
-            // Already opening WebSocket, STATE.CONNECTING. Just push pending.
-            pushPendingSubscription( subscriptionId, $scope, request, messageListener, errorListener)
-          }
-
-        }
-
-        return subscriptionId
-      },
-
+      getStatus: function() { return status; },
+      subscribe: subscribe,
       unsubscribe: unsubscribe
-
-
-  }
-
-
-
+    }
 
   }]);
