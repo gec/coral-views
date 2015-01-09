@@ -33,8 +33,8 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
 
       var REQUEST_ADD_CHART = 'gb-chart.addChart',
           historyConstraints ={
-            time: 1000 * 60 * 60 * 1, // 1 hours
-            size: 60 * 60 * 1, // 1 hours of 1 second data
+            time: 1000 * 60 * 60 * 2, // 2 hours
+            size: 60 * 60 * 2, // 2 hours of 1 second data
             throttling: 5000
           }
 
@@ -42,13 +42,14 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
 
 
       function subscribeToMeasurementHistory( chart, point ) {
-        var firstNotify = true,
-            notify = function () {
-              if( firstNotify) {
-                firstNotify = false
-                chart.trendStart( 300)
-              }
-            }
+        var firstNotify = true
+
+        function notify() {
+          if( firstNotify) {
+            firstNotify = false
+            chart.trendStart( 300)
+          }
+        }
 
         point.measurements = measurement.subscribeWithHistory( $scope, point, historyConstraints, chart, notify )
       }
@@ -94,6 +95,8 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
       $scope.chartRemove = function ( index ) {
 
         var chart = $scope.charts[index]
+        chart.trendStop()
+
         chart.points.forEach( function ( point ) {
           unsubscribeToMeasurementHistory( chart, point )
         } )
@@ -182,8 +185,8 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
         $scope.$digest()
         $scope.chart.traits.invalidate( 'resize', 0)
         $scope.chart.brushTraits.invalidate( 'resize', 0)
+        $scope.chart.trendStart( 300)
       }
-      $scope.chart.invalidate( 'trend')
     }
 
     function subscribeToMeasurementHistory( chart, point) {
@@ -239,6 +242,7 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
     }
 
     $scope.chartRemove = function() {
+      $scope.chart.trendStop()
       $scope.chart.points.forEach( function( point) {
         unsubscribeToMeasurementHistory( $scope.chart, point)
       });
@@ -319,8 +323,8 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
             sizes.brush.height = 0
           } else {
             sizes.brush.height = Math.floor( sizes.container.height * 0.18)
-            if( sizes.brush.height < 50)
-              sizes.brush.height = 50
+            if( sizes.brush.height < 60)
+              sizes.brush.height = 60
             else if( sizes.brush.height > 100)
               sizes.brush.height = 100
             sizes.main.height = sizes.container.height - sizes.brush.height

@@ -11,12 +11,11 @@ angular.module('greenbus.views.demo').controller('ChartDemoCtrl', function ($sco
     'unit': 'kW',
     'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6'
   }
-  $location.search = function() {
-    return { pids: point.id }
-  }
 
-  gbChartDivSize.width = function() { return 300}
-  gbChartDivSize.height = function() { return 200}
+  $location.search( 'pids', point.id)
+
+  gbChartDivSize.width = function() { return 500}
+  gbChartDivSize.height = function() { return 300}
 
   rest.whenGET( '/models/1/points?pids=' + point.id).
     respond([

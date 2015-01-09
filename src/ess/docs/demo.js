@@ -1,11 +1,7 @@
 angular.module('greenbus.views.demo').controller('EssesDemoCtrl', function ($scope, subscription, rest, $location) {
   var measurementId = 0
 
-  $location.search = function() {
-    return {
-      sourceUrl: '/models/1/equipment/a6be3d8e-7862-4ff8-b096-4c87f2939bd0/descendants?depth=0&childTypes=CES'
-    }
-  }
+  $location.search( 'sourceUrl', '/models/1/equipment/a6be3d8e-7862-4ff8-b096-4c87f2939bd0/descendants?depth=0&childTypes=CES')
 
   rest.whenGET( '/models/1/equipment/a6be3d8e-7862-4ff8-b096-4c87f2939bd0/descendants?depth=0&childTypes=CES').
     respond([
