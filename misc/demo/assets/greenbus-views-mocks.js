@@ -121,6 +121,13 @@ function makeSubscription() {
     }, 0)
   }
 
+  Subscription.STATUS = {
+    UNOPENED: 'UNOPENED',
+    OPENING: 'OPENING',
+    CLOSED: 'CLOSED',
+    UP: 'UP'
+  }
+
   Subscription.getStatus = function() {
     return this.status
   }
@@ -228,6 +235,14 @@ function makeRest() {
   Rest['delete'] = function(url, name, $scope, successListener, failureListener) {
     return Rest.request( 'DELETE', url, {}, name, $scope, successListener)
   }
+
+  Rest.STATUS =  {
+    NOT_LOGGED_IN: 'NOT_LOGGED_IN',
+    APPLICATION_SERVER_DOWN: 'APPLICATION_SERVER_DOWN',
+    APPLICATION_REQUEST_FAILURE: 'APPLICATION_REQUEST_FAILURE',
+    UP: 'UP'
+  }
+
   Rest.getStatus = function() {
     return status
   }
