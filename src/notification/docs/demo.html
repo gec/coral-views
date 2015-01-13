@@ -1,0 +1,20 @@
+<div ng-controller="NotificationDemoCtrl">
+
+    <div style="margin-top: 10em;">
+        <h4>Rest Messages</h4>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-default" ng-click="restStatusNotLoggedIn()"><span class="glyphicon glyphicon-exclamation-sign"></span> NotLoggedIn</button>
+            <button type="button" class='btn btn-default' ng-click="restStatusApplicationServerDown()"><span class="glyphicon glyphicon-exclamation-sign"></span> ApplicationServerDown</button>
+            <button type="button" class='btn btn-default' ng-click="restStatusUp()"><span class="glyphicon glyphicon-thumbs-up"></span> UP</button>
+        </div>
+        <br/>
+        <h4>Subscription Messages</h4>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-default" ng-click="subscriptionStatusUnopened()"><span class="glyphicon glyphicon-thumbs-up"></span> Unopened</button>
+            <button type="button" class='btn btn-default' ng-click="subscriptionStatusOpening()"><span class="glyphicon glyphicon-refresh"></span> Opening</button>
+            <button type="button" class='btn btn-default' ng-click="subscriptionStatusClosed()"><span class="glyphicon glyphicon-exclamation-sign"></span> Closed</button>
+            <button type="button" class='btn btn-default' ng-click="subscriptionStatusUp()"><span class="glyphicon glyphicon-thumbs-up"></span> UP</button>
+        </div>
+    </div>
+    <gb-notification ></gb-notification>
+</div>

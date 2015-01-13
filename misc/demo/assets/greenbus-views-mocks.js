@@ -88,7 +88,13 @@ gbMock.SubscriptionProvider = function() {
 };
 
 function makeSubscription() {
-  var listeners = {}
+  var listeners = {},
+      status = {
+        status: 'UNOPENED',
+        reinitializing: false,
+        description: 'WebSocket unopened'
+      }
+
 
   function Subscription() {
 
@@ -113,6 +119,10 @@ function makeSubscription() {
     setTimeout( function() {
       listeners[subscriptionId].message( subscriptionId, messageType, messageData)
     }, 0)
+  }
+
+  Subscription.getStatus = function() {
+    return this.status
   }
 
   return Subscription
@@ -166,7 +176,12 @@ function MockHttpExpectation(method, url, data, headers) {
 
 function makeRest() {
   var definitions = [],
-      copy = angular.copy
+      copy = angular.copy,
+      status = {
+        status:         'UP',
+        reinitializing: false,
+        description:    ''
+      }
 
   function Rest() {
 
@@ -212,6 +227,9 @@ function makeRest() {
   }
   Rest['delete'] = function(url, name, $scope, successListener, failureListener) {
     return Rest.request( 'DELETE', url, {}, name, $scope, successListener)
+  }
+  Rest.getStatus = function() {
+    return status
   }
 
   Rest.queryParameterFromArrayOrString = function(parameter, arrayOrString) {

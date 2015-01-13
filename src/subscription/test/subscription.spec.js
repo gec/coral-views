@@ -216,8 +216,9 @@ describe('subscription', function () {
       )
 
       expect(mock.rootScope.$broadcast).toHaveBeenCalledWith('subscription.status', {
-        state:          subscription.STATE.CONNECTION_FAILED,
-        reinitializing: false
+        status:          subscription.STATUS.CLOSED,
+        reinitializing: false,
+        description : 'WebSocket closed. Your network connection is down or the application server appears to be down.'
       })
       expect(mock.errorListener).toHaveBeenCalledWith('WebSocket onclose()', '')
       expect(mock.websocket.send).not.toHaveBeenCalled()
@@ -235,8 +236,9 @@ describe('subscription', function () {
       )
 
       expect(mock.rootScope.$broadcast).toHaveBeenCalledWith('subscription.status', {
-        state:          subscription.STATE.CONNECTION_FAILED,
-        reinitializing: false
+        status:          subscription.STATUS.CLOSED,
+        reinitializing: false,
+        description : 'WebSocket closed with error. Your network connection is down or the application server appears to be down.'
       })
       expect(mock.errorListener).toHaveBeenCalledWith('WebSocket onerror()', '')
       expect(mock.websocket.send).not.toHaveBeenCalled()

@@ -39,24 +39,24 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
   factory('subscription', ['$rootScope', '$location', 'authentication', 'websocketFactory', function( $rootScope, $location, authentication, websocketFactory){
 
 
-    var STATE = {
+    var STATUS = {
       UNOPENED: 'UNOPENED',
-      CLOSED: 'CLOSED',
       OPENING: 'OPENING',
+      CLOSED: 'CLOSED',
       UP: 'UP'
     }
 
     var status = {
-      state: STATE.UNOPENED,
+      status: STATUS.UNOPENED,
       reinitializing: false,
       description: 'WebSocket unopened'
     }
-    function setStatus( state, description, reinitializing) {
-      status.state = state
+    function setStatus( s, description, reinitializing) {
+      status.status = s
       status.description = description
       if( reinitializing)
         status.reinitializing = reinitializing
-      console.log( 'setStatus: ' + status.state + ', ' + description)
+      console.log( 'setStatus: ' + status.status + ', ' + description)
       $rootScope.$broadcast( 'subscription.status', status);
     }
 
@@ -95,7 +95,7 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
       },
       onopen: function(event) {
         console.log( 'webSocket.onopen event: ' + event)
-        setStatus( STATE.UP, '')
+        setStatus( STATUS.UP, '')
 
         while( webSocketPendingTasks.length > 0) {
           var data = webSocketPendingTasks.shift()
@@ -110,7 +110,7 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
         console.log( 'webSocket.onclose code: ' + code + ', wasClean: ' + wasClean + ', reason: ' + reason)
         webSocket = null
 
-        setStatus( STATE.CLOSED, 'WebSocket closed. Your network connection is down or the application server appears to be down.')
+        setStatus( STATUS.CLOSED, 'WebSocket closed. Your network connection is down or the application server appears to be down.')
         removeAllSubscriptions( 'WebSocket onclose()')
 
         // Cannot redirect here because this webSocket thread fights with the get reply 401 thread.
@@ -121,7 +121,7 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
         var name = event.name;
         var message = event.message;
         console.log( 'webSocket.onerror name: ' + name + ', message: ' + message + ', data: ' + data)
-        setStatus( STATE.CLOSED, 'WebSocket closed with error. Your network connection is down or the application server appears to be down.');
+        setStatus( STATUS.CLOSED, 'WebSocket closed with error. Your network connection is down or the application server appears to be down.');
         removeAllSubscriptions( 'WebSocket onerror()')
       }
     }
@@ -239,7 +239,7 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
       var request = JSON.stringify( json)
 
       // Lazy init of webSocket
-      if( status.state == STATE.UP) {
+      if( status.status == STATUS.UP) {
 
         try {
           webSocket.send( request)
@@ -256,8 +256,8 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
 
       } else{
 
-        if( status.state != STATE.OPENING) {
-          setStatus( STATE.OPENING, 'Initializing WebSocket for subscription services.')
+        if( status.status != STATUS.OPENING) {
+          setStatus( STATUS.OPENING, 'Initializing WebSocket for subscription services.')
 
           try {
             if( ! authentication.isLoggedIn())  // TODO: Should we redirect to login?
@@ -269,7 +269,7 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
             pushPendingSubscription( subscriptionId, $scope, request, messageListener, errorListener)
 
           } catch( ex) {
-            setStatus( STATE.CLOSED, 'Unable to open WebSocket. Your network connection is down or the application server appears to be down.')
+            setStatus( STATUS.CLOSED, 'Unable to open WebSocket. Your network connection is down or the application server appears to be down.')
             webSocket = null
             if( errorListener)
               errorListener( 'Could not create connection to server. Exception: ' + ex)
@@ -277,7 +277,7 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
           }
 
         } else {
-          // Already opening WebSocket, STATE.OPENING. Just push pending.
+          // Already opening WebSocket, STATUS.OPENING. Just push pending.
           pushPendingSubscription( subscriptionId, $scope, request, messageListener, errorListener)
         }
 
@@ -298,7 +298,7 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
      * Public API
      */
     return {
-      STATE: STATE, // publish STATE enum
+      STATUS: STATUS, // publish STATUS enum
       getStatus: function() { return status; },
       subscribe: subscribe,
       unsubscribe: unsubscribe

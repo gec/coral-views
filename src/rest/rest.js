@@ -27,8 +27,15 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
       initialize: 0,
       get:        0
     }
+
+    var STATUS = {
+      NOT_LOGGED_IN: 'NOT_LOGGED_IN',
+      APPLICATION_SERVER_DOWN: 'APPLICATION_SERVER_DOWN',
+      APPLICATION_REQUEST_FAILURE: 'APPLICATION_REQUEST_FAILURE',
+      UP: 'UP'
+    }
     var status = {
-      status:         'NOT_LOGGED_IN',
+      status:         STATUS.NOT_LOGGED_IN,
       reinitializing: true,
       description:    'loading Reef client...'
     }
@@ -49,7 +56,7 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
       console.log('reef: authentication.isLoggedIn()')
       // Let's assume, for now, that we already logged in and have a valid authToken.
       setStatus({
-        status:         'UP',
+        status:         STATUS.UP,
         reinitializing: false,
         description:    ''
       })
@@ -62,14 +69,16 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
     function handleConnectionStatus(json) {
       setStatus(json);
 
-      if( status.status === 'UP' && redirectLocation )
+      if( status.status === STATUS.UP && redirectLocation )
         $location.path(redirectLocation)
     }
 
     function setStatus(s) {
-      status = s
-      console.log('setStatus: ' + status.status)
-      $rootScope.$broadcast('reef.status', status);
+      if( status.status !== s.status || status.description !== s.description ||  status.reinitializing !== s.reinitializing) {
+        status = s
+        console.log('setStatus: ' + status.status)
+        $rootScope.$broadcast('rest.status', status);
+      }
     }
 
 
@@ -85,13 +94,13 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
       console.error('coralRequest error ' + config.method + ' ' + config.url + ' ' + statusCode + ' json: ' + JSON.stringify(json));
       if( statusCode === 0 ) {
         setStatus({
-          status:         'APPLICATION_SERVER_DOWN',
+          status:         STATUS.APPLICATION_SERVER_DOWN,
           reinitializing: false,
           description:    'Application server is not responding. Your network connection is down or the application server appears to be down.'
         });
       } else if( statusCode == 401 ) {
         setStatus({
-          status:         'NOT_LOGGED_IN',
+          status:         STATUS.NOT_LOGGED_IN,
           reinitializing: true,
           description:    'Not logged in.'
         });
@@ -99,7 +108,7 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
         authentication.redirectToLoginPage(redirectLocation)
       } else if( statusCode === 404 || statusCode === 500 || (isString(json) && json.length === 0) ) {
         setStatus({
-          status:         'APPLICATION_REQUEST_FAILURE',
+          status:         STATUS.APPLICATION_REQUEST_FAILURE,
           reinitializing: false,
           description:    'Application server responded with status ' + statusCode
         });
@@ -141,7 +150,7 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
         }
       });
 
-      if( status.status !== 'UP' ) {
+      if( status.status !== STATUS.UP ) {
         console.log('self.get ( status.status != "UP")')
         retries.get++;
         var delay = retries.get < 5 ? 1000 : 10000
@@ -169,9 +178,9 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
             successListener(json)
 
           // If the get worked, the service must be up.
-          if( status.status != 'UP' ) {
+          if( status.status != STATUS.UP ) {
             setStatus({
-              status:         'UP',
+              status:         STATUS.UP,
               reinitializing: false,
               description:    ''
             });
@@ -259,7 +268,7 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
      * Public API
      */
     return {
-
+      STATUS: STATUS,
       getStatus: getStatus,
       get: get,
       post: post,
@@ -291,7 +300,7 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
         } else if( (httpStatus === 404 || httpStatus === 0 ) && response.config.url.indexOf('.html') ) {
 
           var status = {
-            status:         'APPLICATION_SERVER_DOWN',
+            status:         STATUS.APPLICATION_SERVER_DOWN,
             reinitializing: false,
             description:    'Application server is not responding. Your network connection is down or the application server appears to be down.'
           };

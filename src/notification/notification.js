@@ -19,7 +19,7 @@
  * Author: Flint O'Brien
  */
 
-angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.views.rest', 'greenbus.views.request']).
+angular.module('greenbus.views.notification', ['greenbus.views.rest', 'greenbus.views.subscription']).
 
 /**
  * Control notification messages on top of screen. The current notifications are a reflection of the rest service (HTTP requests)
@@ -49,9 +49,9 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
 
       function makeNotifications() {
         $scope.notifications = []
-        if( restStatus.status !== 'UP')
+        if( restStatus.status !== rest.STATUS.UP)
           $scope.notifications.push( restStatus.description)
-        if( subscriptionStatus.status !== 'UP' && subscriptionStatus.status !== 'UNOPENED')
+        if( subscriptionStatus.status !== subscription.STATUS.UP && subscriptionStatus.status !== subscription.STATUS.UNOPENED)
           $scope.notifications.push( subscriptionStatus.description)
       }
 
