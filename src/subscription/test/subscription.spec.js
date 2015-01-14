@@ -59,6 +59,7 @@ describe('subscription', function () {
       })
 
     spyOn(mock, 'websocketFactory').and.callThrough()
+    spyOn(mock.rootScope, '$apply').and.callThrough()
   });
 
 
@@ -84,10 +85,16 @@ describe('subscription', function () {
       expect(mock.on).toHaveBeenCalledWith('$destroy', jasmine.any(Function));
       expect(scope.subscriptionIds.length).toBe(1)
 
+      expect(mock.rootScope.$apply).not.toHaveBeenCalled();
+      expect(subscription.getStatus().status).toBe( subscription.STATUS.OPENING)
+
+
       // Don't call send until socket is open
       expect(mock.websocket.send).not.toHaveBeenCalled();
       mock.websocket.onopen('open event')
       expect(mock.websocket.send).toHaveBeenCalledWith(JSON.stringify(json));
+      expect(mock.rootScope.$apply).toHaveBeenCalled();
+      expect(subscription.getStatus().status).toBe( subscription.STATUS.UP)
 
       // Receive a message
       var message = {
@@ -113,6 +120,21 @@ describe('subscription', function () {
 
     }));
 
+    it('should handle close after open', inject(function(subscription) {
+      var subscriptionId = subscription.subscribe(json, scope, mock.messageListener, mock.errorListener)
+      expect(scope.subscriptionIds.length).toBe(1)
+      mock.websocket.onopen('open event')
+
+      mock.websocket.onclose({
+        code:     1,
+        reason:   'some reason',
+        wasClean: false
+      })
+      expect(mock.errorListener).toHaveBeenCalledWith('WebSocket onclose()', '')
+      expect(mock.rootScope.$apply.calls.count()).toBe(2);
+      expect(subscription.getStatus().status).toBe( subscription.STATUS.CLOSED)
+    }));
+
     it('should process multiple pending subscribes after WebSocket is open', inject(function(subscription) {
       var subscriptionId = subscription.subscribe(json, scope, mock.messageListener, mock.errorListener)
       var subscriptionId2 = subscription.subscribe(json, scope, mock.messageListener, mock.errorListener)
@@ -127,6 +149,7 @@ describe('subscription', function () {
       expect(mock.websocket.send).not.toHaveBeenCalled();
       mock.websocket.onopen('open event')
       expect(mock.websocket.send).toHaveBeenCalledWith(JSON.stringify(json));
+      expect(mock.rootScope.$apply).toHaveBeenCalled();
       expect(mock.websocket.send.calls.count()).toBe(2);
 
       // Receive a message for subscriptionId
@@ -167,7 +190,7 @@ describe('subscription', function () {
 
     }));
 
-    it('should broadcast ConnectionStatus from sever as reef.status', inject(function(subscription) {
+    it('should broadcast ConnectionStatus from sever as greenbus.status', inject(function(subscription) {
       var subscriptionId = subscription.subscribe(json, scope, mock.messageListener, mock.errorListener)
       mock.websocket.onopen('open event')
 
@@ -181,7 +204,8 @@ describe('subscription', function () {
       }
       mock.websocket.onmessage(event)
       expect(mock.messageListener).not.toHaveBeenCalled()
-      expect(mock.rootScope.$broadcast).toHaveBeenCalledWith('reef.status', message.data)
+      expect(mock.rootScope.$apply).toHaveBeenCalled();
+      expect(mock.rootScope.$broadcast).toHaveBeenCalledWith('greenbus.status', message.data)
 
     }));
 
@@ -200,6 +224,7 @@ describe('subscription', function () {
       }
       mock.websocket.onmessage(event)
       expect(mock.messageListener).not.toHaveBeenCalled()
+      expect(mock.rootScope.$apply).not.toHaveBeenCalled();
       expect(mock.errorListener).toHaveBeenCalledWith(message.error, message)
       expect(mock.websocket.send).not.toHaveBeenCalled()
     }));
@@ -207,14 +232,13 @@ describe('subscription', function () {
     it('should call error listener because of WebSocket.onclose()', inject(function(subscription) {
       var subscriptionId = subscription.subscribe(json, scope, mock.messageListener, mock.errorListener)
 
-      mock.websocket.onclose(
-        {
-          code:     1,
-          reason:   'some reason',
-          wasClean: false
-        }
-      )
+      mock.websocket.onclose({
+        code:     1,
+        reason:   'some reason',
+        wasClean: false
+      })
 
+      expect(mock.rootScope.$apply).toHaveBeenCalled();
       expect(mock.rootScope.$broadcast).toHaveBeenCalledWith('subscription.status', {
         status:          subscription.STATUS.CLOSED,
         reinitializing: false,
@@ -235,6 +259,7 @@ describe('subscription', function () {
         }
       )
 
+      expect(mock.rootScope.$apply).toHaveBeenCalled();
       expect(mock.rootScope.$broadcast).toHaveBeenCalledWith('subscription.status', {
         status:          subscription.STATUS.CLOSED,
         reinitializing: false,
@@ -243,6 +268,7 @@ describe('subscription', function () {
       expect(mock.errorListener).toHaveBeenCalledWith('WebSocket onerror()', '')
       expect(mock.websocket.send).not.toHaveBeenCalled()
     }));
+
   });
 
   describe('login failure', function() {
@@ -258,7 +284,55 @@ describe('subscription', function () {
       subscription.subscribe(json, scope, mock.messageListener, mock.errorListener)
       expect(mock.authentication.isLoggedIn).toHaveBeenCalled();
       expect(mock.websocketFactory).not.toHaveBeenCalled();
+
+      expect(mock.rootScope.$apply).not.toHaveBeenCalled();
+      expect(subscription.getStatus().status).toBe( subscription.STATUS.CLOSED)
+      expect(subscription.getStatus().description).toBe( 'Unable to open WebSocket connection to server. Exception: Not logged in.')
+      expect( mock.errorListener).toHaveBeenCalledWith('Unable to open WebSocket connection to server. Exception: Not logged in.')
+
     }));
+  });
+
+
+  describe('WebSocket create failed', function() {
+
+    var json = null
+    var scope = null
+
+    beforeEach(function() {
+      resetAllMockSpies()
+      spyOn(mock.authentication, 'isLoggedIn').and.returnValue(true)
+      spyOn(mock, 'on').and.callThrough()
+
+      json = {subscribeToSomething: {}}
+      scope = { $on: mock.on}
+
+      function webSocketNull( url) {
+        return null
+      }
+      // override the default websocketFactory
+      angular.module('greenbus.views.subscription').
+        factory('websocketFactory', function($window) {
+          return webSocketNull
+        })
+
+    })
+
+    it('should handle WebSocket create failure', inject(function(subscription) {
+      var subscriptionId = subscription.subscribe(json, scope, mock.messageListener, mock.errorListener)
+      expect(subscriptionId).toBeNull()
+      expect(mock.authentication.isLoggedIn).toHaveBeenCalled();
+      expect(mock.on).not.toHaveBeenCalled();
+      expect(scope.subscriptionIds).toBeUndefined()
+
+      expect(mock.rootScope.$apply).not.toHaveBeenCalled();
+      expect(subscription.getStatus().status).toBe( subscription.STATUS.CLOSED)
+      expect(subscription.getStatus().description).toBe( 'Unable to open WebSocket connection to server. Exception: WebSocket create failed.')
+      expect( mock.errorListener).toHaveBeenCalledWith('Unable to open WebSocket connection to server. Exception: WebSocket create failed.')
+
+      expect(mock.websocket.send).not.toHaveBeenCalled();
+    }));
+
   });
 
 

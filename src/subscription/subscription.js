@@ -40,24 +40,39 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
 
 
     var STATUS = {
-      UNOPENED: 'UNOPENED',
-      OPENING: 'OPENING',
-      CLOSED: 'CLOSED',
-      UP: 'UP'
-    }
+          UNOPENED: 'UNOPENED',
+          OPENING: 'OPENING',
+          CLOSED: 'CLOSED',
+          UP: 'UP'
+        },
+        DIGEST = {
+          NONE: 0,   // No current Angular digest cycle
+          CURRENT: 1 // Currently within a Angular digest cycle
+        }
+        
+        
 
     var status = {
       status: STATUS.UNOPENED,
       reinitializing: false,
       description: 'WebSocket unopened'
     }
-    function setStatus( s, description, reinitializing) {
-      status.status = s
-      status.description = description
-      if( reinitializing)
-        status.reinitializing = reinitializing
-      console.log( 'setStatus: ' + status.status + ', ' + description)
-      $rootScope.$broadcast( 'subscription.status', status);
+    function setStatus( digestState, theStatus, description, reinitializing) {
+
+      if( status.status !== theStatus || status.description !== description ||  status.reinitializing !== reinitializing) {
+        status.status = theStatus
+        status.description = description
+        if( reinitializing)
+          status.reinitializing = reinitializing
+        console.log( 'subscription.setStatus: ' + status.status + ' - ' + description)
+        if( digestState === DIGEST.CURRENT) {
+          $rootScope.$broadcast( 'subscription.status', status);
+        } else {
+          $rootScope.$apply( function() {
+            $rootScope.$broadcast( 'subscription.status', status);
+          })
+        }
+      }
     }
 
 
@@ -77,25 +92,19 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
 
         if( message.type === 'ConnectionStatus') {
           console.debug( 'onMessage.ConnectionStatus ' + message.data)
-          handleReefConnectionStatus( message.data)
+          handleGreenBusConnectionStatus( message.data)
           return
         }
 
-        // Handle errors
-        if(message.error) {
-          handleError( message)
-          return
-        }
-
-//                    console.debug( 'onMessage message.subscriptionId=' + message.subscriptionId + ', message.type=' + message.type)
+        // console.debug( 'onMessage message.subscriptionId=' + message.subscriptionId + ', message.type=' + message.type)
 
         var listener = getListenerForMessage( message)
-        if( listener && listener.message)
-          listener.message( message.subscriptionId, message.type, message.data)
+        if( listener)
+          handleMessageWithListener( message, listener)
       },
       onopen: function(event) {
         console.log( 'webSocket.onopen event: ' + event)
-        setStatus( STATUS.UP, '')
+        setStatus( DIGEST.NONE, STATUS.UP, '')
 
         while( webSocketPendingTasks.length > 0) {
           var data = webSocketPendingTasks.shift()
@@ -110,7 +119,7 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
         console.log( 'webSocket.onclose code: ' + code + ', wasClean: ' + wasClean + ', reason: ' + reason)
         webSocket = null
 
-        setStatus( STATUS.CLOSED, 'WebSocket closed. Your network connection is down or the application server appears to be down.')
+        setStatus( DIGEST.NONE, STATUS.CLOSED, 'WebSocket closed. Your network connection is down or the application server appears to be down.')
         removeAllSubscriptions( 'WebSocket onclose()')
 
         // Cannot redirect here because this webSocket thread fights with the get reply 401 thread.
@@ -121,7 +130,7 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
         var name = event.name;
         var message = event.message;
         console.log( 'webSocket.onerror name: ' + name + ', message: ' + message + ', data: ' + data)
-        setStatus( STATUS.CLOSED, 'WebSocket closed with error. Your network connection is down or the application server appears to be down.');
+        setStatus( DIGEST.NONE, STATUS.CLOSED, 'WebSocket closed with error. Your network connection is down or the application server appears to be down.');
         removeAllSubscriptions( 'WebSocket onerror()')
       }
     }
@@ -133,20 +142,29 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
         return null
     }
 
-    function handleError( message) {
-      //webSocket.close()
-      console.log( 'webSocket.handleError message.error: ' + message.error)
-      if( message.jsError)
-        console.error( 'webSocket.handleError message.jsError: ' + message.jsError)
+    function handleMessageWithListener( message, listener) {
+      if( ! message.error) {
 
-      var listener = getListenerForMessage( message);
-      if( listener && listener.error)
-        listener.error( message.error, message)
+        if( listener.message)
+          listener.message( message.subscriptionId, message.type, message.data)
+
+      } else {
+
+        console.log( 'webSocket.handleError message.error: ' + message.error)
+        if( message.jsError)
+          console.error( 'webSocket.handleError message.jsError: ' + message.jsError)
+
+        if( listener.error)
+          listener.error( message.error, message)
+
+      }
     }
 
-    function handleReefConnectionStatus( json) {
-      // TODO! this is a reef status, not connection
-      $rootScope.$broadcast( 'reef.status', json)
+    function handleGreenBusConnectionStatus( json) {
+      $rootScope.$apply( function() {
+        $rootScope.$broadcast( 'greenbus.status', json)
+      })
+
     }
 
     function saveSubscriptionOnScope( $scope, subscriptionId) {
@@ -163,7 +181,7 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
       // TODO save return value as unregister function. Could have multiples on one $scope.
       $scope.$on( '$destroy', function( event) {
         if( $scope.subscriptionIds) {
-          console.log( 'reef.subscribe $destroy ' + $scope.subscriptionIds.length);
+          console.log( 'subscription $destroy ' + $scope.subscriptionIds.length);
           $scope.subscriptionIds.forEach( function( subscriptionId) {
             unsubscribe( subscriptionId)
             delete subscription.listeners[ subscriptionId]
@@ -257,7 +275,7 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
       } else{
 
         if( status.status != STATUS.OPENING) {
-          setStatus( STATUS.OPENING, 'Initializing WebSocket for subscription services.')
+          setStatus( DIGEST.CURRENT, STATUS.OPENING, 'Initializing WebSocket for subscription services.')
 
           try {
             if( ! authentication.isLoggedIn())  // TODO: Should we redirect to login?
@@ -269,10 +287,12 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
             pushPendingSubscription( subscriptionId, $scope, request, messageListener, errorListener)
 
           } catch( ex) {
-            setStatus( STATUS.CLOSED, 'Unable to open WebSocket. Your network connection is down or the application server appears to be down.')
+            var description = 'Unable to open WebSocket connection to server. Exception: ' + ex
+            // TODO: not logged in!
+            setStatus( DIGEST.CURRENT, STATUS.CLOSED, description)
             webSocket = null
             if( errorListener)
-              errorListener( 'Could not create connection to server. Exception: ' + ex)
+              errorListener( description)
             subscriptionId = null
           }
 
@@ -287,10 +307,12 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
     }
 
     function unsubscribe( subscriptionId) {
-      webSocket.send(JSON.stringify(
-        { unsubscribe: subscriptionId}
-      ))
-      delete subscription[ subscriptionId]
+      if( webSocket)
+        webSocket.send(JSON.stringify(
+          { unsubscribe: subscriptionId}
+        ))
+      if( subscription.hasOwnProperty( subscriptionId))
+        delete subscription[ subscriptionId]
     }
 
 
