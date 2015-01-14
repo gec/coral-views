@@ -37,7 +37,7 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
     var status = {
       status:         STATUS.NOT_LOGGED_IN,
       reinitializing: true,
-      description:    'loading Reef client...'
+      description:    'Initializing connection to server...'
     }
     console.log('status = ' + status.status)
 
@@ -53,7 +53,7 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
 
 
     if( authentication.isLoggedIn() ) {
-      console.log('reef: authentication.isLoggedIn()')
+      console.log('rest: authentication.isLoggedIn()')
       // Let's assume, for now, that we already logged in and have a valid authToken.
       setStatus({
         status:         STATUS.UP,
@@ -62,7 +62,7 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
       })
 
     } else {
-      console.log('reef: ! authentication.isLoggedIn()')
+      console.log('rest: ! authentication.isLoggedIn()')
     }
 
 
@@ -76,7 +76,7 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
     function setStatus(s) {
       if( status.status !== s.status || status.description !== s.description ||  status.reinitializing !== s.reinitializing) {
         status = s
-        console.log('setStatus: ' + status.status)
+        console.log('rest.setStatus: ' + status.status + ' - ' + status.description)
         $rootScope.$broadcast('rest.status', status);
       }
     }
@@ -128,7 +128,7 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
 
     function get(url, name, $scope, successListener) {
       $scope.loading = true;
-      //console.log( 'reef.get ' + url + ' retries:' + retries.get);
+      //console.log( 'rest.get ' + url + ' retries:' + retries.get);
 
 
       if( !authentication.isLoggedIn() ) {
@@ -141,9 +141,9 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
 
       // Register for controller.$destroy event and kill any retry tasks.
       $scope.$on('$destroy', function(event) {
-        //console.log( 'reef.get destroy ' + url + ' retries:' + retries.get);
+        //console.log( 'rest.get destroy ' + url + ' retries:' + retries.get);
         if( $scope.task ) {
-          console.log('reef.get destroy task' + url + ' retries:' + retries.get);
+          console.log('rest.get destroy task' + url + ' retries:' + retries.get);
           $timeout.cancel($scope.task);
           $scope.task = null;
           retries.get = 0;
@@ -172,7 +172,7 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
           if( name )
             $scope[name] = json;
           $scope.loading = false;
-          console.log('reef.get success json.length: ' + json.length + ', url: ' + url);
+          console.log('rest.get success json.length: ' + json.length + ', url: ' + url);
 
           if( successListener )
             successListener(json)
@@ -198,7 +198,7 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
         success(function(json) {
           if( name )
             $scope[name] = json;
-          console.log('reef.post success json.length: ' + json.length + ', url: ' + url);
+          console.log('rest.post success json.length: ' + json.length + ', url: ' + url);
 
           if( successListener )
             successListener(json)
@@ -229,7 +229,7 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
         success(function(json) {
           if( name )
             $scope[name] = json;
-          console.log('reef.delete success json.length: ' + json.length + ', url: ' + url);
+          console.log('rest.delete success json.length: ' + json.length + ', url: ' + url);
 
           if( successListener )
             successListener(json)
@@ -300,13 +300,13 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
         } else if( (httpStatus === 404 || httpStatus === 0 ) && response.config.url.indexOf('.html') ) {
 
           var status = {
-            status:         STATUS.APPLICATION_SERVER_DOWN,
+            status:         'APPLICATION_SERVER_DOWN',
             reinitializing: false,
-            description:    'Application server is not responding. Your network connection is down or the application server appears to be down.'
+            description:    'Application server is not responding. Your network connection is down or the application server appears to be down. HTTP Status: ' + httpStatus
           };
 
           //var $rootScope = $rootScope || $injector.get('$rootScope');
-          $rootScope.$broadcast('reef.status', status);
+          $rootScope.$broadcast('rest.status', status);
 
           return response;
         } else {
