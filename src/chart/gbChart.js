@@ -229,9 +229,11 @@ function GBChart( _points, _brushChart) {
     self.traits.remove()
     self.traits = makeChartTraits( self.unitMap, size )
 
-    size = self.brushTraits.size()
-    self.brushTraits.remove()
-    self.brushTraits = makeBrushTraits( size)
+    if( self.brushChart) {
+      size = self.brushTraits.size()
+      self.brushTraits.remove()
+      self.brushTraits = makeBrushTraits( size)
+    }
 
     self.callTraits()
   }
