@@ -8,6 +8,7 @@ A tree menu used for navigating to different views.
     <abn-tree tree-data="navTree"                                          
       icon-expand       = "fa fa-caret-right"
       icon-collapse     = "fa fa-caret-down"
+      icon-leaf         = ""
       initial-selection = "All Equipment"
       on-select         = "menuSelect(branch)"></abn-tree>      
 
