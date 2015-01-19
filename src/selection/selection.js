@@ -42,7 +42,7 @@ angular.module('greenbus.views.selection', []).
       var oldSelectAllState = $scope.selectAllState
       if( $scope.selectCount === 0 )
         $scope.selectAllState = SELECT_UNCHECKED
-      else if( $scope.selectCount >= $scope.model.length )
+      else if( $scope.model && $scope.selectCount >= $scope.model.length )
         $scope.selectAllState = SELECT_CHECKED
       else
         $scope.selectAllState = SELECT_PARTIAL
@@ -52,6 +52,9 @@ angular.module('greenbus.views.selection', []).
     }
 
     $scope.selectAll = function() {
+      if( !$scope.model)
+        return
+
       $scope.selectAllState = SELECT_NEXT_STATE[ $scope.selectAllState]
       // if check, check visible. If uncheck, uncheck all.
 //      var ps = $scope.selectAllState === SELECT_CHECKED ? $scope.pointsFiltered : $scope.model

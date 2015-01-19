@@ -20,7 +20,7 @@
  */
 
 
-angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'greenbus.views.navigation', 'greenbus.views.rest']).
+angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'greenbus.views.navigation', 'greenbus.views.rest', 'greenbus.views.request', 'greenbus.views.selection']).
   factory('pointIdToMeasurementHistoryMap', function() {
     return {};
   }).
@@ -149,19 +149,13 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
       var self = this
       $scope.points = []
       $scope.pointsFiltered = []
-      $scope.checkAllState = CHECKMARK_UNCHECKED
-      $scope.checkCount = 0
+      $scope.selectAllState = 0
       $scope.charts = []
 
       // Search
       $scope.searchText = ''
       $scope.sortColumn = 'name'
       $scope.reverse = false
-
-      var CHECKMARK_UNCHECKED = 0,
-          CHECKMARK_CHECKED = 1,
-          CHECKMARK_PARTIAL = 2,
-          CHECKMARK_NEXT_STATE = [1, 0, 0]
 
       var navId = $routeParams.navId,
           depth = rest.queryParameterFromArrayOrString( 'depth', $routeParams.depth ),
@@ -196,33 +190,9 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
         return null
       }
 
-      $scope.checkUncheck = function ( point ) {
-        point.checked = CHECKMARK_NEXT_STATE[ point.checked]
-        if( point.checked === CHECKMARK_CHECKED )
-          $scope.checkCount++
-        else
-          $scope.checkCount--
-
-        if( $scope.checkCount === 0 )
-          $scope.checkAllState = CHECKMARK_UNCHECKED
-        else if( $scope.checkCount >= $scope.points.length - 1 )
-          $scope.checkAllState = CHECKMARK_CHECKED
-        else
-          $scope.checkAllState = CHECKMARK_PARTIAL
-
+      $scope.selectAllChanged = function( state) {
+        $scope.selectAllState = state
       }
-      $scope.checkUncheckAll = function () {
-        $scope.checkAllState = CHECKMARK_NEXT_STATE[ $scope.checkAllState]
-        // if check, check visible. If uncheck, uncheck all.
-        var ps = $scope.checkAllState === CHECKMARK_CHECKED ? $scope.pointsFiltered : $scope.points
-        var i = ps.length - 1
-        $scope.checkCount = $scope.checkAllState === CHECKMARK_CHECKED ? i : 0
-        for( ; i >= 0; i-- ) {
-          var point = ps[ i]
-          point.checked = $scope.checkAllState
-        }
-      }
-
 
       $scope.chartAddPointById = function( id) {
         var point = findPoint( id)
@@ -236,7 +206,7 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
       $scope.chartAddSelectedPoints = function() {
         // Add all measurements that are checked and visible.
         var points = $scope.pointsFiltered.filter( function ( m ) {
-          return m.checked === CHECKMARK_CHECKED
+          return m.checked === 1
         } )
 
         if( points.length > 0 ) {
@@ -516,9 +486,9 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
 
       $scope.rowClasses = function( point) {
         return point.rowDetail ? 'gb-row-selected-detail animate-repeat'
-          : point.rowSelected ? 'gb-row-selected animate-repeat'
-          : point.commandSet ? 'gb-row-selectable animate-repeat'
-          : 'animate-repeat'
+          : point.rowSelected ? 'gb-point gb-row-selected animate-repeat'
+          : point.commandSet ? 'gb-point gb-row-selectable animate-repeat'
+          : 'gb-point animate-repeat'
       }
       $scope.togglePointRowById = function( id) {
         if( !id)
@@ -644,7 +614,6 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
               commandSet: undefined
             }
         points.forEach( function ( point ) {
-          point.checked = CHECKMARK_UNCHECKED
           point.currentMeasurement = angular.extend( {}, currentMeasurement)
           pointIds.push( point.id )
           if( typeof point.pointType !== 'string')
@@ -774,17 +743,6 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
       templateUrl: 'template/measurement/measurements.html',
       controller: 'gbMeasurementsController'
     }
-  }).
-
-  filter('checkboxClass', function() {
-    return function(checked) {
-      switch( checked) {
-        case 0: return 'fa fa-square-o text-muted'
-        case 1: return 'fa fa-check-square-o'
-        case 2: return 'fa fa-minus-square-o'
-        default: return 'fa fa-square-o'
-      }
-    };
   }).
 
   filter('validityIcon', function() {
