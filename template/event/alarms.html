@@ -26,6 +26,9 @@
             <div class="btn-group gb-toolbar" ng-show="selectAllState!==0" role="group"  style-="margin-left: 1.2em;">
                 <button class="btn btn-default" ng-click="removeSelected()" style="width: 60px;" title="Remove selected alarms"><i class="fa fa-trash-o"></i></button>
             </div>
+            <div class="alert alert-{{notification.type}} gb-alert-inline" ng-show="notification" role="alert" style="margin-left: 1em;">
+                <span><i class="fa fa-info-circle"></i> {{ notification.message }}</span>
+            </div>
         </div>
     </div>
 

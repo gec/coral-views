@@ -24,13 +24,15 @@
 
 angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.subscription']).
 
-  controller('gbAlarmsController', ['$scope', '$attrs', 'rest', 'subscription', function( $scope, $attrs, rest, subscription) {
+  controller('gbAlarmsController', ['$scope', '$attrs', 'rest', 'subscription', '$timeout', function( $scope, $attrs, rest, subscription, $timeout) {
     $scope.loading = true
     $scope.alarms = []
 //    $scope.alarmsFiltered = []
     $scope.limit = Number( $attrs.limit || 20);
     $scope.selectAllState = 0
     $scope.searchText = ''
+    $scope.notification = undefined // {type: 'danger', message: ''}  types: success, info, warning, danger
+    $scope.notificationTask = undefined // $timeout task
 
     var alarmIdMap = {}
 
@@ -103,8 +105,12 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
 
         if( update.state === 'REMOVED') {
           var i = $scope.alarms.indexOf( alarm)
-          if( i >= 0)
+          if( i >= 0) {
+            var a = $scope.alarms[i]
+            if( a.checked)
+              $scope.selectItem( a, 0) // selection needs to update its select count.
             $scope.alarms.splice( i, 1);
+          }
           delete alarmIdMap[alarm.id];
         } else {
           alarm.state = update.state
@@ -134,6 +140,11 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
         },
         function( ex, statusCode, headers, config) {
           console.log( 'gbAlarmsController.updateRequest ERROR updating alarms with ids: ' + ids.join() + ' to state "' + newState + '". Exception: ' + ex.exception + ' - ' + ex.message)
+          ids.forEach( function( id) {
+            var a = alarmIdMap[id]
+            if( a)
+              a.updateState = 'none'
+          })
         }
       )
     }
@@ -152,26 +163,55 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
       }
     }
 
+    function isSelected( alarm) {
+      return alarm.checked
+    }
     function isSelectedAndUnackAudible( alarm) {
       return alarm.checked && alarm.state === 'UNACK_AUDIBLE'
     }
     function isSelectedAndUnack( alarm) {
       return alarm.checked && ( alarm.state === 'UNACK_AUDIBLE' || alarm.state === 'UNACK_SILENT')
     }
-    function isSelectedAndNotRemoving( alarm) {
-      return alarm.checked && alarm.state !== 'REMOVED' && alarm.updateState !== 'removing'
+    function isSelectedAndRemovable( alarm) {
+      return alarm.checked && alarm.state === 'ACKNOWLEDGED' && alarm.updateState !== 'removing'
     }
     function getId( alarm) { return alarm.id }
 
-    function updateSelected( filter, newState, newUpdateState) {
-      var selected = $scope.alarms.filter( filter),
-          ids = selected.map( getId)
-      selected.forEach( function( a) { a.updateState = newUpdateState})
-      updateRequest( ids, newState)
+    function setNotification( typ, message, timeout) {
+      if( $scope.notificationTask) {
+        $timeout.cancel( $scope.notificationTask)
+        $scope.notificationTask = undefined
+      }
+
+      $scope.notification = {type: typ, message: message}
+
+      if( timeout) {
+        $scope.notificationTask = $timeout(function() {
+          $scope.notification = undefined
+          $scope.notificationTask = undefined
+        }, timeout);
+      }
     }
-    $scope.silenceSelected = function() { updateSelected( isSelectedAndUnackAudible, 'UNACK_SILENT', 'updating') }
-    $scope.acknowledgeSelected = function() { updateSelected( isSelectedAndUnack, 'ACKNOWLEDGED', 'updating') }
-    $scope.removeSelected = function() { updateSelected( isSelectedAndNotRemoving, 'REMOVED', 'removing') }
+
+    function updateSelected( filter, newState, newUpdateState, allSelectedAreNotValidMessage, someSelectedAreNotValidMessage) {
+      var selectedAndValid = $scope.alarms.filter( filter)
+
+      if( selectedAndValid.length > 0) {
+        var ids = selectedAndValid.map( getId)
+        selectedAndValid.forEach( function( a) { a.updateState = newUpdateState})
+        if( someSelectedAreNotValidMessage) {
+          var selected = $scope.alarms.filter( isSelected)
+          if( selected.length > selectedAndValid.length)
+            setNotification( 'info', someSelectedAreNotValidMessage, 5000)
+        }
+        updateRequest( ids, newState)
+      } else {
+        setNotification( 'info', allSelectedAreNotValidMessage, 5000)
+      }
+    }
+    $scope.silenceSelected = function() { updateSelected( isSelectedAndUnackAudible, 'UNACK_SILENT', 'updating', 'No audible alarms are selected.') }
+    $scope.acknowledgeSelected = function() { updateSelected( isSelectedAndUnack, 'ACKNOWLEDGED', 'updating', 'No unacknowledged alarms are selected.') }
+    $scope.removeSelected = function() { updateSelected( isSelectedAndRemovable, 'REMOVED', 'removing', 'No acknowledged alarms are selected.', 'Unacknowledged alarms were not removed.') }
 //    $scope.hitIt = function() {
 //      var selected = $scope.alarms.filter( isSelectedAndUnack),
 //          ids = selected.map( getId),

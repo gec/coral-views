@@ -104,6 +104,10 @@ describe('gb-alarms', function () {
     parentScope.$digest();
   }));
 
+  afterEach( function() {
+    $httpBackend.verifyNoOutstandingExpectation();
+    $httpBackend.verifyNoOutstandingRequest();
+  });
 
   function findAlarms() {
     return element.find('.gb-alarm');
@@ -111,6 +115,11 @@ describe('gb-alarms', function () {
 
   function findTd( event, tdIndex) {
     return event.find('td').eq(tdIndex);
+  }
+
+  function findAlertText( alert) {
+//    return alert[0].children[1].children[0].textContent
+    return alert[0].children[0].textContent
   }
 
   it('should create multiple sorted alarms', inject( function () {
@@ -197,41 +206,119 @@ describe('gb-alarms', function () {
 
   }));
 
-  it('should NOT remove selected alarms that are not acknowledged', inject( function () {
+  it('should remove animations from alarms upon failure', inject( function () {
     subscribeInstance.onSuccess( subscribeInstance.id, 'alarm', alarms)
     parentScope.$digest();
 
-    var removeds = [
-          copyAlarmWithState( scope.alarms[0], 'REMOVED'),
-          copyAlarmWithState( scope.alarms[2], 'REMOVED')
-        ],
-        ids = [
+    var updates = alarms.map( function( a) { return copyAlarmWithState( a, 'ACKNOWLEDGED')})
+    subscribeInstance.onSuccess( subscribeInstance.id, 'alarm', updates)
+    parentScope.$digest();
+
+    var ids = [
           scope.alarms[0].id,
           scope.alarms[2].id
-        ],
-        notRemovedId = scope.alarms[1].id
+        ]
     scope.alarms[0].checked = true
     scope.alarms[2].checked = true
 
     var response = {
       exception: 'BadRequestException',
-      message: 'Invalid transition between alarm states UNACK_AUDIBLE -> REMOVED'
+      message: 'Could not do it for whatever reason'
     }
 
     $httpBackend.when( 'POST', '/models/1/alarms', { state: 'REMOVED', ids: ids}).respond( 403, response)
     scope.removeSelected()
     $httpBackend.flush()
     expect( scope.alarms.length).toBe( 3)
+    expect( scope.alarms[0].updateState).toBe('none')
+    expect( scope.alarms[2].updateState).toBe('none')
   }));
 
+  it('should NOT remove selected alarms if none are acknowledged. Should not send post remove', inject( function ($timeout) {
+    subscribeInstance.onSuccess( subscribeInstance.id, 'alarm', alarms)
+    parentScope.$digest();
+
+    var ids = [
+          scope.alarms[0].id,
+          scope.alarms[2].id
+        ]
+    scope.alarms[0].checked = true
+    scope.alarms[2].checked = true
+
+    scope.removeSelected()
+    parentScope.$digest();
+
+    var alert = element.find('div.alert')
+    expect( alert).not.toHaveClass('ng-hide')
+
+    expect( scope.alarms.length).toBe( 3)
+    expect( scope.alarms[0].updateState).toBe('none')
+    expect( scope.alarms[2].updateState).toBe('none')
+
+    $timeout.flush()
+    expect( scope.notification).toBeUndefined()
+    expect( alert).toHaveClass('ng-hide')
+
+  }));
+
+  it('should remove only selected alarms and show info message if some selected are not removable', inject( function ($timeout) {
+    subscribeInstance.onSuccess( subscribeInstance.id, 'alarm', alarms)
+    parentScope.$digest()
+    var updates = [ copyAlarmWithState( scope.alarms[2], 'ACKNOWLEDGED') ]
+    subscribeInstance.onSuccess( subscribeInstance.id, 'alarm', updates)
+    parentScope.$digest();
+
+
+    var removeds = [
+          copyAlarmWithState( scope.alarms[2], 'REMOVED')
+        ],ids = [
+          scope.alarms[2].id
+        ]
+    scope.alarms[1].checked = true
+    scope.alarms[2].checked = true
+
+    $httpBackend.when( 'POST', '/models/1/alarms', { state: 'REMOVED', ids: ids}).respond( removeds)
+    scope.removeSelected()
+    $httpBackend.flush()
+    parentScope.$digest();
+
+    var alert = element.find('div.alert')
+    expect( alert).not.toHaveClass('ng-hide')
+    expect( findAlertText( alert)).toBe( ' Unacknowledged alarms were not removed.')
+
+    expect( scope.alarms.length).toBe( 2)
+    expect( scope.alarms[0].updateState).toBe('none')
+    expect( scope.alarms[1].updateState).toBe('none')
+
+    $timeout.flush()
+    expect( scope.notification).toBeUndefined()
+    expect( alert).toHaveClass('ng-hide')
+
+  }));
+
+  // One unack alarm. Tried to remove it. Got failure.
+  // Request: {"state":"REMOVED","ids":["20"]}
+  // Response: {"exception":"BadRequestException","message":"Invalid transition between alarm states UNACK_AUDIBLE -> REMOVED"}
+  // Bells remained spinning
+
+  // Two alarms. One unack, one ack.
+  // Request: {"state":"REMOVED","ids":["21","20"]}
+  // Response: {"exception":"BadRequestException","message":"Invalid transition between alarm states UNACK_AUDIBLE -> REMOVED"}
+  // Bells remained spinning
+  // Refresh: both alarms remain.
 
   // 403, {"exception":"BadRequestException","message":"No alarm exists for id 1234567890"}
+  // Bells remained spinning
 
   // Some good, some bad: {"exception":"BadRequestException","message":"No alarm exists for id 1234567890"}
 
   it('should remove selected alarms', inject( function () {
     subscribeInstance.onSuccess( subscribeInstance.id, 'alarm', alarms)
     parentScope.$digest();
+    var updates = alarms.map( function( a) { return copyAlarmWithState( a, 'ACKNOWLEDGED')})
+    subscribeInstance.onSuccess( subscribeInstance.id, 'alarm', updates)
+    parentScope.$digest();
+
 
     var removeds = [
           copyAlarmWithState( scope.alarms[0], 'REMOVED'),
@@ -250,7 +337,7 @@ describe('gb-alarms', function () {
     $httpBackend.flush()
     expect( scope.alarms.length).toBe( 1)
     expect( scope.alarms[0].id).toBe( notRemovedId)
-    expect( scope.alarms[0].state).toBe( 'UNACK_AUDIBLE')
+    expect( scope.alarms[0].state).toBe( 'ACKNOWLEDGED')
 
   }));
 

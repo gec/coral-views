@@ -424,6 +424,12 @@ table.gb-row-radius {
   right: 1em;
 }
 
+.gb-alert-inline {
+  display: inline-block;
+  margin-bottom: 0;
+  padding: 6px 12px;
+}
+
 .animate {
   /*line-height:40px;*/
   /*list-style:none;*/
