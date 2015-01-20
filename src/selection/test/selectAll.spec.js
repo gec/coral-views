@@ -3,16 +3,17 @@ describe('gbSelectAll', function () {
     itemCount = 3,
     items = [];
 
-  for( var index = 0; index < itemCount; index++) {
-    items.push( {
-      id: 'id'+index
-    })
-  }
-
   beforeEach(module('greenbus.views.selection'));
   beforeEach(module('template/selection/selectAll.html'));
 
   beforeEach(inject(function ($rootScope, _$compile_) {
+
+    items = []
+    for( var index = 0; index < itemCount; index++) {
+      items.push( {
+        id: 'id'+index
+      })
+    }
 
     parentScope = $rootScope.$new();
     $compile = _$compile_;
@@ -83,7 +84,7 @@ describe('gbSelectAll', function () {
 
   }))
 
-  it('should have proper selectAllState with selectAll(), the deselect individually', inject( function () {
+  it('should have proper selectAllState with selectAll(), then deselect individually', inject( function () {
     var foundI = findI()
 
     scope.selectAll()
@@ -111,5 +112,48 @@ describe('gbSelectAll', function () {
     expect( parentScope.selectAllChanged).toHaveBeenCalledWith( 0)
 
   }))
+
+  it('should not change selectAllState on selectAll() with empty model', inject( function () {
+    var foundI = findI()
+
+    scope.model = []
+
+    scope.selectAll()
+    expect( parentScope.selectAllChanged).not.toHaveBeenCalled()
+
+  }))
+
+  it('should have proper selectAllState with selectAll(), then deselect and remove model items individually', inject( function () {
+    var foundI = findI()
+
+    scope.selectAll()
+    expect( parentScope.selectAllChanged).toHaveBeenCalledWith( 1)
+    parentScope.selectAllChanged.calls.reset()
+
+    // Deselect each
+
+    parentScope.selectItem( items[2], 0)
+    parentScope.items.splice(2, 1)
+    parentScope.$digest()
+    expect( foundI).toHaveClass( 'fa-minus-square-o');
+    expect( parentScope.selectAllChanged).toHaveBeenCalledWith( 2)
+
+
+    parentScope.selectAllChanged.calls.reset()
+    parentScope.selectItem( items[1], 0)
+    parentScope.items.splice(1, 1)
+    parentScope.$digest()
+    expect( foundI).toHaveClass( 'fa-minus-square-o');
+    expect( parentScope.selectAllChanged).not.toHaveBeenCalled()
+
+    parentScope.selectAllChanged.calls.reset()
+    parentScope.selectItem( items[0], 0)
+    parentScope.items.splice(0, 1)
+    parentScope.$digest()
+    expect( foundI).toHaveClass( 'fa-square-o text-muted');
+    expect( parentScope.selectAllChanged).toHaveBeenCalledWith( 0)
+
+  }))
+
 
 });

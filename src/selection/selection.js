@@ -31,14 +31,7 @@ angular.module('greenbus.views.selection', []).
     $scope.selectAllState = SELECT_UNCHECKED
     $scope.selectCount = 0
 
-
-    self.selectItem = function(item) {
-      item.checked = item.hasOwnProperty( 'checked') ? SELECT_NEXT_STATE[ item.checked] : SELECT_CHECKED
-      if( item.checked === SELECT_CHECKED )
-        $scope.selectCount++
-      else
-        $scope.selectCount--
-
+    self.updateSelectAllState = function() {
       var oldSelectAllState = $scope.selectAllState
       if( $scope.selectCount === 0 )
         $scope.selectAllState = SELECT_UNCHECKED
@@ -51,8 +44,46 @@ angular.module('greenbus.views.selection', []).
         self.notifyParent( $scope.selectAllState)
     }
 
+    /**
+     * Check or uncheck item.
+     * @param item  The item to check or uncheck
+     * @param newState If undefined, toggle selection. If defined set to that state.
+     */
+    self.selectItem = function(item, newState) {
+      var currentState = item.checked || SELECT_UNCHECKED
+
+      if( newState === undefined)
+        newState = SELECT_NEXT_STATE[ currentState]
+
+      if( currentState !== newState) {
+
+        item.checked = newState
+        if( item.checked === SELECT_CHECKED )
+          $scope.selectCount++
+        else
+          $scope.selectCount--
+
+        // Just in case
+        if( $scope.selectCount < 0)
+          $scope.selectCount = 0
+
+        self.updateSelectAllState()
+      }
+
+    }
+
+    self.uncheckItem = function(item) {
+      if( item.checked) {
+        if( $scope.selectCount > 0 )
+          $scope.selectCount--
+        item.checked = false
+
+        self.updateSelectAllState()
+      }
+    }
+
     $scope.selectAll = function() {
-      if( !$scope.model)
+      if( !$scope.model || $scope.model.length === 0)
         return
 
       $scope.selectAllState = SELECT_NEXT_STATE[ $scope.selectAllState]
@@ -85,6 +116,7 @@ angular.module('greenbus.views.selection', []).
       link: function(scope, element, attrs, controller) {
         var selectItem = attrs.selectItem || 'selectItem'
         scope.$parent[selectItem] = controller.selectItem
+        scope.$parent.uncheckItem = controller.uncheckItem
         controller.notifyParent = function( state) {
           scope.notify( {state: state})
         }

@@ -19,6 +19,8 @@ needs to be the variable in the ng-repeat.
         <i ng-class="item.checked | selectItemClass"></i>
     </div> 
 
+When delete model items. Call selectItem( item, 0) to make sure all items are deselected before deletion.
+
 ### Filters
 #### selectItemClass
 Returns the checkbox icon class for the given checkbox state. Example:
