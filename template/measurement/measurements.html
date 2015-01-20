@@ -100,7 +100,7 @@
                                 <div class="col-md-1">
                                 </div>
                                 <div class="col-md-10">
-                                    <alert ng-repeat="alert in point.commandSet.alerts" type="alert.type" close="point.commandSet.closeAlert($index)" style="text-align: left; white-space: normal;">{{alert.message}}</alert>
+                                    <alert ng-repeat="alert in point.commandSet.alerts" type="{{alert.type}}" close="point.commandSet.closeAlert($index)" style="text-align: left; white-space: normal;">{{alert.message}}</alert>
                                 </div>
                                 <div class="col-md-1">
                                 </div>
