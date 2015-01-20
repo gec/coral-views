@@ -83,4 +83,33 @@ describe('gbSelectAll', function () {
 
   }))
 
+  it('should have proper selectAllState with selectAll(), the deselect individually', inject( function () {
+    var foundI = findI()
+
+    scope.selectAll()
+    expect( parentScope.selectAllChanged).toHaveBeenCalledWith( 1)
+
+    // Deselect each
+
+    parentScope.selectAllChanged.calls.reset()
+    parentScope.selectItem( items[2])
+    parentScope.$digest()
+    expect( foundI).toHaveClass( 'fa-minus-square-o');
+    expect( parentScope.selectAllChanged).toHaveBeenCalledWith( 2)
+
+
+    parentScope.selectAllChanged.calls.reset()
+    parentScope.selectItem( items[1])
+    parentScope.$digest()
+    expect( foundI).toHaveClass( 'fa-minus-square-o');
+    expect( parentScope.selectAllChanged).not.toHaveBeenCalled()
+
+    parentScope.selectAllChanged.calls.reset()
+    parentScope.selectItem( items[0])
+    parentScope.$digest()
+    expect( foundI).toHaveClass( 'fa-square-o text-muted');
+    expect( parentScope.selectAllChanged).toHaveBeenCalledWith( 0)
+
+  }))
+
 });

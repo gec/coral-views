@@ -59,9 +59,9 @@ angular.module('greenbus.views.selection', []).
       // if check, check visible. If uncheck, uncheck all.
 //      var ps = $scope.selectAllState === SELECT_CHECKED ? $scope.pointsFiltered : $scope.model
       var ps =$scope.model
-      var i = ps.length - 1
-      $scope.selectCount = $scope.selectAllState === SELECT_CHECKED ? i : 0
-      for( ; i >= 0; i-- ) {
+
+      $scope.selectCount = $scope.selectAllState === SELECT_CHECKED ? ps.length : 0
+      for( var i = ps.length - 1; i >= 0; i-- ) {
         var item = ps[ i]
         item.checked = $scope.selectAllState
       }
