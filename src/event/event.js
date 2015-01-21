@@ -167,10 +167,10 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
       return alarm.checked
     }
     function isSelectedAndUnackAudible( alarm) {
-      return alarm.checked && alarm.state === 'UNACK_AUDIBLE'
+      return alarm.checked && alarm.state === 'UNACK_AUDIBLE' && alarm.updateState !== 'updating'
     }
     function isSelectedAndUnack( alarm) {
-      return alarm.checked && ( alarm.state === 'UNACK_AUDIBLE' || alarm.state === 'UNACK_SILENT')
+      return alarm.checked && ( alarm.state === 'UNACK_AUDIBLE' || alarm.state === 'UNACK_SILENT') && alarm.updateState !== 'updating'
     }
     function isSelectedAndRemovable( alarm) {
       return alarm.checked && alarm.state === 'ACKNOWLEDGED' && alarm.updateState !== 'removing'
@@ -310,7 +310,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     }
   }).
 
-  filter('alarmStateClass', function() {
+  filter('alarmAckClass', function() {
     return function(state, updateState) {
       var s
       switch( state) {
@@ -326,12 +326,21 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
       return s
     };
   }).
-  filter('alarmStateTitle', function() {
+  filter('alarmAckButtonClass', function() {
     return function(state) {
       switch( state) {
-        case 'UNACK_AUDIBLE': return 'Unacknowledged audible'
-        case 'UNACK_SILENT': return 'Unacknowledged'
-        case 'ACKNOWLEDGED': return 'Acknowledged'
+        case 'UNACK_AUDIBLE': return 'btn btn-default btn-xs'
+        case 'UNACK_SILENT': return 'btn btn-default btn-xs'
+        default: return '';
+      }
+    };
+  }).
+  filter('alarmAckTitle', function() {
+    return function(state) {
+      switch( state) {
+        case 'UNACK_AUDIBLE': return 'Acknowledge alarm'
+        case 'UNACK_SILENT': return 'Acknowledge alarm'
+        case 'ACKNOWLEDGED': return 'Acknowledged alarm'
         case 'REMOVED': return 'Removed'
         default: return 'Unknown state: ' + state
       }
@@ -342,21 +351,23 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     return function(state) {
       switch( state) {
         case 'UNACK_AUDIBLE': return 'fa fa-volume-up gb-alarm-unack'
-        case 'UNACK_SILENT': return 'fa'
-        case 'ACKNOWLEDGED': return 'fa'
-        case 'REMOVED': return 'fa'
-        default: return 'fa fa-question-circle gb-alarm-unack'
+        default: return 'fa'
+      }
+    };
+  }).
+  filter('alarmAudibleButtonClass', function() {
+    return function(state) {
+      switch( state) {
+        case 'UNACK_AUDIBLE': return 'btn btn-default btn-xs'
+        default: return ''
       }
     };
   }).
   filter('alarmAudibleTitle', function() {
     return function(state) {
       switch( state) {
-        case 'UNACK_AUDIBLE': return 'Unacknowledged audible'
-        case 'UNACK_SILENT': return 'Unacknowledged'
-        case 'ACKNOWLEDGED': return 'Acknowledged'
-        case 'REMOVED': return 'Removed'
-        default: return 'Unknown state: ' + state
+        case 'UNACK_AUDIBLE': return 'Silence alarm'
+        default: return ''
       }
     };
   })

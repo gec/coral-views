@@ -11,6 +11,16 @@
   display: none !important;
 }
 
+td.gb-alarm-btn-xs {
+  text-align: center;
+  min-height: 22px;
+  min-width: 27px;
+}
+th.gb-alarm-btn-xs {
+  text-align: center;
+  min-width: 27px;
+}
+
 .icon-spin {
   -animation: icon-spin1 .7s infinite linear;
   -webkit-animation: icon-spin2 .7s infinite linear;
