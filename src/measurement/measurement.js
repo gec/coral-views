@@ -214,274 +214,6 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
         }
       }
 
-      var CommandNotSelected = 'NotSelected',   // -> Selecting
-          CommandSelecting = 'Selecting',       // -> Selected, NotSelected (unauthorized or failure)
-          CommandSelected = 'Selected',         // -> Executing, NotSelected, Deselecting (user or timeout)
-          CommandDeselecting = 'Deselecting',   // -> Executing, NotSelected (user or timeout)
-          CommandExecuting = 'Executing'        // -> NotSelected (success or failure)
-      var CommandIcons = {
-        NotSelected: 'fa fa-chevron-right text-primary',
-        Selecting: 'fa fa-chevron-right fa-spin text-primary',
-        Selected: 'fa fa-chevron-left text-primary',
-        Deselecting: 'fa fa-chevron-left fa-spin text-primary',
-        Executing: 'fa fa-chevron-left text-primary'
-      }
-      var ExecuteIcons = {
-        NotSelected: '',
-        Selecting: '',
-        Selected: 'fa fa-sign-in',
-        Deselecting: 'fa fa-sign-in',
-        Executing: 'fa fa-refresh fa-spin'
-      }
-
-      function CommandSet( _point, _commands) {
-        // Control & Setpoint States
-
-
-        this.point = _point
-        this.commands = _commands
-        this.state = CommandNotSelected
-        this.lock = undefined
-        this.selectedCommand = undefined
-        this.commands.forEach( function( c) {
-          c.selectClasses = CommandIcons[ CommandNotSelected]
-          c.executeClasses = ExecuteIcons[ CommandNotSelected]
-          c.isSetpoint = c.commandType.indexOf('SETPOINT') === 0
-          c.blockClasses = 'fa fa-unlock'
-          if( c.isSetpoint) {
-            c.setpointValue = undefined
-
-            switch( c.commandType) {
-              case 'SETPOINT_INT':
-                c.pattern = /^[+-]?\d+$/;
-                c.placeHolder = 'int'
-                break
-              case 'SETPOINT_DOUBLE':
-                c.pattern = /^[-+]?\d+(\.\d+)?$/;
-                c.placeHolder = 'decimal'
-                break
-              case 'SETPOINT_STRING':
-                c.pattern = undefined;
-                c.placeHolder = 'text'
-                break
-              default:
-                break
-            }
-
-          }
-
-        })
-      }
-
-      CommandSet.prototype.selectToggle = function( command) {
-        switch( this.state) {
-          case CommandNotSelected: this.select( command); break;
-          case CommandSelecting:   break;
-          case CommandSelected:    this.deselectOptionSelect( command); break;
-          case CommandExecuting:   break;
-        }
-        this.point.ignoreRowClick = true
-      }
-
-      CommandSet.prototype.setState = function( state, command) {
-        console.log( 'setState from ' + this.state + ' to ' + state)
-        this.state = state
-        if( command) {
-          command.selectClasses = CommandIcons[this.state]
-          command.executeClasses = ExecuteIcons[this.state]
-          console.log( 'setState ' + this.state + ', command.classes ' + command.classes)
-        }
-      }
-
-      CommandSet.prototype.select = function( command) {
-        var self = this
-
-        if( this.state !== CommandNotSelected) {
-          console.error( 'CommandSet.select invalid state: ' + this.state)
-          return
-        }
-
-        self.setState( CommandSelecting, command)
-
-        var arg = {
-          accessMode: 'ALLOWED',
-          commandIds: [command.id]
-        }
-        rest.post( '/models/1/commandlock', arg, null, $scope,
-          function( data) {
-            self.lock = data
-            if( self.lock.expireTime) {
-              self.selectedCommand = command
-              self.setState( CommandSelected, command)
-
-              var delay = self.lock.expireTime - Date.now()
-              console.log( 'commandLock delay: ' + delay)
-              // It the clock for client vs server is off, we'll use a minimum delay.
-              delay = Math.max( delay, 10)
-              self.selectTimeout = $timeout(function () {
-                delete self.lock;
-                delete self.selectTimeout;
-                if( self.state === CommandSelected || self.state === CommandExecuting) {
-                  self.setState( CommandNotSelected, self.selectedCommand)
-                  self.selectedCommand = undefined
-                }
-              }, delay)
-            } else {
-              self.setState( CommandNotSelected, self.selectedCommand)
-              self.selectedCommand = undefined
-              self.alertDanger( 'Select failed. ' + data)
-            }
-          },
-          function( ex, statusCode, headers, config) {
-            console.log( 'CommandSet.select ' + ex)
-            self.alertException( ex)
-            self.setState( CommandNotSelected, command)
-          })
-      }
-
-      CommandSet.prototype.deselectModel = function() {
-        this.setState( CommandNotSelected, this.selectedCommand)
-        this.selectedCommand = undefined
-      }
-
-
-      CommandSet.prototype.deselectOptionSelect = function( command) {
-        var self = this
-
-        if( this.state !== CommandSelected) {
-          console.error( 'CommandSet.deselect invalid state: ' + this.state)
-          return
-        }
-
-        self.setState( CommandDeselecting, self.selectedCommand)
-
-        rest.delete( '/models/1/commandlock/' + self.lock.id, null, $scope,
-          function( data) {
-            delete self.lock;
-            var saveCommand = self.selectedCommand
-            self.deselectModel()
-            if( saveCommand !== command) {
-              self.select( command)
-            }
-          },
-          function( ex, statusCode, headers, config) {
-            console.log( 'CommandSet.deselect ' + ex)
-            self.deselectModel()
-            self.alertException( ex)
-
-            var saveCommand = self.selectedCommand
-            self.selectedCommand = undefined
-            if( saveCommand !== command) {
-              self.select( command)
-            }
-          })
-      }
-
-      function getSetpointInt( value) {
-        var n = Number( value)
-
-      }
-      CommandSet.prototype.execute = function( command, commandIndex) {
-        var self = this
-
-        if( this.state !== CommandSelected) {
-          console.error( 'CommandSet.execute invalid state: ' + this.state)
-          return
-        }
-
-        var args = {
-          commandLockId: self.lock.id
-        }
-
-        if( command.isSetpoint) {
-          if( command.pattern && !command.pattern.test( command.setpointValue)) {
-            switch( command.commandType) {
-              case 'SETPOINT_INT': self.alertDanger( 'Setpoint needs to be an integer value.'); return;
-              case 'SETPOINT_DOUBLE': self.alertDanger( 'Setpoint needs to be a floating point value.'); return;
-              default:
-                console.error( 'Setpoint has unknown error, "' + command.setpointValue + '" for command type ' + command.commandType);
-            }
-          }
-
-          switch( command.commandType) {
-            case 'SETPOINT_INT':
-              args.setpoint = { intValue: Number( command.setpointValue)}
-              break
-            case 'SETPOINT_DOUBLE':
-              args.setpoint = { doubleValue: Number( command.setpointValue)}
-              break
-            case 'SETPOINT_STRING':
-              args.setpoint = { stringValue: command.setpointValue}
-              break
-            default:
-              break
-          }
-        }
-
-        self.setState( CommandExecuting, command)
-
-
-        rest.post( '/models/1/commands/' + command.id, args, null, $scope,
-          function( commandResult) {
-            self.alertCommandResult( commandResult)
-            self.deselectModel()
-          },
-          function( ex, statusCode, headers, config) {
-            console.log( 'CommandSet.execute ' + ex)
-            self.deselectModel()
-            self.alertException( ex)
-          })
-
-        this.point.ignoreRowClick = true
-      }
-
-      CommandSet.prototype.closeAlert = function( index) {
-        if( this.alerts)
-          this.alerts.splice( index, 1)
-        this.point.ignoreRowClick = true
-      }
-
-      CommandSet.prototype.alertCommandResult = function( result) {
-        var alert = { message: 'Successful'}
-        alert.type = result.status === 'SUCCESS' ? 'success' : 'danger'
-        if( result.status !== 'SUCCESS') {
-          alert.message = 'ERROR: ' + result.status
-          if( result.error)
-            alert.message += ',  ' + result.error
-        }
-        this.alerts = [ alert ]
-      }
-
-      CommandSet.prototype.alertException = function( ex) {
-        var alert = {
-          type: 'danger',
-          message: ex.exception + ': ' + ex.message
-        }
-        this.alerts = [ alert ]
-      }
-      CommandSet.prototype.alertDanger = function( message) {
-        var alert = {
-          type: 'danger',
-          message: message
-        }
-        this.alerts = [ alert ]
-      }
-
-      CommandSet.prototype.getCommandTypes = function() {
-        var control = '',
-            setpoint = ''
-
-        this.commands.forEach( function( c) {
-          if( control.length === 0 && c.commandType === 'CONTROL') {
-            control = 'control'
-          } else {
-            if( setpoint.length === 0 && c.commandType.indexOf( 'SETPOINT') === 0)
-              setpoint = 'setpoint'
-          }
-        })
-
-        return control && setpoint ? control + ',' + setpoint : control + setpoint
-      }
 
 
       $scope.rowClasses = function( point) {
@@ -668,6 +400,21 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
         }
       ]
 
+      var CommandRest = {
+        select: function ( accessMode, commandIds, success, failure) {
+          var arg = {
+            accessMode: accessMode,
+            commandIds: commandIds
+          }
+          rest.post( '/models/1/commandlock', arg, null, $scope, success, failure)
+        },
+        deselect: function( lockId, success, failure) {
+          rest.delete( '/models/1/commandlock/' + lockId, null, $scope, success, failure)
+        },
+        execute: function( commandId, success, failure) {
+          rest.post( '/models/1/commands/' + commandId, success, failure)
+        }
+      }
 
       /**
        * UUIDs are 36 characters long. The URL max is 2048
@@ -682,7 +429,7 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
           for( var pointId in data) {
             point = findPoint( pointId)
             if( point) {
-              point.commandSet = new CommandSet( point, data[pointId])
+              point.commandSet = new CommandSet( point, data[pointId], CommandRest)
               point.commandTypes = point.commandSet.getCommandTypes().toLowerCase()
               console.log( 'commandTypes: ' + point.commandTypes)
             }
