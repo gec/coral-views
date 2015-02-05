@@ -139,7 +139,7 @@ angular.module('greenbus.views.endpoint', ['greenbus.views.rest', 'greenbus.view
       replace: true,
       transclude: true,
       scope: true,
-      templateUrl: 'template/endpoint/endpoints.html',
+      templateUrl: 'greenbus.views.template/endpoint/endpoints.html',
       controller: 'gbEndpointsController'
     }
   }).

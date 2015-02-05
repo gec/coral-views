@@ -274,7 +274,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
       replace: true,
       transclude: true,
       scope: true,
-      templateUrl: 'template/event/alarms.html',
+      templateUrl: 'greenbus.views.template/event/alarms.html',
       controller: 'gbAlarmsController',
       link: function(scope, element, attrs) {
         // Title element
@@ -305,7 +305,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
       replace: true,
       transclude: true,
       scope: true,
-      templateUrl: 'template/event/events.html',
+      templateUrl: 'greenbus.views.template/event/events.html',
       controller: 'gbEventsController'
     }
   }).

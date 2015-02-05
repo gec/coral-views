@@ -259,7 +259,7 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
       replace: true,
       transclude: true,
       scope: true,
-      templateUrl: 'template/ess/esses.html',
+      templateUrl: 'greenbus.views.template/ess/esses.html',
       controller: 'gbEssesController'
     }
   }).

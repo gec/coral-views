@@ -26,7 +26,7 @@ describe('gb-notification', function () {
   beforeEach(module('greenbus.views.rest'));
   beforeEach(module('greenbus.views.subscription'));
   beforeEach(module('greenbus.views.notification'));
-  beforeEach(module('template/notification/notification.html'));
+  beforeEach(module('greenbus.views.template/notification/notification.html'));
   beforeEach(function() {
     module(function($provide) {
       $provide.value('authentication', mock.authentication)

@@ -132,6 +132,10 @@ module.exports = function(grunt) {
       dist: {
         options: {
           module: null, // no bundle module for all the html2js templates
+          // Prefix the rootModule name to each template's module name.
+          // This way mmc.views won't have the same template names as greenbus.views
+          // Note: test specs need to add this prefix when loading templates
+          rename: function( moduleName) { return grunt.config('rootModule') + '.' + moduleName},
           base: '.'
         },
         files: [{
@@ -275,7 +279,8 @@ module.exports = function(grunt) {
       cssFiles: grunt.file.expand(['assets/css/*.css', 'src/'+name+'/*.css']),
       tplFiles: grunt.file.expand('template/'+name+'/*.html'),
       tpljsFiles: grunt.file.expand('template/'+name+'/*.html.js'),
-      tplModules: grunt.file.expand('template/'+name+'/*.html').map(enquote),
+      // Prefix the rootModule name to each template file name. See note above at html2js
+      tplModules: grunt.file.expand('template/'+name+'/*.html').map( function( f) { return enquote('<%= rootModule %>.' + f)} ),
       dependencies: dependenciesForModule(name),
       docs: {
         md: grunt.file.expand('src/'+name+'/docs/*.md')

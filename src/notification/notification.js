@@ -89,7 +89,7 @@ angular.module('greenbus.views.notification', ['greenbus.views.rest', 'greenbus.
       replace: true,
       transclude: true,
       scope: true,
-      templateUrl: 'template/notification/notification.html',
+      templateUrl: 'greenbus.views.template/notification/notification.html',
       controller: 'gbNotificationController'
     }
   })

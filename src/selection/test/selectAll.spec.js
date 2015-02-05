@@ -4,7 +4,7 @@ describe('gbSelectAll', function () {
     items = [];
 
   beforeEach(module('greenbus.views.selection'));
-  beforeEach(module('template/selection/selectAll.html'));
+  beforeEach(module('greenbus.views.template/selection/selectAll.html'));
 
   beforeEach(inject(function ($rootScope, _$compile_) {
 

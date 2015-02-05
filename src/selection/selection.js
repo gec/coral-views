@@ -111,7 +111,7 @@ angular.module('greenbus.views.selection', []).
              model  : '=',
              notify: '&'
       },
-      templateUrl: 'template/selection/selectAll.html',
+      templateUrl: 'greenbus.views.template/selection/selectAll.html',
       controller: 'gbSelectAllController',
       link: function(scope, element, attrs, controller) {
         var selectItem = attrs.selectItem || 'selectItem'

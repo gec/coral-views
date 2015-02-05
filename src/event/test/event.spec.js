@@ -29,8 +29,8 @@ describe('gb-events', function () {
   beforeEach(module('greenbus.views.rest'));
   beforeEach(module('greenbus.views.subscription'));
   beforeEach(module('greenbus.views.event'));
-  beforeEach(module('template/event/events.html'));
-  beforeEach(module('template/event/alarms.html'));
+  beforeEach(module('greenbus.views.template/event/events.html'));
+  beforeEach(module('greenbus.views.template/event/alarms.html'));
 
   beforeEach(function () {
     subscribeInstance = {}

@@ -262,7 +262,7 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
       replace: true,
       transclude: true,
       scope: true,
-      templateUrl: 'template/chart/charts.html',
+      templateUrl: 'greenbus.views.template/chart/charts.html',
       controller: 'gbChartsController'
     }
   }).
@@ -373,7 +373,7 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
       replace: true,
       transclude: true,
       scope: true,
-      templateUrl: 'template/chart/chart.html',
+      templateUrl: 'greenbus.views.template/chart/chart.html',
       controller: 'gbChartController',
       link: gbChartLink
     }

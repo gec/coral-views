@@ -62,7 +62,7 @@ describe('endpoint', function () {
   beforeEach(module('greenbus.views.rest'));
   beforeEach(module('greenbus.views.subscription'));
   beforeEach(module('greenbus.views.endpoint'));
-  beforeEach(module('template/endpoint/endpoints.html'));
+  beforeEach(module('greenbus.views.template/endpoint/endpoints.html'));
   beforeEach(function() {
     subscribeInstance = {}
     _subscription = {

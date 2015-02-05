@@ -150,7 +150,6 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
       $scope.points = []
       $scope.pointsFiltered = []
       $scope.selectAllState = 0
-      $scope.charts = []
 
       // Search
       $scope.searchText = ''
@@ -487,7 +486,7 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
       replace: true,
       transclude: true,
       scope: true,
-      templateUrl: 'template/measurement/measurements.html',
+      templateUrl: 'greenbus.views.template/measurement/measurements.html',
       controller: 'gbMeasurementsController'
     }
   }).

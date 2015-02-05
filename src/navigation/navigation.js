@@ -218,7 +218,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
       replace: true,
       transclude: true,
       scope: true,
-      templateUrl: 'template/navigation/navBarTop.html',
+      templateUrl: 'greenbus.views.template/navigation/navBarTop.html',
       controller: 'NavBarTopController'
     }
   }).
@@ -244,7 +244,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
       replace: true,
       transclude: true,
       scope: true,
-      templateUrl: 'template/navigation/navList.html',
+      templateUrl: 'greenbus.views.template/navigation/navList.html',
       controller: 'NavListController'
     }
   }).
