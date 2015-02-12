@@ -4,7 +4,7 @@ angular.module('greenbus.views.demo').controller('EventDemoCtrl', function ($sco
 
   $scope.pushEvent = function() {
     subscription.pushMessage(
-      'subscription.subscribeToRecentEvents',
+      'subscription.subscribeToEvents',
       'event',
       [
         {'id': ++eventId, 'deviceTime': 0, 'eventType': 'System.UserLogin', 'alarm': false, 'severity': 5, 'agent': 'system', 'entity': '44c0e05e-1e21-4785-a2ad-80fdfad8c51d', 'message': 'User logged in: system', 'time': Date.now()},
@@ -13,9 +13,9 @@ angular.module('greenbus.views.demo').controller('EventDemoCtrl', function ($sco
   }
 
   $scope.pushAlarm = function() {
-    var alarm  = {'id': ++alarmId, 'state': 'UNACK_AUDIBLE', 'event': {'id': '17', 'deviceTime': 0, 'eventType': 'Scada.Breaker', 'alarm': true, 'severity': 3, 'agent': 'system', 'entity': '218bf05f-b479-49b6-99aa-c2803419d31f', 'message': 'Breaker Opened: Openstatus validity GOOD', 'time': Date.now()}}
+    var alarm  = {'id': ++alarmId, 'state': 'UNACK_AUDIBLE', 'eventId': '17', 'deviceTime': 0, 'eventType': 'Scada.Breaker', 'alarm': true, 'severity': 3, 'agent': 'system', 'entity': '218bf05f-b479-49b6-99aa-c2803419d31f', 'message': 'Breaker Opened: Openstatus validity GOOD', 'time': Date.now()}
     subscription.pushMessage(
-      'subscription.subscribeToActiveAlarms',
+      'subscription.subscribeToEvents',
       'event', [ alarm ]
     )
 
@@ -31,15 +31,15 @@ angular.module('greenbus.views.demo').controller('EventDemoCtrl', function ($sco
 
 
   var subscribeEvents = {
-    'subscribeToRecentEvents':{
+    'subscribeToEvents':{
       'eventTypes':[],
       'limit':40,
-      'subscriptionId':'subscription.subscribeToRecentEvents.fc96f4bc-a323-4f00-90d9-856fa13b408c'
+      'subscriptionId':'subscription.subscribeToEvents.fc96f4bc-a323-4f00-90d9-856fa13b408c'
     }
   }
 
   var events = {
-    'subscriptionId': 'subscription.subscribeToRecentEvents.8c30c910-ca56-4b9d-8039-d420a856d2db',
+    'subscriptionId': 'subscription.subscribeToEvents.8c30c910-ca56-4b9d-8039-d420a856d2db',
     'type': 'event',
     'data': [
       {'id': '134', 'deviceTime': 0, 'eventType': 'System.UserLogin', 'alarm': false, 'severity': 5, 'agent': 'system', 'entity': '44c0e05e-1e21-4785-a2ad-80fdfad8c51d', 'message': 'User logged in: system', 'time': 1416331910823},
@@ -86,19 +86,19 @@ angular.module('greenbus.views.demo').controller('EventDemoCtrl', function ($sco
   }
 
   var subcribeAlarms = {
-    'subscribeToActiveAlarms': {
+    'subscribeToEvents': {
       'limit': 40,
-      'subscriptionId': 'subscription.subscribeToActiveAlarms.61417dc9-2e7d-4b8d-f9cd-f6d9a3b268f2'
+      'subscriptionId': 'subscription.subscribeToEvents.61417dc9-2e7d-4b8d-f9cd-f6d9a3b268f2'
     }
   }
 
   var alarms = {
-    'subscriptionId': 'subscription.subscribeToActiveAlarms.59713953-a630-4584-8a8d-7b617015a47b',
+    'subscriptionId': 'subscription.subscribeToEvents.59713953-a630-4584-8a8d-7b617015a47b',
     'type': 'alarm',
     'data': [
-      {'id': '3', 'state': 'UNACK_AUDIBLE', 'event': {'id': '48', 'deviceTime': 0, 'eventType': 'Scada.Breaker', 'alarm': true, 'severity': 3, 'agent': 'system', 'entity': '218bf05f-b479-49b6-99aa-c2803419d31f', 'message': 'Breaker Opened: Openstatus validity GOOD', 'time': 1415304360269}},
-      {'id': '2', 'state': 'UNACK_AUDIBLE', 'event': {'id': '22', 'deviceTime': 0, 'eventType': 'Scada.Breaker', 'alarm': true, 'severity': 3, 'agent': 'system', 'entity': '218bf05f-b479-49b6-99aa-c2803419d31f', 'message': 'Breaker Opened: Openstatus validity GOOD', 'time': 1415288035666}},
-      {'id': '1', 'state': 'UNACK_AUDIBLE', 'event': {'id': '17', 'deviceTime': 0, 'eventType': 'Scada.Breaker', 'alarm': true, 'severity': 3, 'agent': 'system', 'entity': '218bf05f-b479-49b6-99aa-c2803419d31f', 'message': 'Breaker Opened: Openstatus validity GOOD', 'time': 1415287958571}}
+      {'id': '3', 'state': 'UNACK_AUDIBLE', 'eventId': '48', 'deviceTime': 0, 'eventType': 'Scada.Breaker', 'alarm': true, 'severity': 3, 'agent': 'system', 'entity': '218bf05f-b479-49b6-99aa-c2803419d31f', 'message': 'Breaker Opened: Openstatus validity GOOD', 'time': 1415304360269},
+      {'id': '2', 'state': 'UNACK_AUDIBLE', 'eventId': '22', 'deviceTime': 0, 'eventType': 'Scada.Breaker', 'alarm': true, 'severity': 3, 'agent': 'system', 'entity': '218bf05f-b479-49b6-99aa-c2803419d31f', 'message': 'Breaker Opened: Openstatus validity GOOD', 'time': 1415288035666},
+      {'id': '1', 'state': 'UNACK_AUDIBLE', 'eventId': '17', 'deviceTime': 0, 'eventType': 'Scada.Breaker', 'alarm': true, 'severity': 3, 'agent': 'system', 'entity': '218bf05f-b479-49b6-99aa-c2803419d31f', 'message': 'Breaker Opened: Openstatus validity GOOD', 'time': 1415287958571}
     ]
   }
 

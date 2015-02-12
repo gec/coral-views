@@ -29,17 +29,15 @@ describe('gb-alarms', function () {
     return {
       id: 'id'+index,
       state: 'UNACK_AUDIBLE',
-      event:{
-        id: 'id'+index,
-        deviceTime: index,
-        eventType: 'eventType'+index,
-        alarm: true,
-        severity: index,
-        agent: 'agent'+index,
-        entity: 'entitId'+index,
-        message: 'message'+index,
-        time: index
-      }
+      eventId: 'id'+index,
+      deviceTime: index,
+      eventType: 'eventType'+index,
+      alarm: true,
+      severity: index,
+      agent: 'agent'+index,
+      entity: 'entitId'+index,
+      message: 'message'+index,
+      time: index
     }
   }
 

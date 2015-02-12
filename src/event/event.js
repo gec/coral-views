@@ -50,7 +50,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     }
 
     function sortByTime() {
-      $scope.alarms.sort( function( a, b) { return b.event.time - a.event.time})
+      $scope.alarms.sort( function( a, b) { return b.time - a.time})
     }
 
     // alarm can be an array or one alarm.
@@ -73,7 +73,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
         })
         $scope.alarms = newAlarms.concat( $scope.alarms)
       } else {
-        console.log( 'alarmService onAlarm ' + alarm.id + ' "' + alarm.state + '"' + ' "' + alarm.event.message + '"')
+        console.log( 'alarmService onAlarm ' + alarm.id + ' "' + alarm.state + '"' + ' "' + alarm.message + '"')
         alarm.updateState = 'none'
         existing = alarmIdMap[alarm.id]
         if( existing)
@@ -113,8 +113,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
           }
           delete alarmIdMap[alarm.id];
         } else {
-          alarm.state = update.state
-          alarm.event = update.event
+          angular.extend( alarm, update)
           alarm.updateState = 'none'
         }
       }
@@ -228,7 +227,8 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     }
 
     var request = {
-      subscribeToActiveAlarms: {
+      subscribeToEvents: {
+        alarmsOnly: true,
         limit: $scope.limit
       }
     }
@@ -259,8 +259,8 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     }
 
     var request = {
-      subscribeToRecentEvents: {
-        eventTypes: [],
+      subscribeToEvents: {
+        //eventTypes: [],
         limit: $scope.limit
       }
     }

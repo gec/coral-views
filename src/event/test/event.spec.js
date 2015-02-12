@@ -88,8 +88,8 @@ describe('gb-events', function () {
 
   it('should subscribe to events', inject( function () {
     var request = {
-      subscribeToRecentEvents: {
-        eventTypes: [],
+      subscribeToEvents: {
+        //eventTypes: [],
         limit: 40
       }
     }

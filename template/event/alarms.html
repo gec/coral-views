@@ -55,11 +55,11 @@
                 </td>
                 <td ng-click="acknowledge(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmAckButtonClass"><i ng-class="alarm.state | alarmAckClass: alarm.updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmAckTitle}}"></i></div></td>
                 <td ng-click="silence(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmAudibleButtonClass"><i ng-class="alarm.state | alarmAudibleClass: alarm.updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmAudibleTitle}}"></i></div></td>
-                <td>{{alarm.event.eventType}}</td>
-                <td>{{alarm.event.severity}}</td>
-                <td>{{alarm.event.agent}}</td>
-                <td>{{alarm.event.message}}</td>
-                <td>{{alarm.event.time | date:"h:mm:ss a, MM-dd-yyyy"}}</td>
+                <td>{{alarm.eventType}}</td>
+                <td>{{alarm.severity}}</td>
+                <td>{{alarm.agent}}</td>
+                <td>{{alarm.message}}</td>
+                <td>{{alarm.time | date:"h:mm:ss a, MM-dd-yyyy"}}</td>
             </tr>
             </tbody>
         </table>

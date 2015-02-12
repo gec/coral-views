@@ -5,7 +5,7 @@ A tabular view of recent events.
 * `limit` — The maximum number of rows in the table. Defaults to 20.
 
 #### Subscription
-    subscribeToRecentEvents: {
+    subscribeToEvents: {
         eventTypes: [],
         limit: $scope.limit
     }
@@ -19,6 +19,7 @@ A tabular view of active alarms.
 * `limit` — The maximum number of rows in the table. Defaults to 20.
 
 #### Subscription
-    subscribeToActiveAlarms: {
+    subscribeToEvents: {
+        alarmsOnly: true,
         limit: $scope.limit
     }
