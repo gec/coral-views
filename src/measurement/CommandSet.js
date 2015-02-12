@@ -26,13 +26,14 @@
  * @param _commands
  * @constructor
  */
-function CommandSet( _point, _commands, commandRest) {
+function CommandSet( _point, _commands, commandRest, $timeout) {
   // Control & Setpoint States
 
 
   this.point = _point
   this.commands = _commands
   this.commandRest = commandRest
+  this.timeout = $timeout
   this.state = CommandSet.States.NotSelected
   this.lock = undefined
   this.selectedCommand = undefined
@@ -134,7 +135,7 @@ CommandSet.prototype.select = function( command) {
         console.log( 'commandLock delay: ' + delay)
         // It the clock for client vs server is off, we'll use a minimum delay.
         delay = Math.max( delay, 10)
-        self.selectTimeout = $timeout(function () {
+        self.selectTimeout = this.timeout(function () {
           delete self.lock;
           delete self.selectTimeout;
           if( self.state === CommandSet.States.Selected || self.state === CommandSet.States.Executing) {

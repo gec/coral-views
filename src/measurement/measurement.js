@@ -428,7 +428,7 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
           for( var pointId in data) {
             point = findPoint( pointId)
             if( point) {
-              point.commandSet = new CommandSet( point, data[pointId], CommandRest)
+              point.commandSet = new CommandSet( point, data[pointId], CommandRest, $timeout)
               point.commandTypes = point.commandSet.getCommandTypes().toLowerCase()
               console.log( 'commandTypes: ' + point.commandTypes)
             }
