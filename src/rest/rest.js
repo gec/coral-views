@@ -169,7 +169,7 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
       // encodeURI because objects like point names can have percents in them.
       $http.get(encodeURI(url), httpConfig).
         success(function(json) {
-          if( name )
+          if( name && $scope)
             $scope[name] = json;
           $scope.loading = false;
           console.log('rest.get success json.length: ' + json.length + ', url: ' + url);
@@ -196,7 +196,7 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
       // encodeURI because objects like point names can have percents in them.
       $http.post(url, data, httpConfig).
         success(function(json) {
-          if( name )
+          if( name && $scope)
             $scope[name] = json;
           console.log('rest.post success json.length: ' + json.length + ', url: ' + url);
 
@@ -227,7 +227,7 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
       // encodeURI because objects like point names can have percents in them.
       $http.delete(url, httpConfig).
         success(function(json) {
-          if( name )
+          if( name && $scope)
             $scope[name] = json;
           console.log('rest.delete success json.length: ' + json.length + ', url: ' + url);
 

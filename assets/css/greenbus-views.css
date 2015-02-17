@@ -41,8 +41,9 @@ th.gb-alarm-btn-xs {
 .validity-questionable {color: #f57900; font-size:1.4em;}
 .validity-notloaded {font-size:1.4em;}
 
-.gb-alarm-ack {color: darkgray}
 .gb-alarm-unack {color: red}
+.gb-alarm-ack {color: darkgray}
+.gb-alarm-remove {color: darkgray}
 
 .gb-comms-enabled-up {color: green}
 .gb-comms-enabled-down {color: #b22222}

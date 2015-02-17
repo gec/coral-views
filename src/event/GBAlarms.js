@@ -1,0 +1,110 @@
+function GBAlarms( _limit, _alarms) {
+  var self = this
+
+  if( !_alarms)
+    _alarms = []
+
+  self.alarms = copyAlarms( _alarms.slice( 0, _limit))
+  self.alarmIdMap = {}
+  self.limit = _limit
+
+
+  function copyAlarms( alarms) {
+    var copies = []
+    alarms.forEach( function( a) {
+      copies.push( angular.extend( {}, a))
+    })
+    return copies
+  }
+
+}
+
+GBAlarms.prototype.onMessage = function( alarm) {
+  var self = this,
+      removedAlarms = []
+
+  if( angular.isArray( alarm)) {
+    console.log( 'GBAlarms onAlarmOrAlarms length=' + alarm.length)
+    alarm.forEach( function( a) {
+      if( self.onEach( a)) // if was removed
+        removedAlarms[ removedAlarms.length] = a
+    })
+  } else {
+    this.onEach( alarm)
+  }
+
+  this.sortByTime()
+
+  if( this.alarms.length > this.limit) {
+    removedAlarms = this.alarms.splice( this.limit, this.alarms.length - this.limit)
+    removedAlarms.forEach( function( a) { delete self.alarmIdMap[a.id]})
+  }
+
+  return removedAlarms
+}
+
+GBAlarms.prototype.onUpdateFailure = function( ids, newState) {
+  var self = this
+  ids.forEach( function( id) {
+    var a = self.alarmIdMap[id]
+    if( a)
+      a.updateState = 'none'
+  })
+}
+
+/**
+ *
+ * @param alarm
+ * @return boolean true if removed
+ */
+GBAlarms.prototype.onEach = function( alarm) {
+  var existing,
+      removed = false
+
+  console.log( 'GBAlarms onEach ' + alarm.id + ' "' + alarm.state + '"' + ' "' + alarm.message + '"')
+  alarm.updateState = 'none'
+  existing = this.alarmIdMap[alarm.id]
+  if( existing)
+    removed = this.onUpdate( existing, alarm)
+  else {
+    this.alarms.unshift( alarm)
+    this.alarmIdMap[alarm.id] = alarm
+  }
+
+  return removed
+}
+
+/**
+ * Update from regular subscription stream or from update state request.
+ *
+ *   if( wasRemoved && alarm.checked)
+ *     $scope.selectItem( alarm, 0) // selection needs to update its select count.
+ *
+ * @param alarm Existing alarm
+ * @param update Updated properties for alarm
+ * @return boolean true if the alarm was removed
+ */
+GBAlarms.prototype.onUpdate = function( alarm, update) {
+  var wasRemoved = false
+
+  if( ! alarm)
+    return wasRemoved
+
+  if( update.state === 'REMOVED') {
+    var i = this.alarms.indexOf( alarm)
+    if( i >= 0)
+      this.alarms.splice( i, 1);
+    wasRemoved = true
+    delete this.alarmIdMap[alarm.id];
+  } else {
+    angular.extend( alarm, update)
+    alarm.updateState = 'none'
+  }
+
+  return wasRemoved
+}
+
+GBAlarms.prototype.sortByTime = function() {
+  this.alarms.sort( function( a, b) { return b.time - a.time})
+}
+
