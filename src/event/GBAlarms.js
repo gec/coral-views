@@ -1,21 +1,36 @@
+/**
+ * Manage a set of alarms as subscription messages come in.
+ *
+ * @param _limit - Maximum number of alarms
+ * @param _alarms - if supplied, this array will be update and sorted with onMessage calls.
+ * @constructor
+ */
 function GBAlarms( _limit, _alarms) {
   var self = this
 
   if( !_alarms)
     _alarms = []
 
-  self.alarms = copyAlarms( _alarms.slice( 0, _limit))
   self.alarmIdMap = {}
   self.limit = _limit
 
+  self.alarms = _alarms // copyAlarms( _alarms.slice( 0, _limit))
 
-  function copyAlarms( alarms) {
-    var copies = []
-    alarms.forEach( function( a) {
-      copies.push( angular.extend( {}, a))
-    })
-    return copies
-  }
+  // trim to limit
+  if( this.alarms.length > this.limit)
+    this.alarms.splice( this.limit, this.alarms.length - this.limit)
+
+  // setup alarmIdMap
+  self.alarms.forEach( function( a) { self.alarmIdMap[a.id] = a})
+
+
+  //function copyAlarms( alarms) {
+  //  var copies = []
+  //  alarms.forEach( function( a) {
+  //    copies.push( angular.extend( {}, a))
+  //  })
+  //  return copies
+  //}
 
 }
 
@@ -90,15 +105,15 @@ GBAlarms.prototype.onUpdate = function( alarm, update) {
   if( ! alarm)
     return wasRemoved
 
+  angular.extend( alarm, update)
+  alarm.updateState = 'none'
+
   if( update.state === 'REMOVED') {
     var i = this.alarms.indexOf( alarm)
     if( i >= 0)
       this.alarms.splice( i, 1);
     wasRemoved = true
     delete this.alarmIdMap[alarm.id];
-  } else {
-    angular.extend( alarm, update)
-    alarm.updateState = 'none'
   }
 
   return wasRemoved
@@ -106,5 +121,9 @@ GBAlarms.prototype.onUpdate = function( alarm, update) {
 
 GBAlarms.prototype.sortByTime = function() {
   this.alarms.sort( function( a, b) { return b.time - a.time})
+}
+
+GBAlarms.prototype.filter = function( theFilter) {
+  return this.alarms.filter( theFilter)
 }
 

@@ -1,24 +1,26 @@
 describe('GBAlarms', function () {
-  var alarmCount = 7,
-      alarms = [];
-
-  for( var index = 0; index < alarmCount; index++) {
-    alarms.push( {
-      id: 'id'+index,
-      //state: 'UNACKNOWLEDGED',
-      //deviceTime: index,
-      //eventType: 'alarmType'+index,
-      //alarm: null,
-      //severity: index,
-      //agent: 'agent'+index,
-      //entity: 'entitId'+index,
-      //message: 'message'+index,
-      time: index * 10
-    })
-  }
-
+  var alarms,
+      alarmCount = 7
 
   beforeEach(module('greenbus.views.event'));
+
+  beforeEach( function() {
+    alarms = []
+    for( var index = 0; index < alarmCount; index++) {
+      alarms.push( {
+        id: 'id'+index,
+        //state: 'UNACKNOWLEDGED',
+        //deviceTime: index,
+        //eventType: 'alarmType'+index,
+        //alarm: null,
+        //severity: index,
+        //agent: 'agent'+index,
+        //entity: 'entitId'+index,
+        //message: 'message'+index,
+        time: index * 10
+      })
+    }
+  })
 
 
   it('should start with 0 alarms and set limit', inject( function () {

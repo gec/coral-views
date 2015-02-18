@@ -1,20 +1,24 @@
 describe('GBEvents', function () {
-  var eventCount = 3,
-      events = [];
+  var events,
+      eventCount = 3
 
-  for( var index = 0; index < eventCount; index++) {
-    events.push( {
-      id: 'id'+index,
-      deviceTime: index,
-      eventType: 'eventType'+index,
-      alarm: null,
-      severity: index,
-      agent: 'agent'+index,
-      entity: 'entitId'+index,
-      message: 'message'+index,
-      time: index
-    })
-  }
+
+  beforeEach( function() {
+    events = []
+    for( var index = 0; index < eventCount; index++) {
+      events.push( {
+        id: 'id'+index,
+        deviceTime: index,
+        eventType: 'eventType'+index,
+        alarm: null,
+        severity: index,
+        agent: 'agent'+index,
+        entity: 'entitId'+index,
+        message: 'message'+index,
+        time: index
+      })
+    }
+  })
 
 
   beforeEach(module('greenbus.views.event'));
