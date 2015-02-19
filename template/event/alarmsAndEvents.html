@@ -36,9 +36,9 @@
         <table class="table table-condensed">
             <tbody>
             <tr class="gb-alarm" ng-repeat="alarm in alarms.alarms">
-                <td ng-click="remove(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmRemoveButtonClass"><i ng-class="alarm.state | alarmRemoveClass: alarm.updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmRemoveTitle}}"></i></div></td>
-                <td ng-click="acknowledge(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmAckButtonClass"><i ng-class="alarm.state | alarmAckClass: alarm.updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmAckTitle}}"></i></div></td>
-                <td ng-click="silence(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmAudibleButtonClass"><i ng-class="alarm.state | alarmAudibleClass: alarm.updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmAudibleTitle}}"></i></div></td>
+                <td ng-click="remove(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmRemoveButtonClass"><i ng-class="alarm.state | alarmRemoveClass: alarm._updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmRemoveTitle}}"></i></div></td>
+                <td ng-click="acknowledge(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmAckButtonClass"><i ng-class="alarm.state | alarmAckClass: alarm._updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmAckTitle}}"></i></div></td>
+                <td ng-click="silence(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmAudibleButtonClass"><i ng-class="alarm.state | alarmAudibleClass: alarm._updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmAudibleTitle}}"></i></div></td>
                 <td>{{alarm.eventType}}</td>
                 <td>{{alarm.severity}}</td>
                 <td>{{alarm.agent}}</td>

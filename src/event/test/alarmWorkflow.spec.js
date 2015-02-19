@@ -50,10 +50,12 @@ describe('alarmWorkflow', function () {
   //}
 
 
-  function makeAlarm( index) {
-    return {
+  function makeAlarm( index, state, checked, updateState) {
+    if( state === undefined)
+      state = 'UNACK_AUDIBLE'
+    var alarm = {
       id: 'id'+index,
-      state: 'UNACK_AUDIBLE',
+      state: state,
       eventId: 'id'+index,
       deviceTime: index,
       eventType: 'eventType'+index,
@@ -64,12 +66,25 @@ describe('alarmWorkflow', function () {
       message: 'message'+index,
       time: index
     }
+
+    if( checked !== undefined)
+      alarm._checked = checked
+    if( updateState !== undefined)
+      alarm._updateState = updateState
+
+    return alarm
   }
 
   function copyAlarmWithState( alarm, newState) {
-    var a = angular.extend( {}, alarm)
-    a.state = newState
-    return a
+    var key,
+        newAlarm = {}
+
+    for( key in alarm) {
+      if( key !== 'state' && key !== '_checked' && key !== '_updateState')
+        newAlarm[key] = alarm[key]
+    }
+    newAlarm.state = newState
+    return newAlarm
   }
 
   beforeEach(module('greenbus.views.event'));
@@ -99,10 +114,10 @@ describe('alarmWorkflow', function () {
     expect( alarmRestMock.callsCount).toBe( 1)
     expect( alarmRestMock.ids).toEqual( [a0.id])
     expect( alarmRestMock.newState).toEqual( 'UNACK_SILENT')
-    expect( a0.updateState).toBe( 'updating')
+    expect( a0._updateState).toBe( 'updating')
     alarmRestMock.thenSuccess( copyAlarmWithState( a0, 'UNACK_SILENT'))
     expect( a0.state).toBe( 'UNACK_SILENT')
-    expect( a0.updateState).toBe( 'none')
+    expect( a0._updateState).toBe( 'none')
 
     alarmRestMock.reset()
     requestSucceeded = alarmWorkflow.acknowledge( gbAlarms, a0)
@@ -110,10 +125,10 @@ describe('alarmWorkflow', function () {
     expect( alarmRestMock.callsCount).toBe( 1)
     expect( alarmRestMock.ids).toEqual( [a0.id])
     expect( alarmRestMock.newState).toEqual( 'ACKNOWLEDGED')
-    expect( a0.updateState).toBe( 'updating')
+    expect( a0._updateState).toBe( 'updating')
     alarmRestMock.thenSuccess( copyAlarmWithState( a0, 'ACKNOWLEDGED'))
     expect( a0.state).toBe( 'ACKNOWLEDGED')
-    expect( a0.updateState).toBe( 'none')
+    expect( a0._updateState).toBe( 'none')
 
     alarmRestMock.reset()
     requestSucceeded = alarmWorkflow.remove( gbAlarms, a0)
@@ -121,11 +136,11 @@ describe('alarmWorkflow', function () {
     expect( alarmRestMock.callsCount).toBe( 1)
     expect( alarmRestMock.ids).toEqual( [a0.id])
     expect( alarmRestMock.newState).toEqual( 'REMOVED')
-    expect( a0.updateState).toBe( 'removing')
+    expect( a0._updateState).toBe( 'removing')
     alarmRestMock.thenSuccess( copyAlarmWithState( a0, 'REMOVED'))
     expect( a0.state).toBe( 'REMOVED')
     expect( alarms.indexOf( a0)).toBe( -1)
-    expect( a0.updateState).toBe( 'none')
+    expect( a0._updateState).toBe( 'none')
 
   }));
 
@@ -138,10 +153,10 @@ describe('alarmWorkflow', function () {
     expect( alarmRestMock.callsCount).toBe( 1)
     expect( alarmRestMock.ids).toEqual( [a0.id])
     expect( alarmRestMock.newState).toEqual( 'ACKNOWLEDGED')
-    expect( a0.updateState).toBe( 'updating')
+    expect( a0._updateState).toBe( 'updating')
     alarmRestMock.thenSuccess( copyAlarmWithState( a0, 'ACKNOWLEDGED'))
     expect( a0.state).toBe( 'ACKNOWLEDGED')
-    expect( a0.updateState).toBe( 'none')
+    expect( a0._updateState).toBe( 'none')
 
   }));
 
@@ -153,7 +168,7 @@ describe('alarmWorkflow', function () {
     expect( requestSucceeded).toBeFalsy()
     expect( alarmRestMock.callsCount).toBe( 0)
     expect( a0.state).toBe( 'UNACK_AUDIBLE')
-    expect( a0.updateState).toBeUndefined()
+    expect( a0._updateState).toBeUndefined()
 
     requestSucceeded = alarmWorkflow.acknowledge( gbAlarms, a0)
     expect( requestSucceeded).toBeTruthy()
@@ -165,14 +180,14 @@ describe('alarmWorkflow', function () {
     expect( requestSucceeded).toBeFalsy()
     expect( alarmRestMock.callsCount).toBe( 0)
     expect( a0.state).toBe( 'ACKNOWLEDGED')
-    expect( a0.updateState).toBe( 'none')
+    expect( a0._updateState).toBe( 'none')
 
     alarmRestMock.reset()
     requestSucceeded = alarmWorkflow.acknowledge( gbAlarms, a0)
     expect( requestSucceeded).toBeFalsy()
     expect( alarmRestMock.callsCount).toBe( 0)
     expect( a0.state).toBe( 'ACKNOWLEDGED')
-    expect( a0.updateState).toBe( 'none')
+    expect( a0._updateState).toBe( 'none')
 
   }));
 
@@ -182,160 +197,211 @@ describe('alarmWorkflow', function () {
         a1 = alarms[1],
         a2 = alarms[2]
 
-    var acks = [
+    var reply = [
           copyAlarmWithState( a0, 'UNACK_SILENT'),
           copyAlarmWithState( a2, 'UNACK_SILENT')
         ],
         notification = jasmine.createSpy('notification')
 
-    a0.checked = true
-    a2.checked = true
+    a0._checked = 1
+    a2._checked = 1
 
     requestSucceeded = alarmWorkflow.silenceSelected( gbAlarms, notification)
     expect( requestSucceeded).toBeTruthy()
+    expect( notification).not.toHaveBeenCalled()
     expect( alarmRestMock.callsCount).toBe( 1)
     expect( alarmRestMock.ids).toEqual( [a0.id, a2.id])
     expect( alarmRestMock.newState).toEqual( 'UNACK_SILENT')
-    expect( a0.updateState).toBe( 'updating')
-    expect( a2.updateState).toBe( 'updating')
-    alarmRestMock.thenSuccess( acks)
+    expect( a0._updateState).toBe( 'updating')
+    expect( a2._updateState).toBe( 'updating')
+    alarmRestMock.thenSuccess( reply)
     expect( a0.state).toBe( 'UNACK_SILENT')
     expect( a1.state).toBe( 'UNACK_AUDIBLE')
     expect( a2.state).toBe( 'UNACK_SILENT')
-    expect( a0.updateState).toBe( 'none')
-    expect( a2.updateState).toBe( 'none')
+    expect( a0._updateState).toBe( 'none')
+    expect( a2._updateState).toBe( 'none')
 
     alarmRestMock.reset()
     requestSucceeded = alarmWorkflow.acknowledgeSelected( gbAlarms, notification)
+    expect( notification).not.toHaveBeenCalled()
     expect( requestSucceeded).toBeTruthy()
     expect( alarmRestMock.callsCount).toBe( 1)
     expect( alarmRestMock.ids).toEqual( [a2.id, a0.id])
     expect( alarmRestMock.newState).toEqual( 'ACKNOWLEDGED')
-    expect( a0.updateState).toBe( 'updating')
-    expect( a2.updateState).toBe( 'updating')
-    acks = [
+    expect( a0._updateState).toBe( 'updating')
+    expect( a2._updateState).toBe( 'updating')
+    reply = [
       copyAlarmWithState( a0, 'ACKNOWLEDGED'),
       copyAlarmWithState( a2, 'ACKNOWLEDGED')
     ]
-    alarmRestMock.thenSuccess( acks)
+    alarmRestMock.thenSuccess( reply)
     expect( a0.state).toBe( 'ACKNOWLEDGED')
     expect( a1.state).toBe( 'UNACK_AUDIBLE')
     expect( a2.state).toBe( 'ACKNOWLEDGED')
-    expect( a0.updateState).toBe( 'none')
-    expect( a2.updateState).toBe( 'none')
+    expect( a0._updateState).toBe( 'none')
+    expect( a2._updateState).toBe( 'none')
 
     alarmRestMock.reset()
     requestSucceeded = alarmWorkflow.removeSelected( gbAlarms, notification)
+    expect( notification).not.toHaveBeenCalled()
     expect( requestSucceeded).toBeTruthy()
     expect( alarmRestMock.callsCount).toBe( 1)
     expect( alarmRestMock.ids).toEqual( [a2.id, a0.id])
     expect( alarmRestMock.newState).toEqual( 'REMOVED')
-    expect( a0.updateState).toBe( 'removing')
-    expect( a2.updateState).toBe( 'removing')
-    acks = [
+    expect( a0._updateState).toBe( 'removing')
+    expect( a2._updateState).toBe( 'removing')
+    reply = [
       copyAlarmWithState( a0, 'REMOVED'),
       copyAlarmWithState( a2, 'REMOVED')
     ]
-    alarmRestMock.thenSuccess( acks)
+    alarmRestMock.thenSuccess( reply)
     expect( a0.state).toBe( 'REMOVED')
     expect( a1.state).toBe( 'UNACK_AUDIBLE')
     expect( a2.state).toBe( 'REMOVED')
-    expect( a0.updateState).toBe( 'none')
-    expect( a2.updateState).toBe( 'none')
+    expect( a0._updateState).toBe( 'none')
+    expect( a2._updateState).toBe( 'none')
 
   }));
 
-  //it('should remove animations from alarms upon failure', inject( function () {
-  //  subscribeInstance.onSuccess( subscribeInstance.id, 'alarm', alarms)
-  //  parentScope.$digest();
-  //
-  //  var updates = alarms.map( function( a) { return copyAlarmWithState( a, 'ACKNOWLEDGED')})
-  //  subscribeInstance.onSuccess( subscribeInstance.id, 'alarm', updates)
-  //  parentScope.$digest();
-  //
-  //  var ids = [
-  //        scope.alarms[0].id,
-  //        scope.alarms[2].id
-  //      ]
-  //  scope.alarms[0].checked = true
-  //  scope.alarms[2].checked = true
-  //
-  //  var response = {
-  //    exception: 'BadRequestException',
-  //    message: 'Could not do it for whatever reason'
-  //  }
-  //
-  //  $httpBackend.when( 'POST', '/models/1/alarms', { state: 'REMOVED', ids: ids}).respond( 403, response)
-  //  scope.removeSelected()
-  //  $httpBackend.flush()
-  //  expect( scope.alarms.length).toBe( 3)
-  //  expect( scope.alarms[0].updateState).toBe('none')
-  //  expect( scope.alarms[2].updateState).toBe('none')
-  //}));
-  //
-  //it('should remove only selected alarms and show info message if some selected are not removable', inject( function ($timeout) {
-  //  subscribeInstance.onSuccess( subscribeInstance.id, 'alarm', alarms)
-  //  parentScope.$digest()
-  //  var updates = [ copyAlarmWithState( scope.alarms[2], 'ACKNOWLEDGED') ]
-  //  subscribeInstance.onSuccess( subscribeInstance.id, 'alarm', updates)
-  //  parentScope.$digest();
-  //
-  //
-  //  var removeds = [
-  //        copyAlarmWithState( scope.alarms[2], 'REMOVED')
-  //      ],ids = [
-  //        scope.alarms[2].id
-  //      ]
-  //  scope.alarms[1].checked = true
-  //  scope.alarms[2].checked = true
-  //
-  //  $httpBackend.when( 'POST', '/models/1/alarms', { state: 'REMOVED', ids: ids}).respond( removeds)
-  //  scope.removeSelected()
-  //  $httpBackend.flush()
-  //  parentScope.$digest();
-  //
-  //  var alert = element.find('div.alert')
-  //  expect( alert).not.toHaveClass('ng-hide')
-  //  expect( findAlertText( alert)).toBe( ' Unacknowledged alarms were not removed.')
-  //
-  //  expect( scope.alarms.length).toBe( 2)
-  //  expect( scope.alarms[0].updateState).toBe('none')
-  //  expect( scope.alarms[1].updateState).toBe('none')
-  //
-  //  $timeout.flush()
-  //  expect( scope.notification).toBeUndefined()
-  //  expect( alert).toHaveClass('ng-hide')
-  //
-  //}));
-  //
-  //
-  //it('should remove selected alarms', inject( function () {
-  //  subscribeInstance.onSuccess( subscribeInstance.id, 'alarm', alarms)
-  //  parentScope.$digest();
-  //  var updates = alarms.map( function( a) { return copyAlarmWithState( a, 'ACKNOWLEDGED')})
-  //  subscribeInstance.onSuccess( subscribeInstance.id, 'alarm', updates)
-  //  parentScope.$digest();
-  //
-  //
-  //  var removeds = [
-  //        copyAlarmWithState( scope.alarms[0], 'REMOVED'),
-  //        copyAlarmWithState( scope.alarms[2], 'REMOVED')
-  //      ],
-  //      ids = [
-  //        scope.alarms[0].id,
-  //        scope.alarms[2].id
-  //      ],
-  //      notRemovedId = scope.alarms[1].id
-  //  scope.alarms[0].checked = true
-  //  scope.alarms[2].checked = true
-  //
-  //  $httpBackend.when( 'POST', '/models/1/alarms', { state: 'REMOVED', ids: ids}).respond( removeds)
-  //  scope.removeSelected()
-  //  $httpBackend.flush()
-  //  expect( scope.alarms.length).toBe( 1)
-  //  expect( scope.alarms[0].id).toBe( notRemovedId)
-  //  expect( scope.alarms[0].state).toBe( 'ACKNOWLEDGED')
-  //
-  //}));
+  describe('actions on selections', function () {
+
+    beforeEach(function () {
+
+      // All states, both not updating and updating.
+      alarms = [
+        makeAlarm(0, 'UNACK_AUDIBLE', 1), // 1: checked
+        makeAlarm(1, 'UNACK_SILENT', 1),
+        makeAlarm(2, 'ACKNOWLEDGED', 1),
+        makeAlarm(3, 'REMOVED', 1),
+        makeAlarm(4, 'UNACK_AUDIBLE', 1, 'updating'), // 1: checked, _updateState
+        makeAlarm(5, 'UNACK_SILENT', 1, 'updating'),
+        makeAlarm(6, 'ACKNOWLEDGED', 1, 'removing')
+      ]
+      gbAlarms = new GBAlarms(10, alarms)
+    })
+
+
+    it('silenceSelected should only update UNACK_AUDIBLE and no notify because some are selected.', inject( function (alarmWorkflow) {
+      var requestSucceeded, targetIds, reply,
+          notification = jasmine.createSpy('notification')
+
+      targetIds = [alarms[0].id]
+      reply = [ copyAlarmWithState( alarms[0], 'UNACK_SILENT')]
+      reply[0].time = 100 // on update, this will sort back to index 0
+
+      requestSucceeded = alarmWorkflow.silenceSelected( gbAlarms, notification)
+      expect( notification).not.toHaveBeenCalled()
+      expect( requestSucceeded).toBeTruthy()
+      expect( alarmRestMock.callsCount).toBe( 1)
+      expect( alarmRestMock.ids).toEqual( targetIds)
+      expect( alarmRestMock.newState).toEqual( 'UNACK_SILENT')
+      expect( alarms[0]._updateState).toBe( 'updating')
+      expect( alarms[1]._updateState).toBeUndefined()
+      alarmRestMock.thenSuccess( reply)
+      expect( alarms[0].state).toBe( 'UNACK_SILENT')
+      expect( alarms[0]._updateState).toBe( 'none')
+
+    }));
+
+    it('silenceSelected detects no UNACK_AUDIBLE selected and calls notify and not request.', inject( function (alarmWorkflow) {
+      var requestSucceeded,
+          notification = jasmine.createSpy('notification')
+
+      // Uncheck alarms that can be silenced
+      alarms[0]._checked = 0
+      requestSucceeded = alarmWorkflow.silenceSelected( gbAlarms, notification)
+      expect( notification).toHaveBeenCalledWith( 'info', 'No audible alarms are selected.', 5000)
+      expect( requestSucceeded).toBeFalsy()
+      expect( alarmRestMock.callsCount).toBe( 0)
+      expect( alarms[0]._updateState).toBeUndefined()
+
+    }));
+
+
+    it('acknowledgeSelected should only update UNACK_AUDIBLE, UNACK_SILENT and no notify because some are selected.', inject( function (alarmWorkflow) {
+      var requestSucceeded, targetIds, reply,
+          notification = jasmine.createSpy('notification')
+
+      targetIds = [alarms[0].id, alarms[1].id]
+      reply = [
+        copyAlarmWithState( alarms[0], 'ACKNOWLEDGED'),
+        copyAlarmWithState( alarms[1], 'ACKNOWLEDGED')
+      ]
+      reply[0].time = 100  // on update, this will sort back to index 0
+      reply[1].time = 101
+
+      requestSucceeded = alarmWorkflow.acknowledgeSelected( gbAlarms, notification)
+      expect( notification).not.toHaveBeenCalled()
+      expect( requestSucceeded).toBeTruthy()
+      expect( alarmRestMock.callsCount).toBe( 1)
+      expect( alarmRestMock.ids).toEqual( targetIds)
+      expect( alarmRestMock.newState).toEqual( 'ACKNOWLEDGED')
+      expect( alarms[0]._updateState).toBe( 'updating')
+      expect( alarms[1]._updateState).toBe( 'updating')
+      alarmRestMock.thenSuccess( reply)
+      expect( alarms[0].state).toBe( 'ACKNOWLEDGED')
+      expect( alarms[1].state).toBe( 'ACKNOWLEDGED')
+      expect( alarms[0]._updateState).toBe( 'none')
+      expect( alarms[1]._updateState).toBe( 'none')
+
+    }));
+
+    it('acknowledgeSelected detects no UNACK_AUDIBLE, UNACK_SILENT selected and calls notify and not request.', inject( function (alarmWorkflow) {
+      var requestSucceeded,
+          notification = jasmine.createSpy('notification')
+
+      // Uncheck alarms that can be acknowledged
+      alarms[0]._checked = 0
+      alarms[1]._checked = 0
+      requestSucceeded = alarmWorkflow.acknowledgeSelected( gbAlarms, notification)
+      expect( notification).toHaveBeenCalledWith( 'info', 'No unacknowledged alarms are selected.', 5000)
+      expect( requestSucceeded).toBeFalsy()
+      expect( alarmRestMock.callsCount).toBe( 0)
+      expect( alarms[0]._updateState).toBeUndefined()
+      expect( alarms[1]._updateState).toBeUndefined()
+
+    }));
+
+
+    it('removeSelected should only update ACKNOWLEDGED and notify because some selected are not removable.', inject( function (alarmWorkflow) {
+      var requestSucceeded, targetIds, reply, alarmToBeRemoved, finalAlarmCount
+          notification = jasmine.createSpy('notification')
+
+      alarmToBeRemoved = alarms[2]
+      finalAlarmCount = alarms.length - 1
+      targetIds = [alarms[2].id]
+      reply = [copyAlarmWithState( alarms[2], 'REMOVED')]
+      reply[0].time = 100  // on update, this will sort to index 0
+
+      requestSucceeded = alarmWorkflow.removeSelected( gbAlarms, notification)
+      expect( notification).toHaveBeenCalledWith('info', 'Unacknowledged alarms were not removed.', 5000)
+      expect( requestSucceeded).toBeTruthy()
+      expect( alarmRestMock.callsCount).toBe( 1)
+      expect( alarmRestMock.ids).toEqual( targetIds)
+      expect( alarmRestMock.newState).toEqual( 'REMOVED')
+      expect( alarms[2]._updateState).toBe( 'removing')
+      alarmRestMock.thenSuccess( reply)
+      expect( alarmToBeRemoved.state).toBe( 'REMOVED')
+      expect( alarmToBeRemoved._updateState).toBe( 'none')
+      expect( alarms.indexOf( alarmToBeRemoved)).toBe( -1)
+      expect( alarms.length).toBe( finalAlarmCount)
+    }));
+
+    it('removeSelected detects no ACKNOWLEDGED selected and calls notify and not request.', inject( function (alarmWorkflow) {
+      var requestSucceeded,
+          notification = jasmine.createSpy('notification')
+
+      // Uncheck alarms that can be removed
+      alarms[2]._checked = 0
+      requestSucceeded = alarmWorkflow.removeSelected( gbAlarms, notification)
+      expect( notification).toHaveBeenCalledWith( 'info', 'No acknowledged alarms are selected.', 5000)
+      expect( requestSucceeded).toBeFalsy()
+      expect( alarmRestMock.callsCount).toBe( 0)
+      expect( alarms[3]._updateState).toBeUndefined()
+
+    }));
+
+  })
+
 
 });

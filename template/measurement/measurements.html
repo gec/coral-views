@@ -32,7 +32,7 @@
                     <tr ng-repeat="point in pointsFiltered = (points | filter:search | orderBy:sortColumn)" ng-class="rowClasses(point)">
                         <td ng-if="!point.rowDetail">
                             <div class="gb-checkbox-container" ng-click="selectItem(point)" role="checkbox" aria-labelledby=":2f" dir="ltr" aria-checked="true" tabindex="-1">
-                                <i ng-class="point.checked | selectItemClass"></i>
+                                <i ng-class="point._checked | selectItemClass"></i>
                             </div>
                         </td>
                         <td ng-if="!point.rowDetail" ng-click="togglePointRowById(point.id)">

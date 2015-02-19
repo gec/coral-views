@@ -25,7 +25,7 @@
             <tr ng-repeat="item in itemsFiltered = (items | filter:search | orderBy:sortColumn)">
                 <td>
                     <div class="gb-checkbox-container" ng-click="selectItem(item)" role="checkbox" aria-labelledby=":2f" dir="ltr" aria-checked="true" tabindex="-1">
-                        <i ng-class="item.checked | selectItemClass"></i>
+                        <i ng-class="item._checked | selectItemClass"></i>
                     </div>
                 </td>
                 <td>{{ item.label }}</td>

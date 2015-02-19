@@ -62,6 +62,12 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     }
   }]).
 
+  /**
+   * Adds _updateState to events
+   *   'updating' - Waiting on reply from POST request.
+   *   'removing' - Waiting on reply from POST REMOVED request.
+   *   'none' - Not waiting on anything
+   */
   factory('alarmWorkflow', ['alarmRest', function( alarmRest) {
     var serviceName = 'alarmWorkflow.updateRequest'
 
@@ -82,7 +88,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
       var requestSucceeded = false
       if( alarm.state === 'UNACK_AUDIBLE') {
         if( updateRequest( gbAlarms, [alarm.id], 'UNACK_SILENT')) {
-          alarm.updateState = 'updating' // TODO: what if already updating?
+          alarm._updateState = 'updating' // TODO: what if already updating?
           requestSucceeded = true
         }
       }
@@ -93,7 +99,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
       var requestSucceeded = false
       if( alarm.state === 'UNACK_AUDIBLE' || alarm.state === 'UNACK_SILENT') {
         if( updateRequest( gbAlarms, [alarm.id], 'ACKNOWLEDGED')) {
-          alarm.updateState = 'updating' // TODO: what if already updating?
+          alarm._updateState = 'updating' // TODO: what if already updating?
           requestSucceeded = true
         }
       }
@@ -102,9 +108,9 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
 
     function remove( gbAlarms, alarm) {
       var requestSucceeded = false
-      if( alarm.state === 'ACKNOWLEDGED' && alarm.updateState !== 'removing') {
+      if( alarm.state === 'ACKNOWLEDGED' && alarm._updateState !== 'removing') {
         if( updateRequest( gbAlarms, [alarm.id], 'REMOVED')) {
-          alarm.updateState = 'removing' // TODO: what if already updating?
+          alarm._updateState = 'removing' // TODO: what if already updating?
           requestSucceeded = true
         }
       }
@@ -115,28 +121,28 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
 
     var filters = {
       isSelected: function( alarm) {
-        return alarm.checked
+        return alarm._checked === 1
       },
       isSelectedAndUnackAudible: function( alarm) {
-        return alarm.checked && alarm.state === 'UNACK_AUDIBLE' && alarm.updateState !== 'updating'
+        return alarm._checked === 1 && alarm.state === 'UNACK_AUDIBLE' && alarm._updateState !== 'updating'
       },
       isSelectedAndUnack: function( alarm) {
-        return alarm.checked && ( alarm.state === 'UNACK_AUDIBLE' || alarm.state === 'UNACK_SILENT') && alarm.updateState !== 'updating'
+        return alarm._checked === 1 && ( alarm.state === 'UNACK_AUDIBLE' || alarm.state === 'UNACK_SILENT') && alarm._updateState !== 'updating'
       },
       isSelectedAndRemovable: function( alarm) {
-        return alarm.checked && alarm.state === 'ACKNOWLEDGED' && alarm.updateState !== 'removing'
+        return alarm._checked === 1 && alarm.state === 'ACKNOWLEDGED' && alarm._updateState !== 'removing'
       }
     }
     function getId( alarm) { return alarm.id }
 
 
-    function updateSelected( gbAlarms,  filter, newState, newUpdateState, allSelectedAreNotValidMessage, someSelectedAreNotValidMessage, notification) {
+    function updateSelected( gbAlarms, notification, filter, newState, newUpdateState, allSelectedAreNotValidMessage, someSelectedAreNotValidMessage) {
       var requestSucceeded = false,
           selectedAndValid = gbAlarms.filter( filter)
 
       if( selectedAndValid.length > 0) {
         var ids = selectedAndValid.map( getId)
-        selectedAndValid.forEach( function( a) { a.updateState = newUpdateState})
+        selectedAndValid.forEach( function( a) { a._updateState = newUpdateState})
         if( someSelectedAreNotValidMessage) {
           var selected = gbAlarms.filter( filters.isSelected)
           if( selected.length > selectedAndValid.length)
@@ -149,9 +155,9 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
       return requestSucceeded
     }
 
-    function silenceSelected( gbAlarms, notification) { return updateSelected( gbAlarms, filters.isSelectedAndUnackAudible, 'UNACK_SILENT', 'updating', 'No audible alarms are selected.', notification) }
-    function acknowledgeSelected( gbAlarms, notification) { return updateSelected( gbAlarms, filters.isSelectedAndUnack, 'ACKNOWLEDGED', 'updating', 'No unacknowledged alarms are selected.', notification) }
-    function removeSelected( gbAlarms, notification) { return updateSelected( gbAlarms, filters.isSelectedAndRemovable, 'REMOVED', 'removing', 'No acknowledged alarms are selected.', 'Unacknowledged alarms were not removed.', notification) }
+    function silenceSelected( gbAlarms, notification) { return updateSelected( gbAlarms, notification, filters.isSelectedAndUnackAudible, 'UNACK_SILENT', 'updating', 'No audible alarms are selected.') }
+    function acknowledgeSelected( gbAlarms, notification) { return updateSelected( gbAlarms, notification, filters.isSelectedAndUnack, 'ACKNOWLEDGED', 'updating', 'No unacknowledged alarms are selected.') }
+    function removeSelected( gbAlarms, notification) { return updateSelected( gbAlarms, notification, filters.isSelectedAndRemovable, 'REMOVED', 'removing', 'No acknowledged alarms are selected.', 'Unacknowledged alarms were not removed.') }
 
 
     /**
@@ -218,8 +224,8 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     function onMessage( subscriptionId, type, alarms) {
       var removedAlarms = gbAlarms.onMessage( alarms)
       removedAlarms.forEach( function( a) {
-        if( a.checked)
-          $scope.selectItem( a, 0) // selection needs to decrement its select count.
+        if( a._checked)
+          $scope.selectItem( a, 0) // 0: unchecked. Selection needs to decrement its select count.
       })
 
       $scope.loading = false
@@ -291,8 +297,8 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
       if( isAlarm( firstObject)) {
         var removedAlarms = $scope.alarms.onMessage( eventsOrAlarms)
         removedAlarms.forEach( function( a) {
-          if( a.checked)
-            $scope.selectItem( a, 0) // selection needs to decrement its select count.
+          if( a._checked)
+            $scope.selectItem( a, 0) // 0: unchecked. Selection needs to decrement its select count.
         })
       } else {
         $scope.events.onMessage( eventsOrAlarms)

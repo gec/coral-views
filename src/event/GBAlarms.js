@@ -63,7 +63,7 @@ GBAlarms.prototype.onUpdateFailure = function( ids, newState) {
   ids.forEach( function( id) {
     var a = self.alarmIdMap[id]
     if( a)
-      a.updateState = 'none'
+      a._updateState = 'none'
   })
 }
 
@@ -73,15 +73,15 @@ GBAlarms.prototype.onUpdateFailure = function( ids, newState) {
  * @return boolean true if removed
  */
 GBAlarms.prototype.onEach = function( alarm) {
-  var existing,
+  var existingAlarm,
       removed = false
 
   console.log( 'GBAlarms onEach ' + alarm.id + ' "' + alarm.state + '"' + ' "' + alarm.message + '"')
-  alarm.updateState = 'none'
-  existing = this.alarmIdMap[alarm.id]
-  if( existing)
-    removed = this.onUpdate( existing, alarm)
+  existingAlarm = this.alarmIdMap[alarm.id]
+  if( existingAlarm)
+    removed = this.onUpdate( existingAlarm, alarm)
   else {
+    alarm._updateState = 'none'
     this.alarms.unshift( alarm)
     this.alarmIdMap[alarm.id] = alarm
   }
@@ -92,7 +92,7 @@ GBAlarms.prototype.onEach = function( alarm) {
 /**
  * Update from regular subscription stream or from update state request.
  *
- *   if( wasRemoved && alarm.checked)
+ *   if( wasRemoved && alarm._checked)
  *     $scope.selectItem( alarm, 0) // selection needs to update its select count.
  *
  * @param alarm Existing alarm
@@ -106,7 +106,7 @@ GBAlarms.prototype.onUpdate = function( alarm, update) {
     return wasRemoved
 
   angular.extend( alarm, update)
-  alarm.updateState = 'none'
+  alarm._updateState = 'none'
 
   if( update.state === 'REMOVED') {
     var i = this.alarms.indexOf( alarm)

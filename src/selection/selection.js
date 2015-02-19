@@ -50,15 +50,15 @@ angular.module('greenbus.views.selection', []).
      * @param newState If undefined, toggle selection. If defined set to that state.
      */
     self.selectItem = function(item, newState) {
-      var currentState = item.checked || SELECT_UNCHECKED
+      var currentState = item._checked || SELECT_UNCHECKED
 
       if( newState === undefined)
         newState = SELECT_NEXT_STATE[ currentState]
 
       if( currentState !== newState) {
 
-        item.checked = newState
-        if( item.checked === SELECT_CHECKED )
+        item._checked = newState
+        if( item._checked === SELECT_CHECKED )
           $scope.selectCount++
         else
           $scope.selectCount--
@@ -73,10 +73,10 @@ angular.module('greenbus.views.selection', []).
     }
 
     self.uncheckItem = function(item) {
-      if( item.checked) {
+      if( item._checked) {
         if( $scope.selectCount > 0 )
           $scope.selectCount--
-        item.checked = false
+        item._checked = 0
 
         self.updateSelectAllState()
       }
@@ -94,7 +94,7 @@ angular.module('greenbus.views.selection', []).
       $scope.selectCount = $scope.selectAllState === SELECT_CHECKED ? ps.length : 0
       for( var i = ps.length - 1; i >= 0; i-- ) {
         var item = ps[ i]
-        item.checked = $scope.selectAllState
+        item._checked = $scope.selectAllState
       }
       self.notifyParent( $scope.selectAllState)
     }
@@ -125,8 +125,8 @@ angular.module('greenbus.views.selection', []).
   }).
 
   filter('selectItemClass', function() {
-    return function(checked) {
-      switch( checked) {
+    return function(_checked) {
+      switch( _checked) {
         case 0: return 'fa fa-square-o text-muted'
         case 1: return 'fa fa-check-square-o'
         case 2: return 'fa fa-minus-square-o'

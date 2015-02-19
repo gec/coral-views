@@ -129,11 +129,13 @@ describe('GBAlarms', function () {
     removed = a.onMessage( [a2])
     expect(a.alarms.length).toEqual(3);
     expect(removed.length).toEqual(0);
+    a2._updateState = 'none'
     expect(a.alarms).toEqual( [alarms[5],a2,alarms[1]]);
 
     removed = a.onMessage( [a3])
     expect(a.alarms.length).toEqual(3);
     expect(removed.length).toEqual(0);
+    a3._updateState = 'none'
     expect(a.alarms).toEqual( [a3,alarms[5],alarms[1]]);
 
     removed = a.onMessage( [a4])

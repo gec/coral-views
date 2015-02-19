@@ -152,19 +152,19 @@ describe('gb-measurements', function () {
 
     selectAll.trigger('click');
     expect(scope.selectAllState).toBe(1);
-    expect( scope.pointsFiltered[0].checked).toBe(1)
-    expect( scope.pointsFiltered[1].checked).toBe(1)
-    expect( scope.pointsFiltered[2].checked).toBe(1)
-    expect( scope.pointsFiltered[3].checked).toBe(1)
-    expect( scope.pointsFiltered[4].checked).toBe(1)
+    expect( scope.pointsFiltered[0]._checked).toBe(1)
+    expect( scope.pointsFiltered[1]._checked).toBe(1)
+    expect( scope.pointsFiltered[2]._checked).toBe(1)
+    expect( scope.pointsFiltered[3]._checked).toBe(1)
+    expect( scope.pointsFiltered[4]._checked).toBe(1)
 
     selectAll.trigger('click');
     expect(scope.selectAllState).toBe(0);
-    expect( scope.pointsFiltered[0].checked).toBe(0)
-    expect( scope.pointsFiltered[1].checked).toBe(0)
-    expect( scope.pointsFiltered[2].checked).toBe(0)
-    expect( scope.pointsFiltered[3].checked).toBe(0)
-    expect( scope.pointsFiltered[4].checked).toBe(0)
+    expect( scope.pointsFiltered[0]._checked).toBe(0)
+    expect( scope.pointsFiltered[1]._checked).toBe(0)
+    expect( scope.pointsFiltered[2]._checked).toBe(0)
+    expect( scope.pointsFiltered[3]._checked).toBe(0)
+    expect( scope.pointsFiltered[4]._checked).toBe(0)
   }));
 
   it('should display selected buttons when some points are selected', inject( function () {

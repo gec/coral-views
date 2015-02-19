@@ -50,11 +50,11 @@
             <tr class="gb-alarm" ng-repeat="alarm in alarms">
                 <td>
                     <div class="gb-checkbox-container" ng-click="selectItem(alarm)" role="checkbox" aria-labelledby=":2f" dir="ltr" aria-checked="true" tabindex="-1">
-                        <i ng-class="alarm.checked | selectItemClass"></i>
+                        <i ng-class="alarm._checked | selectItemClass"></i>
                     </div>
                 </td>
-                <td ng-click="acknowledge(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmAckButtonClass"><i ng-class="alarm.state | alarmAckClass: alarm.updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmAckTitle}}"></i></div></td>
-                <td ng-click="silence(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmAudibleButtonClass"><i ng-class="alarm.state | alarmAudibleClass: alarm.updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmAudibleTitle}}"></i></div></td>
+                <td ng-click="acknowledge(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmAckButtonClass"><i ng-class="alarm.state | alarmAckClass: alarm._updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmAckTitle}}"></i></div></td>
+                <td ng-click="silence(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmAudibleButtonClass"><i ng-class="alarm.state | alarmAudibleClass: alarm._updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmAudibleTitle}}"></i></div></td>
                 <td>{{alarm.eventType}}</td>
                 <td>{{alarm.severity}}</td>
                 <td>{{alarm.agent}}</td>

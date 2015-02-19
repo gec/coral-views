@@ -192,8 +192,8 @@ describe('gb-alarms', function () {
           scope.alarms[0].id,
           scope.alarms[2].id
         ]
-    scope.alarms[0].checked = true
-    scope.alarms[2].checked = true
+    scope.alarms[0]._checked = 1
+    scope.alarms[2]._checked = 1
 
     $httpBackend.when( 'POST', '/models/1/alarms', { state: 'ACKNOWLEDGED', ids: ids}).respond( acks)
     scope.acknowledgeSelected()
@@ -216,8 +216,8 @@ describe('gb-alarms', function () {
       scope.alarms[0].id,
       scope.alarms[2].id
     ]
-    scope.alarms[0].checked = true
-    scope.alarms[2].checked = true
+    scope.alarms[0]._checked = 1
+    scope.alarms[2]._checked = 1
 
     var response = {
       exception: 'BadRequestException',
@@ -228,8 +228,8 @@ describe('gb-alarms', function () {
     scope.removeSelected()
     $httpBackend.flush()
     expect( scope.alarms.length).toBe( 3)
-    expect( scope.alarms[0].updateState).toBe('none')
-    expect( scope.alarms[2].updateState).toBe('none')
+    expect( scope.alarms[0]._updateState).toBe('none')
+    expect( scope.alarms[2]._updateState).toBe('none')
   }));
 
   it('should NOT remove selected alarms if none are acknowledged. Should not send post remove', inject( function ($timeout) {
@@ -240,8 +240,8 @@ describe('gb-alarms', function () {
       scope.alarms[0].id,
       scope.alarms[2].id
     ]
-    scope.alarms[0].checked = true
-    scope.alarms[2].checked = true
+    scope.alarms[0]._checked = 1
+    scope.alarms[2]._checked = 1
 
     scope.removeSelected()
     parentScope.$digest();
@@ -250,8 +250,8 @@ describe('gb-alarms', function () {
     expect( alert).not.toHaveClass('ng-hide')
 
     expect( scope.alarms.length).toBe( 3)
-    expect( scope.alarms[0].updateState).toBe('none')
-    expect( scope.alarms[2].updateState).toBe('none')
+    expect( scope.alarms[0]._updateState).toBe('none')
+    expect( scope.alarms[2]._updateState).toBe('none')
 
     $timeout.flush()
     expect( scope.notification).toBeUndefined()
@@ -272,8 +272,8 @@ describe('gb-alarms', function () {
     ],ids = [
       scope.alarms[2].id
     ]
-    scope.alarms[1].checked = true
-    scope.alarms[2].checked = true
+    scope.alarms[1]._checked = 1
+    scope.alarms[2]._checked = 1
 
     $httpBackend.when( 'POST', '/models/1/alarms', { state: 'REMOVED', ids: ids}).respond( removeds)
     scope.removeSelected()
@@ -285,8 +285,8 @@ describe('gb-alarms', function () {
     expect( findAlertText( alert)).toBe( ' Unacknowledged alarms were not removed.')
 
     expect( scope.alarms.length).toBe( 2)
-    expect( scope.alarms[0].updateState).toBe('none')
-    expect( scope.alarms[1].updateState).toBe('none')
+    expect( scope.alarms[0]._updateState).toBe('none')
+    expect( scope.alarms[1]._updateState).toBe('none')
 
     $timeout.flush()
     expect( scope.notification).toBeUndefined()
@@ -327,8 +327,8 @@ describe('gb-alarms', function () {
           scope.alarms[2].id
         ],
         notRemovedId = scope.alarms[1].id
-    scope.alarms[0].checked = true
-    scope.alarms[2].checked = true
+    scope.alarms[0]._checked = 1
+    scope.alarms[2]._checked = 1
 
     $httpBackend.when( 'POST', '/models/1/alarms', { state: 'REMOVED', ids: ids}).respond( removeds)
     scope.removeSelected()

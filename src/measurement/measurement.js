@@ -205,7 +205,7 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
       $scope.chartAddSelectedPoints = function() {
         // Add all measurements that are checked and visible.
         var points = $scope.pointsFiltered.filter( function ( m ) {
-          return m.checked === 1
+          return m._checked === 1
         } )
 
         if( points.length > 0 ) {
