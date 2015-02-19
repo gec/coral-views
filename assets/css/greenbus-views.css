@@ -21,6 +21,17 @@ th.gb-alarm-btn-xs {
   min-width: 27px;
 }
 
+.table-topless thead>tr:first-child>th, .table-topless tbody>tr:first-child>th, .table-topless thead>tr:first-child>td, .table-topless tbody>tr:first-child>td {
+  border-top: 0;
+}
+.table tbody>tr>td.event-severity {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+td.event-agent {
+  background-color: #f0f0f0;
+}
+
 .icon-spin {
   -animation: icon-spin1 .7s infinite linear;
   -webkit-animation: icon-spin2 .7s infinite linear;
