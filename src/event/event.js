@@ -267,8 +267,10 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
   controller('gbAlarmsAndEventsController', ['$scope', '$attrs', 'subscription', 'alarmWorkflow', function( $scope, $attrs, subscription, alarmWorkflow) {
     $scope.loading = true
     $scope.limit = Number( $attrs.limit || 20);
-    $scope.alarms = new GBAlarms( $scope.limit)
-    $scope.events = new GBEvents( $scope.limit)
+    $scope.alarms = []
+    $scope.events = []
+    var gbAlarms = new GBAlarms( $scope.limit, $scope.alarms),
+        gbEvents = new GBEvents( $scope.limit, $scope.events)
 
     $scope.silence = function( alarm) { alarmWorkflow.silence( alarm) }
     $scope.acknowledge = function( alarm) { alarmWorkflow.acknowledge( alarm) }
@@ -295,13 +297,13 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
         return
 
       if( isAlarm( firstObject)) {
-        var removedAlarms = $scope.alarms.onMessage( eventsOrAlarms)
+        var removedAlarms = gbAlarms.onMessage( eventsOrAlarms)
         removedAlarms.forEach( function( a) {
           if( a._checked)
             $scope.selectItem( a, 0) // 0: unchecked. Selection needs to decrement its select count.
         })
       } else {
-        $scope.events.onMessage( eventsOrAlarms)
+        gbEvents.onMessage( eventsOrAlarms)
       }
 
       $scope.loading = false

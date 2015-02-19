@@ -1,41 +1,9 @@
 <div>
-    <!--<div class="row">-->
-        <!--<div class="col-md-12">-->
-            <!--<input type="text"  class="form-control" placeholder="search any column" ng-model="searchText" style="height: 100%;">-->
-        <!--</div>-->
-    <!--</div>-->
-
-    <div class="row">
-        <div class="col-md-5">
-            <h3>Alarms</h3>
-        </div>
-        <!--<div class="col-md-7">-->
-            <!--<input type="text"  class="form-control" placeholder="search any column" ng-model="searchText" style="height: 100%;">-->
-        <!--</div>-->
-    </div>
-    <div class="row">
-        <div class="col-md-1">
-            <gb-select-all model="alarms" notify="selectAllChanged(state)"></gb-select-all>
-        </div>
-        <div class="col-md-11">
-            <div class="btn-group gb-toolbar" ng-show="selectAllState!==0" role="group"  style-="margin-left: 1.2em;">
-                <button class="btn btn-default" ng-click="silenceSelected()" style="width: 60px;" title="Silence selected alarms"><i class="fa fa-volume-off" style="font-size: 124%;"></i></button>
-                <button class="btn btn-default" ng-click="acknowledgeSelected()" style="width: 60px;" title="Acknowledge selected alarms"><i class="fa fa-bell-slash-o"></i></button>
-                <!--<button class="btn btn-default" ng-click="hitIt()" style="width: 60px;" title="Hit it with something special!"><i class="fa fa-bolt"></i></button>-->
-            </div>
-            <div class="btn-group gb-toolbar" ng-show="selectAllState!==0" role="group"  style-="margin-left: 1.2em;">
-                <button class="btn btn-default" ng-click="removeSelected()" style="width: 60px;" title="Remove selected acknowledged alarms"><i class="fa fa-trash-o"></i></button>
-            </div>
-            <div class="alert alert-{{notification.type}} gb-alert-inline" ng-show="notification" role="alert" style="margin-left: 1em;">
-                <span><i class="fa fa-info-circle"></i> {{ notification.message }}</span>
-            </div>
-        </div>
-    </div>
 
     <div class="table-responsive" style="overflow-x: auto">
         <table class="table table-condensed">
             <tbody>
-            <tr class="gb-alarm" ng-repeat="alarm in alarms.alarms">
+            <tr class="gb-alarm" ng-repeat="alarm in alarms">
                 <td ng-click="remove(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmRemoveButtonClass"><i ng-class="alarm.state | alarmRemoveClass: alarm._updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmRemoveTitle}}"></i></div></td>
                 <td ng-click="acknowledge(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmAckButtonClass"><i ng-class="alarm.state | alarmAckClass: alarm._updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmAckTitle}}"></i></div></td>
                 <td ng-click="silence(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmAudibleButtonClass"><i ng-class="alarm.state | alarmAudibleClass: alarm._updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmAudibleTitle}}"></i></div></td>
