@@ -2,30 +2,44 @@ angular.module('greenbus.views.demo').controller('EventDemoCtrl', function ($sco
   var eventId = 0,
       alarmId = 0
 
-  $scope.pushEvent = function() {
+  function getScopeValue( domSelector, subscriptionKey) {
+    var element, scope, value
+    element = document.querySelector( domSelector)
+    scope = angular.element( element).scope()
+    value = scope[subscriptionKey]
+    return value
+  }
+
+  $scope.pushEvent = function( domSelector, subscriptionKey) {
+    var subscriptionId = getScopeValue( domSelector, subscriptionKey)
+
+    eventId++
     subscription.pushMessage(
-      'subscription.subscribeToEvents',
+      subscriptionId,
       'event',
       [
-        {'id': ++eventId, 'deviceTime': 0, 'eventType': 'System.UserLogin', 'alarm': false, 'severity': 5, 'agent': 'system', 'entity': '44c0e05e-1e21-4785-a2ad-80fdfad8c51d', 'message': 'User logged in: system', 'time': Date.now()},
+        {'id': eventId.toString(), 'deviceTime': 0, 'eventType': 'System.UserLogin', 'alarm': false, 'severity': 5, 'agent': 'system', 'entity': '44c0e05e-1e21-4785-a2ad-80fdfad8c51d', 'message': 'User logged in: system', 'time': Date.now()},
       ]
     )
   }
 
-  $scope.pushAlarm = function() {
-    var alarm  = {'id': ++alarmId, 'state': 'UNACK_AUDIBLE', 'eventId': '17', 'deviceTime': 0, 'eventType': 'Scada.Breaker', 'alarm': true, 'severity': 3, 'agent': 'system', 'entity': '218bf05f-b479-49b6-99aa-c2803419d31f', 'message': 'Breaker Opened: Openstatus validity GOOD', 'time': Date.now()}
+  $scope.pushAlarm = function( domSelector, subscriptionKey) {
+    var subscriptionId = getScopeValue( domSelector, subscriptionKey)
+
+    alarmId++
+    var alarm  = {'id': alarmId.toString(), 'state': 'UNACK_AUDIBLE', 'eventId': '17', 'deviceTime': 0, 'eventType': 'Scada.Breaker', 'alarm': true, 'severity': 3, 'agent': 'system', 'entity': '218bf05f-b479-49b6-99aa-c2803419d31f', 'message': 'Breaker Opened: Openstatus validity GOOD', 'time': Date.now()}
     subscription.pushMessage(
-      'subscription.subscribeToEvents',
-      'event', [ alarm ]
+      subscriptionId,
+      'alarm', [ alarm ]
     )
 
-    var a2 = angular.extend( {}, alarm),
-        a3 = angular.extend( {}, alarm)
-    a2.state = 'UNACK_SILENT'
-    a3.state = 'ACKNOWLEDGED'
+    var a2 = angular.extend( {}, alarm, {state: 'UNACK_SILENT'}),
+        a3 = angular.extend( {}, alarm, {state: 'ACKNOWLEDGED'}),
+        a4 = angular.extend( {}, alarm, {state: 'REMOVED'})
 
-    rest.whenPOST( '/models/1/alarms', { state: 'UNACK_SILENT', ids: [alarmId]}).respond([ a2 ])
-    rest.whenPOST( '/models/1/alarms', { state: 'ACKNOWLEDGED', ids: [alarmId]}).respond([ a3 ])
+    rest.whenPOST( '/models/1/alarms', { state: 'UNACK_SILENT', ids: [alarmId.toString()]}).respond([ a2 ])
+    rest.whenPOST( '/models/1/alarms', { state: 'ACKNOWLEDGED', ids: [alarmId.toString()]}).respond([ a3 ])
+    rest.whenPOST( '/models/1/alarms', { state: 'REMOVED', ids: [alarmId.toString()]}).respond([ a4 ])
   }
 
 

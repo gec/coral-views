@@ -95,13 +95,23 @@ function makeSubscription() {
         description: 'WebSocket unopened'
       }
 
+  function generateUUID(){
+    var d = new Date().getTime();
+    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = (d + Math.random()*16)%16 | 0;
+      d = Math.floor(d/16);
+      return (c=='x' ? r : (r&0x7|0x8)).toString(16);
+    });
+    return uuid;
+  }
+
 
   function Subscription() {
 
   }
 
   Subscription.subscribe = function( json, $scope, messageListener, errorListener) {
-    var subscriptionId = 'subscription.' + Object.keys( json)[0]
+    var subscriptionId = 'subscription.' + Object.keys( json)[0] + '.' + generateUUID()
     listeners[ subscriptionId] = { 'message': messageListener, 'error': errorListener}
     return subscriptionId
   }
@@ -181,7 +191,7 @@ function MockHttpExpectation(method, url, data, headers) {
 }
 
 
-function makeRest() {
+function makeRest($injector) {
   var definitions = [],
       copy = angular.copy,
       status = {
@@ -204,18 +214,27 @@ function makeRest() {
       if (definition.match(method, url, data, headers || {})) {
         if (definition.response) {
           setTimeout( function() {
-            $scope.$apply( function() {
+            var responseData = copy( definition.response()[1])
 
-              var responseData = copy( definition.response()[1])
+            if( $scope) {
+              $scope.$apply( function() {
 
-              if( name )
-                $scope[name] = responseData
+                if( name )
+                  $scope[name] = responseData
 
-              $scope.loading = false
+                $scope.loading = false
 
-              if( successListener)
-                successListener( responseData)
-            })
+                if( successListener)
+                  successListener( responseData)
+              })
+            } else {
+              if( successListener) {
+                var rootScope = $injector.get('$rootScope')
+                rootScope.$apply( function() {
+                  successListener( responseData)
+                })
+              }
+            }
           })
 
         } else

@@ -1,19 +1,42 @@
 <div>
+    <tabset>
+        <tab select="tabAlarms()">
+            <tab-heading>Alarms</tab-heading>
+            <div class="table-responsive" style="overflow-x: auto">
+                <table class="table table-condensed">
+                    <tbody>
+                    <tr class="gb-alarm" ng-repeat="alarm in alarms">
+                        <td ng-click="remove(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmRemoveButtonClass"><i ng-class="alarm.state | alarmRemoveClass: alarm._updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmRemoveTitle}}"></i></div></td>
+                        <td ng-click="acknowledge(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmAckButtonClass"><i ng-class="alarm.state | alarmAckClass: alarm._updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmAckTitle}}"></i></div></td>
+                        <td ng-click="silence(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmAudibleButtonClass"><i ng-class="alarm.state | alarmAudibleClass: alarm._updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmAudibleTitle}}"></i></div></td>
+                        <td>{{alarm.eventType}}</td>
+                        <td>{{alarm.severity}}</td>
+                        <td>{{alarm.agent}}</td>
+                        <td>{{alarm.message}}</td>
+                        <td>{{alarm.time | date:"h:mm:ss a, MM-dd-yyyy"}}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </tab>
 
-    <div class="table-responsive" style="overflow-x: auto">
-        <table class="table table-condensed">
-            <tbody>
-            <tr class="gb-alarm" ng-repeat="alarm in alarms">
-                <td ng-click="remove(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmRemoveButtonClass"><i ng-class="alarm.state | alarmRemoveClass: alarm._updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmRemoveTitle}}"></i></div></td>
-                <td ng-click="acknowledge(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmAckButtonClass"><i ng-class="alarm.state | alarmAckClass: alarm._updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmAckTitle}}"></i></div></td>
-                <td ng-click="silence(alarm)" class="gb-alarm-btn-xs"><div ng-class="alarm.state | alarmAudibleButtonClass"><i ng-class="alarm.state | alarmAudibleClass: alarm._updateState" style="min-width: 1.1em;" title="{{alarm.state | alarmAudibleTitle}}"></i></div></td>
-                <td>{{alarm.eventType}}</td>
-                <td>{{alarm.severity}}</td>
-                <td>{{alarm.agent}}</td>
-                <td>{{alarm.message}}</td>
-                <td>{{alarm.time | date:"h:mm:ss a, MM-dd-yyyy"}}</td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+        <tab select="tabEvents()">
+            <tab-heading>Events</tab-heading>
+            <div class="table-responsive" style="overflow-x: auto">
+                <table class="table table-condensed">
+                    <tbody>
+                    <tr class="gb-alarm" ng-repeat="event in events">
+                        <td><i ng-show="event.alarm" class="fa fa-bell text-muted"></i></td>
+                        <td>{{event.eventType}}</td>
+                        <td>{{event.severity}}</td>
+                        <td>{{event.agent}}</td>
+                        <td>{{event.message}}</td>
+                        <td>{{event.time | date:"h:mm:ss a, MM-dd-yyyy"}}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </tab>
+    </tabset>
+
 </div>

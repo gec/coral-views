@@ -43,7 +43,7 @@ th.gb-alarm-btn-xs {
 
 .gb-alarm-unack {color: red}
 .gb-alarm-ack {color: darkgray}
-.gb-alarm-remove {color: darkgray}
+.gb-alarm-remove {}
 
 .gb-comms-enabled-up {color: green}
 .gb-comms-enabled-down {color: #b22222}

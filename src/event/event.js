@@ -214,13 +214,6 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
       return state
     }
 
-    var request = {
-      subscribeToEvents: {
-        alarmsOnly: true,
-        limit: $scope.limit
-      }
-    }
-
     function onMessage( subscriptionId, type, alarms) {
       var removedAlarms = gbAlarms.onMessage( alarms)
       removedAlarms.forEach( function( a) {
@@ -236,7 +229,14 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
 
     }
 
-    return subscription.subscribe( request, $scope, onMessage, onError)
+    var subscribeToAlarms = {
+      subscribeToAlarms: {
+        limit: $scope.limit
+      }
+    }
+
+    // Id is accessed by demo script to push alarms.
+    $scope._subscribeToAlarmsId = subscription.subscribe( subscribeToAlarms, $scope, onMessage, onError)
   }]).
 
   controller('gbEventsController', ['$scope', '$attrs', 'subscription', function( $scope, $attrs, subscription) {
@@ -255,13 +255,15 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
 
     }
 
-    var request = {
+    var subscribeToEvents = {
       subscribeToEvents: {
         //eventTypes: [],
         limit: $scope.limit
       }
     }
-    return subscription.subscribe( request, $scope, $scope.onEvent, $scope.onError)
+    // Id is accessed by demo script to push events.
+    $scope._subscribeToEventsId = subscription.subscribe( subscribeToEvents, $scope, $scope.onEvent, $scope.onError)
+
   }]).
 
   controller('gbAlarmsAndEventsController', ['$scope', '$attrs', 'subscription', 'alarmWorkflow', function( $scope, $attrs, subscription, alarmWorkflow) {
@@ -272,55 +274,46 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     var gbAlarms = new GBAlarms( $scope.limit, $scope.alarms),
         gbEvents = new GBEvents( $scope.limit, $scope.events)
 
-    $scope.silence = function( alarm) { alarmWorkflow.silence( alarm) }
-    $scope.acknowledge = function( alarm) { alarmWorkflow.acknowledge( alarm) }
-    $scope.remove = function( alarm) { alarmWorkflow.remove( alarm) }
+    $scope.silence = function( alarm) { alarmWorkflow.silence( gbAlarms, alarm) }
+    $scope.acknowledge = function( alarm) { alarmWorkflow.acknowledge( gbAlarms, alarm) }
+    $scope.remove = function( alarm) { alarmWorkflow.remove( gbAlarms, alarm) }
 
-
-    function isAlarm( alarmOrEvent) {
-      return alarmOrEvent.hasOwnProperty( 'state')
-    }
-
-    function getFirstObject( message) {
-      if( angular.isArray( message)) {
-        if( message.length > 0)
-          return message[0]
-        else
-          return undefined
-      } else
-        return message
-    }
-
-    function onMessage( subscriptionId, type, eventsOrAlarms) {
-      var firstObject = getFirstObject( eventsOrAlarms)
-      if( firstObject === undefined)
-        return
-
-      if( isAlarm( firstObject)) {
-        var removedAlarms = gbAlarms.onMessage( eventsOrAlarms)
-        removedAlarms.forEach( function( a) {
-          if( a._checked)
-            $scope.selectItem( a, 0) // 0: unchecked. Selection needs to decrement its select count.
-        })
-      } else {
-        gbEvents.onMessage( eventsOrAlarms)
-      }
-
+    function onAlarm( subscriptionId, type, alarms) {
+      gbAlarms.onMessage( alarms)
       $scope.loading = false
       $scope.$digest()
     }
-
-    function onError( error, message) {
-
+    function onAlarmError( error, message) {
+      console.error( 'gbAlarmsAndEventsController onAlarmError ' + error + ', ' + message)
     }
 
-    var request = {
+    function onEvent( subscriptionId, type, events) {
+      gbEvents.onMessage( events)
+      $scope.loading = false
+      $scope.$digest()
+    }
+    function onEventError( error, message) {
+      console.error( 'gbAlarmsAndEventsController onEventError ' + error + ', ' + message)
+    }
+
+    var subscribeToAlarms = {
       subscribeToEvents: {
         //eventTypes: [],
         limit: $scope.limit
       }
     }
-    return subscription.subscribe( request, $scope, onMessage, onError)
+    // Id is accessed by demo script to push alarms.
+    $scope._subscribeToAlarmsId = subscription.subscribe( subscribeToAlarms, $scope, onAlarm, onAlarmError)
+
+    var subscribeToEvents = {
+      subscribeToEvents: {
+        //eventTypes: [],
+        limit: $scope.limit
+      }
+    }
+    // Id is accessed by demo script to push events.
+    $scope._subscribeToEventsId = subscription.subscribe( subscribeToEvents, $scope, onEvent, onEventError)
+
   }]).
 
   directive( 'gbAlarms', function(){
@@ -388,7 +381,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
         default: s = 'fa fa-question-circle gb-alarm-unack'; break;
       }
 
-      if( updateState !== 'none')
+      if( updateState === 'updating')
         s += ' fa-spin'
       return s
     };
@@ -402,7 +395,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
         default: s = 'fa'; break;
       }
 
-      if( updateState !== 'none')
+      if( updateState === 'removing')
         s += ' fa-spin'
       return s
     };

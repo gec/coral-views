@@ -1,11 +1,18 @@
 <div ng-controller="EventDemoCtrl">
 
-    <button class='btn btn-default pull-right' ng-click="pushEvent()">Push Event</button>
+    <button class='btn btn-default pull-right' ng-click="pushEvent('#event-demo-events', '_subscribeToEventsId')">Push Event</button>
     <h2>events</h2>
-    <gb-events limit="3" style="margin-bottom: 50px;"></gb-events>
+    <gb-events limit="3" style="margin-bottom: 50px;" id="event-demo-events"></gb-events>
 
 
-    <button class='btn btn-default pull-right' ng-click="pushAlarm()">Push Alarm</button>
+    <button class='btn btn-default pull-right' ng-click="pushAlarm('#event-demo-alarms', '_subscribeToAlarmsId')">Push Alarm</button>
     <h2>alarms</h2>
-    <gb-alarms limit="4"></gb-alarms>
+    <gb-alarms limit="4" id="event-demo-alarms"></gb-alarms>
+
+    <div class="btn-group pull-right" role="group" aria-label="push for alarms-and-events">
+        <button class='btn btn-default' ng-click="pushAlarm('#event-demo-events-and-alarms', '_subscribeToAlarmsId')">Push Alarm</button>
+        <button class='btn btn-default' ng-click="pushEvent('#event-demo-events-and-alarms', '_subscribeToEventsId')">Push Event</button>
+    </div>
+    <h2>Alarms &amp; Events</h2>
+    <gb-alarms-and-events limit="4" id="event-demo-events-and-alarms"></gb-alarms-and-events>
 </div>
