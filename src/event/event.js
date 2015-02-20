@@ -348,7 +348,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     }
 
     var subscribeToAlarms = {
-      subscribeToEvents: {
+      subscribeToAlarms: {
         //eventTypes: [],
         limit: $scope.limit
       }
