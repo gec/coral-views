@@ -272,15 +272,58 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     $scope.alarms = []
     $scope.events = []
     var gbAlarms = new GBAlarms( $scope.limit, $scope.alarms),
-        gbEvents = new GBEvents( $scope.limit, $scope.events)
+        gbEvents = new GBEvents( $scope.limit, $scope.events),
+        tab = 'alarms',
+        newCounts = {
+          alarms: -1,
+          events: 0
+        }
+
+
+    $scope.newCounts = {
+      alarms: '',
+      events: ''
+    }
+    $scope.tabAlarms = function() {
+      if( tab !== 'alarms') {
+        tab = 'alarms'
+        newCounts.alarms = -1
+        newCounts.events = 0
+        $scope.newCounts.alarms = ''
+        $scope.newCounts.events = ''
+      }
+    }
+    $scope.tabEvents = function() {
+      if( tab !== 'events') {
+        tab = 'events'
+        newCounts.events = -1
+        newCounts.alarms = 0
+        $scope.newCounts.alarms = ''
+        $scope.newCounts.events = ''
+      }
+    }
 
     $scope.silence = function( alarm) { alarmWorkflow.silence( gbAlarms, alarm) }
     $scope.acknowledge = function( alarm) { alarmWorkflow.acknowledge( gbAlarms, alarm) }
     $scope.remove = function( alarm) { alarmWorkflow.remove( gbAlarms, alarm) }
 
+    function countUpdates( objOrArray) {
+      if( angular.isArray( objOrArray))
+        return objOrArray.length
+      else
+        return 1
+    }
     function onAlarm( subscriptionId, type, alarms) {
+      var updateCount = countUpdates( alarms)
+
       gbAlarms.onMessage( alarms)
       $scope.loading = false
+
+      if( tab === 'events') {
+        newCounts.alarms += updateCount
+        $scope.newCounts.alarms = newCounts.alarms.toString()
+      }
+
       $scope.$digest()
     }
     function onAlarmError( error, message) {
@@ -288,8 +331,16 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     }
 
     function onEvent( subscriptionId, type, events) {
+      var updateCount = countUpdates( events)
+
       gbEvents.onMessage( events)
       $scope.loading = false
+
+      if( tab === 'alarms') {
+        newCounts.events += updateCount
+        $scope.newCounts.events = newCounts.events.toString()
+      }
+
       $scope.$digest()
     }
     function onEventError( error, message) {

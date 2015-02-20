@@ -1,7 +1,7 @@
 <div>
     <tabset>
         <tab select="tabAlarms()">
-            <tab-heading>Alarms</tab-heading>
+            <tab-heading>Alarms <span class="badge">{{ newCounts.alarms }}</span></tab-heading>
             <div class="table-responsive" style="overflow-x: auto">
                 <table class="table table-condensed table-topless">
                     <tbody>
@@ -21,7 +21,7 @@
         </tab>
 
         <tab select="tabEvents()">
-            <tab-heading>Events</tab-heading>
+            <tab-heading>Events <span class="badge">{{ newCounts.events }}</span></tab-heading>
             <div class="table-responsive" style="overflow-x: auto">
                 <table class="table table-condensed table-topless">
                     <tbody>

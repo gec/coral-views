@@ -19,7 +19,21 @@ A tabular view of active alarms.
 * `limit` — The maximum number of rows in the table. Defaults to 20.
 
 #### Subscription
+    subscribeToAlarms: {
+        limit: $scope.limit
+    }
+
+###gb-alarms-and-events
+A tabbed panel showing both active alarms and events. Each is a tabular view.
+
+
+#### Attributes
+* `limit` — The maximum number of rows in both tables. Defaults to 20.
+
+#### Subscription
+    subscribeToAlarms: {
+        limit: $scope.limit
+    }
     subscribeToEvents: {
-        alarmsOnly: true,
         limit: $scope.limit
     }
