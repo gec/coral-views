@@ -146,4 +146,42 @@ describe('GBAlarms', function () {
 
   }));
 
+  it('should handle duplicate notifications with alarmWorkflow - one from alarmWorkflow POST reply and one from subscription', inject( function () {
+    var removed,
+        a = new GBAlarms( 3),
+        a1 = {id: 'a', time: 11, state: 'UNACK_AUDIBLE'},
+        a3 = {id: 'a', time: 53, state: 'ACKNOWLEDGED'},
+        a4 = {id: 'a', time: 54, state: 'REMOVED'}
+
+    removed = a.onMessage( [a1])
+    expect(a.alarms.length).toEqual(1);
+    expect(removed.length).toEqual(0);
+
+    // From the subscription notification. We get it first.
+    removed = a.onMessage( [a3])
+    expect(a.alarms.length).toEqual(1);
+    expect(removed.length).toEqual(0);
+    a3._updateState = 'none'
+    expect(a.alarms).toEqual( [a3]);
+    // Duplicate from POST reply
+    removed = a.onMessage( [a3])
+    expect(a.alarms.length).toEqual(1);
+    expect(removed.length).toEqual(0);
+    a3._updateState = 'none'
+    expect(a.alarms).toEqual( [a3]);
+
+    // From the subscription notification. We get it first.
+    removed = a.onMessage( [a4])
+    expect(a.alarms.length).toEqual(0);
+    expect(removed.length).toEqual(1);
+    expect(removed).toEqual( [a4]);
+    expect(a.alarms).toEqual( []);
+    // Duplicate from POST reply
+    removed = a.onMessage( [a4])
+    expect(a.alarms.length).toEqual(0);
+    expect(removed.length).toEqual(0);
+    expect(a.alarms).toEqual( []);
+
+  }));
+
 });

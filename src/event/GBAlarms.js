@@ -76,11 +76,14 @@ GBAlarms.prototype.onEach = function( alarm) {
   var existingAlarm,
       removed = false
 
+  // NOTE: We get duplicate notifications with alarmWorkflow. One from the subscription
+  // and one from the POST reply.
+  //
   console.log( 'GBAlarms onEach ' + alarm.id + ' "' + alarm.state + '"' + ' "' + alarm.message + '"')
   existingAlarm = this.alarmIdMap[alarm.id]
   if( existingAlarm)
     removed = this.onUpdate( existingAlarm, alarm)
-  else {
+  else if( alarm.state !== 'REMOVED') {
     alarm._updateState = 'none'
     this.alarms.unshift( alarm)
     this.alarmIdMap[alarm.id] = alarm
