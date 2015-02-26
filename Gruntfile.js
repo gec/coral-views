@@ -12,6 +12,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-conventional-changelog');
   grunt.loadNpmTasks('grunt-ngdocs');
   grunt.loadNpmTasks('grunt-ddescribe-iit');
+  grunt.loadNpmTasks('grunt-contrib-coffee');
 
   // Project configuration.
   grunt.util.linefeed = '\n';
@@ -51,6 +52,18 @@ module.exports = function(grunt) {
         files: ['src/**/*.js'],
         //we don't need to jshint here, it slows down everything else
         tasks: ['karma:watch:run']
+      }
+    },
+    coffee: {
+      coffee_to_js: {
+        options: { bare: true },
+        sourceMap: true,
+        expand: true,
+        flatten: false,
+        cwd: 'src',
+        src: ['**/*.coffee'],
+        dest: 'target',
+        ext: '.js'
       }
     },
     concat: {
@@ -232,7 +245,8 @@ module.exports = function(grunt) {
 
   //register before and after test tasks so we've don't have to change cli
   //options on the goole's CI server
-  grunt.registerTask('before-test', ['enforce', 'ddescribe-iit', 'jshint', 'html2js']);
+  grunt.registerTask( 'compile', ['coffee'])
+  grunt.registerTask('before-test', ['enforce', 'ddescribe-iit', 'jshint', 'html2js', 'compile']);
   grunt.registerTask('after-test', ['build', 'copy']);
 
   //Rename our watch task to 'delta', then make actual 'watch'
@@ -275,7 +289,8 @@ module.exports = function(grunt) {
       name: name,
       moduleName: enquote('<%= rootModule %>.' + name),
       displayName: ucwords(breakup(name, ' ')),
-      srcFiles: grunt.file.expand('src/'+name+'/*.js'),
+      // coffeeFiles: grunt.file.expand('src/'+name+'/*.coffee'),
+      srcFiles: grunt.file.expand(['src/'+name+'/*.js','target/'+name+'/*.js']),
       cssFiles: grunt.file.expand(['assets/css/*.css', 'src/'+name+'/*.css']),
       tplFiles: grunt.file.expand('template/'+name+'/*.html'),
       tpljsFiles: grunt.file.expand('template/'+name+'/*.html.js'),

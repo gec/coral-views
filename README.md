@@ -1,7 +1,17 @@
 greenbus-web-views
 ===========
 
-AngularJS components using Greenbus Server for rapid application development.
+AngularJS components using GreenBus Server for rapid application development.
+
+## Build
+
+```
+git clone https://github.com/gec/greenbus-web-views.git
+cd greenbus-web-views/
+npm install
+bower install
+grunt
+```
 
 ## Dependencies
 * GreenBus Web [Core](https://github.com/gec/greenbus-web-core)
