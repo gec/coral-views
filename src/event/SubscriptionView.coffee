@@ -15,10 +15,10 @@
   @constructor
 ###
 class SubscriptionView extends SubscriptionCache
-  constructor: ( @viewSize, @cacheSize, @items) ->
+  constructor: ( @viewSize, @cacheSize, items) ->
     @cacheSize ?= @viewSize
-    super @cacheSize, @items
-    @items ?= []
+    super @cacheSize, items
+    @items = @itemStore[0...@viewSize] # 0 to viewSize - 1
     # trim to viewSize
     if( @items.length > @viewSize)
       @items.splice( @viewSize, @items.length - @viewSize)
@@ -27,11 +27,9 @@ class SubscriptionView extends SubscriptionCache
     @viewOffset = 0
     @backgrounded = false
     @pagePending = undefined
-    # The part of the next page that was in the cache. Keep it in case it rolls off
-    # before the GET reply.
+    # When loading the next page, there were some items in the cache, but not enough for a full page.
+    # We cache what we have in pagePendingCache to keep it in case it rolls off before the GET replies.
     @pagePendingCache = undefined
-
-
 
   # Could get the insert index for one. Copy array for n.
   # i 1
@@ -44,33 +42,66 @@ class SubscriptionView extends SubscriptionCache
     removedItems = []
     actions = super item
 
-    if actions.many
-      @items = @itemStore[@viewOffset ... (@viewOffset + @viewSize)] # exclude 'to' index
-      if @items.length > @viewSize
-        removedItems = @items.splice( @viewSize, @items.length - @viewSize)
-    else
-      removedItems = actionRemove actions.remove if actions.remove 
-      actionInsert actions.insert if actions.insert
+    acts = (@act action for action in actions)
+    removedItems = (removed for removed in acts when removed) # filter on defined (i.e. not undefined)
+    
+    if( @items.length > @viewSize)
+      removedItems = removedItems.concat( @items.splice( @viewSize, @items.length - @viewSize))
       
     removedItems
-
     
-  actionRemove: ( remove) ->
-    removeAt = remove.at - @viewOffset
+#    if actions.many
+#      @items = @itemStore[@viewOffset ... (@viewOffset + @viewSize)] # exclude 'to' index
+#      # TODO: don't know which items were removed.
+#    else
+#      if actions.remove
+#        removed = @actionRemove actions.remove
+#      if actions.insert
+#        inserted = @actionInsert actions.insert
+#        if inserted
+#          if removed and removed != inserted
+#            removedItems[removedItems.length] = removed
+#          if( @items.length > @viewSize)
+#            removedItems = removedItems.concat( @items.splice( @viewSize, @items.length - @viewSize))
+#      else if removed
+#        removedItems[removedItems.length] = removed
+#
+#    removedItems
+
+  act: (action) ->
+    switch action.type
+      when SubscriptionCacheAction.UPDATE then @actionUpdate action  # item
+      when SubscriptionCacheAction.INSERT then @actionInsert action  # item, at
+      when SubscriptionCacheAction.REMOVE then @actionRemove action  # item, at
+      when SubscriptionCacheAction.MOVE   then @actionMove   action  # item, from, to
+      when SubscriptionCacheAction.TRIM   then @actionTrim   action  # items, at, count
+      
+
+  actionUpdate: (action) ->
+  actionMove: (action) ->
+  actionTrim: (action) ->
+    
+  actionRemove: ( action) ->
+    removed = undefined
+    removeAt = action.at - @viewOffset
     if removeAt >= 0 and removeAt < @viewSize
+      removed = @items[removeAt] 
       @items.splice( removeAt, 1)
     else if removeAt < 0
       @viewOffset -= 1
-    
+    removed
+  
       
-  actionInsert: ( insert) ->
-    insertAt = insert.at - @viewOffset
+  actionInsert: ( action) ->
+    inserted = undefined
+    insertAt = action.at - @viewOffset
     if insertAt >= 0 and insertAt < @viewSize
-      @items.splice( insertAt, insert.item)
+      @items.splice( insertAt, 0, action.item)
+      inserted = action.item
     else if insertAt < 0
       @viewOffset += 1
-    
-  
+    undefined
+
 #  insert: (item) ->
 #    if( @items.length is 0 or item.time >= @items[0])
 #      @items.unshift( item)
@@ -122,7 +153,7 @@ class SubscriptionView extends SubscriptionCache
   # page4 - GET and store in SubscriptionCache and GetCache.
   # page5 - GET and store in GetCache.
   #
-  pageNext: ->
+  pageNext: (pageRest) ->
     return false if @pagePending
     # Page next can be
     #   Within the itemStore
@@ -140,7 +171,7 @@ class SubscriptionView extends SubscriptionCache
 #      when @viewOffset + @viewSize + 1 < @itemStore.length
 #        limit = @itemStore.length - (@viewOffset + @viewSize)
 #        @pagePending = 'next'
-#        @pageRest.next( @items[@items.length], limit, @pageSuccess, @pageFailure)
+#        pageRest.next( @items[@items.length], limit, @pageSuccess, @pageFailure)
       # Off the end of what's loaded in the cache. Maybe past cache capacity.
       else
         # Need to GET more that what's in cache. Might need to GET a whole or partial page.
@@ -148,13 +179,13 @@ class SubscriptionView extends SubscriptionCache
         @pagePendingCache = @itemStore[nextPageOffset...(nextPageOffset + @viewSize)] # empty or partial page.
         limit = @viewSize - @pagePendingCache.length
         @pagePending = 'next'
-        @pageRest.next( @items[@items.length], limit, @pageSuccess, @pageFailure)
+        pageRest.next( @items[@items.length], limit, @pageSuccess, @pageFailure)
     true
 
-  pagePrevious: ->
+  pagePrevious: (pageRest)->
     if not @pagePending
       @pagePending = 'previous'
-      @pageRest.next( @pageSuccess, @pageFailure)
+      pageRest.next( @pageSuccess, @pageFailure)
       true
     else
       false

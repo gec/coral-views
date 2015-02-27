@@ -49,15 +49,24 @@ module.exports = function(grunt) {
         tasks: ['html2js', 'karma:watch:run']
       },
       js: {
-        files: ['src/**/*.js'],
+        files: ['src/**/*.js','target/**/*.js'],
         //we don't need to jshint here, it slows down everything else
         tasks: ['karma:watch:run']
-      }
+      },
+      coffee: {
+        files: ['src/**/*.coffee'],
+        tasks: ['coffee','karma:watch:run']
+      }//,
+      //options: {
+      //  livereload: true
+      //}
     },
     coffee: {
       coffee_to_js: {
-        options: { bare: true },
-        sourceMap: true,
+        options: {
+          bare: true,
+          sourceMap: true
+        },
         expand: true,
         flatten: false,
         cwd: 'src',
@@ -245,8 +254,8 @@ module.exports = function(grunt) {
 
   //register before and after test tasks so we've don't have to change cli
   //options on the goole's CI server
-  grunt.registerTask( 'compile', ['coffee'])
-  grunt.registerTask('before-test', ['enforce', 'ddescribe-iit', 'jshint', 'html2js', 'compile']);
+  //grunt.registerTask( 'compile', ['coffee'])
+  grunt.registerTask('before-test', ['enforce', 'ddescribe-iit', 'jshint', 'html2js', 'coffee']);
   grunt.registerTask('after-test', ['build', 'copy']);
 
   //Rename our watch task to 'delta', then make actual 'watch'

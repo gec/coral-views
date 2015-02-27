@@ -4,8 +4,28 @@ module.exports = function(config) {
     // base path, that will be used to resolve files and exclude
     basePath: '',
 
+    // Added this so grunt watch would auto-compile coffeescript. Still doesn't do it.
     preprocessors: {
-      'gec-views-tpls-*-SNAPSHOT.js': 'coverage'
+      'gec-views-tpls-*-SNAPSHOT.js': 'coverage',
+      'src/**/*.coffee': 'coffee'
+    },
+    coffeePreprocessor: {
+      // options passed to the coffee compiler
+      options: {
+        bare: true,
+        sourceMap: true
+      },
+      expand: true,
+      flatten: false,
+      cwd: 'src',
+      src: ['**/*.coffee'],
+      dest: 'target',
+      ext: '.js'
+
+      //// transforming the filenames
+      //transformPath: function(path) {
+      //  return path.replace(/\.coffee$/, '.js');
+      //}
     },
 
     frameworks: [
@@ -27,6 +47,7 @@ module.exports = function(config) {
 
       // Use the actual source files for testing.
       'src/**/*.js',
+      'target/**/*.js',
       'template/**/*.js'
     ],
 
@@ -42,7 +63,8 @@ module.exports = function(config) {
       'karma-coverage',
       //'karma-phantomjs-launcher',
       //'karma-firefox-launcher',
-      'karma-chrome-launcher'
+      'karma-chrome-launcher',
+      'karma-coffee-preprocessor'
     ],
 
     coverageReporter: {
