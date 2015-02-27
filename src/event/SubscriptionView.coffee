@@ -24,9 +24,9 @@ class SubscriptionView extends SubscriptionCache
       @items.splice( @viewSize, @items.length - @viewSize)
       
     @paged = false
-    @viewOffset = 0
+    @pageCacheOffset = 0 # current page's index into cache
     @backgrounded = false
-    @pagePending = undefined
+    @pagePending = undefined # waiting on rest call
     # When loading the next page, there were some items in the cache, but not enough for a full page.
     # We cache what we have in pagePendingCache to keep it in case it rolls off before the GET replies.
     @pagePendingCache = undefined
@@ -41,17 +41,18 @@ class SubscriptionView extends SubscriptionCache
   onMessage: ( item) ->
     removedItems = []
     actions = super item
-
-    acts = (@act action for action in actions)
-    removedItems = (removed for removed in acts when removed) # filter on defined (i.e. not undefined)
     
-    if( @items.length > @viewSize)
-      removedItems = removedItems.concat( @items.splice( @viewSize, @items.length - @viewSize))
-      
-    removedItems
+    if @pageCacheOffset >= 0
+      acts = (@act action for action in actions)
+      removedItems = (removed for removed in acts when removed) # filter on defined (i.e. not undefined)
+
+      if( @items.length > @viewSize)
+        removedItems = removedItems.concat( @items.splice( @viewSize, @items.length - @viewSize))
+
+      removedItems
     
 #    if actions.many
-#      @items = @itemStore[@viewOffset ... (@viewOffset + @viewSize)] # exclude 'to' index
+#      @items = @itemStore[@pageCacheOffset ... (@pageCacheOffset + @viewSize)] # exclude 'to' index
 #      # TODO: don't know which items were removed.
 #    else
 #      if actions.remove
@@ -83,23 +84,23 @@ class SubscriptionView extends SubscriptionCache
     
   actionRemove: ( action) ->
     removed = undefined
-    removeAt = action.at - @viewOffset
+    removeAt = action.at - @pageCacheOffset
     if removeAt >= 0 and removeAt < @viewSize
       removed = @items[removeAt] 
       @items.splice( removeAt, 1)
     else if removeAt < 0
-      @viewOffset -= 1
+      @pageCacheOffset -= 1
     removed
   
       
   actionInsert: ( action) ->
     inserted = undefined
-    insertAt = action.at - @viewOffset
+    insertAt = action.at - @pageCacheOffset
     if insertAt >= 0 and insertAt < @viewSize
       @items.splice( insertAt, 0, action.item)
       inserted = action.item
     else if insertAt < 0
-      @viewOffset += 1
+      @pageCacheOffset += 1
     undefined
 
 #  insert: (item) ->
@@ -134,32 +135,37 @@ class SubscriptionView extends SubscriptionCache
   pageSuccess: (items) =>
     switch @pagePending
       when 'next'
-        @items = @pagePendingCache.concat( items)
+        # TODO: What if some of the new items should overwrite pagePendingCache items.
+        @items = if @pagePendingCache then @pagePendingCache.concat( items) else items
+        @items.sort( ( a, b) -> return b.time - a.time)
         @pagePending = undefined
         @pagePendingCache = undefined
-        # do we add to the cache?
-        # do we update pageOffset?
+        @paged = true
+        @pageCacheOffset = -1
+        # See if some of this will fit in the cache.
+        @onMessage( items)
   
 #    if not @paged
 #      background()
-#      @paged = true
 
   pageFailure: (items) =>
 
 
-  #                    <- items loaded -> capacity max
-  # SubscriptionCache [iiiiiiiiiiiiiiiiii            ]
-  #                   [page0][page1][page2][page3][page4][page5]
-  # GetCache                                      [                    ]
-  #
-  # page1 - load from cached
-  # page2 - Some in cache. GET the rest and store in cache
-  # page3 - GET and store in cache
-  # page4 - GET and store in SubscriptionCache and GetCache.
-  # page5 - GET and store in GetCache.
-  #
+  ###
+                      <- items loaded -> capacity max
+    SubscriptionCache [iiiiiiiiiiiiiiiiii            ]
+                     [page0][page1][page2][page3][page4][page5]
+
+    page1 - load from cached
+    page2 - Some in cache. GET the rest and store in cache
+    page3 - GET and store in cache
+    page4 - GET and store in cache.
+    page5 - GET and nothing to store in cache.
+
+    @return string 'paged', 'pending', 'pastPending'
+  ###
   pageNext: (pageRest) ->
-    return false if @pagePending
+    return 'pastPending' if @pagePending
     # Page next can be
     #   Within the itemStore
     #   Partially off the end of the itemStore
@@ -167,26 +173,34 @@ class SubscriptionView extends SubscriptionCache
     #
     switch
       
-      when @viewOffset + 2 * @viewSize <= @itemStore.length
+      when @pageCacheOffset < 0
+        # Already paged past what's loaded in cache.
+        @pagePending = 'next'
+        # TODO: what if length is 0!
+        pageRest.next( @items[@items.length-1].id, @viewSize, @pageSuccess, @pageFailure)
+        'pending'
+      when @pageCacheOffset + 2 * @viewSize <= @itemStore.length
         # Load page from cache
-        @viewOffset += @viewSize
-        @items = @itemStore[@viewOffset ... (@viewOffset + @viewSize)] # exclude 'to' index
+        @pageCacheOffset += @viewSize
+        @items = @itemStore[@pageCacheOffset ... (@pageCacheOffset + @viewSize)] # exclude 'to' index
         @paged = true
+        'paged'
 #      # Partially within cache
-#      when @viewOffset + @viewSize + 1 < @itemStore.length
-#        limit = @itemStore.length - (@viewOffset + @viewSize)
+#      when @pageCacheOffset + @viewSize + 1 < @itemStore.length
+#        limit = @itemStore.length - (@pageCacheOffset + @viewSize)
 #        @pagePending = 'next'
 #        pageRest.next( @items[@items.length], limit, @pageSuccess, @pageFailure)
-      # Off the end of what's loaded in the cache. Maybe past cache capacity.
+      
       else
-        # Need to GET more that what's in cache. Might need to GET a whole or partial page.
-        nextPageOffset = @viewOffset + @viewSize
+        # At least some of the next page is off the end of what's loaded in the cache. Maybe past cache capacity.
+        # Might be getting a whole or partial page.
+        nextPageOffset = @pageCacheOffset + @viewSize
         @pagePendingCache = @itemStore[nextPageOffset...(nextPageOffset + @viewSize)] # empty or partial page.
         limit = @viewSize - @pagePendingCache.length
         @pagePending = 'next'
         # TODO: what if length is 0!
         pageRest.next( @items[@items.length-1].id, limit, @pageSuccess, @pageFailure)
-    true
+        'pending'
 
   pagePrevious: (pageRest)->
     if not @pagePending

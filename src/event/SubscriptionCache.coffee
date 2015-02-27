@@ -16,7 +16,10 @@ class SubscriptionCache
   constructor: ( @cacheSize, items) ->
     @itemStore = []
     if( items)
-      @itemStore = items[0...@cacheSize] # 0 ... @cacheSize - 1
+      @itemStore = items[..]
+      @itemStore.sort( ( a, b) -> return b.time - a.time)
+      if @itemStore.length > @cacheSize
+        @itemStore = @itemStore[0...@cacheSize] # 0 ... @cacheSize - 1
 
   onMessage: ( item) ->
     actions = []
