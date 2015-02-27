@@ -1,6 +1,6 @@
 describe('SubscriptionView', function () {
-  var items,
-      itemCount = 3
+  var items, pageRest,
+      itemCount = 6
 
   beforeEach( function() {
     items = []
@@ -9,6 +9,22 @@ describe('SubscriptionView', function () {
         id: 'id'+index,
         time: index
       })
+    }
+    
+    pageRest = {
+      next: function( startAfterId, limit, pageSuccess, pageFailure) {
+        pageRest.nextStartAfterId = startAfterId
+        pageRest.nextLimit = limit
+        pageRest.nextPageSuccess = pageSuccess
+        pageRest.nextPageFailure = pageFailure
+      },
+      previous: function( startAfterId, limit, pageSuccess, pageFailure) {
+        pageRest.previousStartAfterId = startAfterId
+        pageRest.previousLimit = limit
+        pageRest.previousPageSuccess = pageSuccess
+        pageRest.previousPageFailure = pageFailure
+      }
+
     }
   })
 
@@ -26,13 +42,13 @@ describe('SubscriptionView', function () {
   }));
 
   it('should limit items from construction', inject( function () {
-    var view = new SubscriptionView( 2, 2, items)
+    var view = new SubscriptionView( 2, 2, items.slice(0,3))
     expect(view.viewSize).toEqual(2);
     expect(view.cacheSize).toEqual(2);
     expect(view.items.length).toEqual(2);
     expect(view.itemStore.length).toEqual(2);
 
-    view = new SubscriptionView( 1, 2, items)
+    view = new SubscriptionView( 1, 2, items.slice(0,3))
     expect(view.viewSize).toEqual(1);
     expect(view.cacheSize).toEqual(2);
     expect(view.items.length).toEqual(1);
@@ -174,5 +190,42 @@ describe('SubscriptionView', function () {
     //expect(removed.trimmed).toBeUndefined();
     //expect(view.items).toEqual( [i6,i5,i4]);
   }));
+
+  it('onMessage should trim items with view limit is less than cache limit', inject( function () {
+    var removed,
+        view = new SubscriptionView( 2, 6, items),
+        i6 = {time: 6},
+        i7 = {time: 7},
+        i8 = {time: 8},
+        i9 = {time: 9},
+        i10 = {time: 10},
+        i11 = {time: 11},
+        i12 = {time: 12}
+
+    expect(view.items).toEqual( items.slice(0,2));
+    
+    paged = view.pageNext( pageRest)
+    expect(view.items.length).toEqual(2);
+    expect(view.items).toEqual( items.slice(2,4));
+    expect(paged).toBeTruthy();
+
+    paged = view.pageNext( pageRest)
+    expect(view.items.length).toEqual(2);
+    expect(view.items).toEqual( items.slice(4,6));
+    expect(paged).toBeTruthy();
+
+    paged = view.pageNext( pageRest)
+    expect(view.items.length).toEqual(2);
+    expect(view.items).toEqual( items.slice(4,6));
+    expect(paged).toBeTruthy();
+    expect(view.pagePending).toBe('next');
+    
+    pageRest.nextPageSuccess( [i6, i7])
+    expect(view.pagePending).not.toBeDefined();
+    // TODO: get this working! expect(view.items).toEqual( [i7, i6]);
+
+
+  }));
+
 
 });

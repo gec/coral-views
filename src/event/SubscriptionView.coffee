@@ -132,12 +132,17 @@ class SubscriptionView extends SubscriptionCache
 
 
   pageSuccess: (items) =>
-    if @pagePending is 'next'
-      @items = @pagePendingCache.concat( items)
-    if not @paged
-      background()
-      @paged = true
-    @items = items
+    switch @pagePending
+      when 'next'
+        @items = @pagePendingCache.concat( items)
+        @pagePending = undefined
+        @pagePendingCache = undefined
+        # do we add to the cache?
+        # do we update pageOffset?
+  
+#    if not @paged
+#      background()
+#      @paged = true
 
   pageFailure: (items) =>
 
@@ -162,7 +167,7 @@ class SubscriptionView extends SubscriptionCache
     #
     switch
       
-      when @viewOffset + 2 * @viewSize < @itemStore.length
+      when @viewOffset + 2 * @viewSize <= @itemStore.length
         # Load page from cache
         @viewOffset += @viewSize
         @items = @itemStore[@viewOffset ... (@viewOffset + @viewSize)] # exclude 'to' index
@@ -179,13 +184,14 @@ class SubscriptionView extends SubscriptionCache
         @pagePendingCache = @itemStore[nextPageOffset...(nextPageOffset + @viewSize)] # empty or partial page.
         limit = @viewSize - @pagePendingCache.length
         @pagePending = 'next'
-        pageRest.next( @items[@items.length], limit, @pageSuccess, @pageFailure)
+        # TODO: what if length is 0!
+        pageRest.next( @items[@items.length-1].id, limit, @pageSuccess, @pageFailure)
     true
 
   pagePrevious: (pageRest)->
     if not @pagePending
       @pagePending = 'previous'
-      pageRest.next( @pageSuccess, @pageFailure)
+      pageRest.previous( @pageSuccess, @pageFailure)
       true
     else
       false
