@@ -154,11 +154,13 @@ class SubscriptionView extends SubscriptionCache
         @pagePending = undefined
         @pagePendingCache = undefined
         @paged = true
-        # see if we've paged previous enough so we're back on the cache.
-        @pageCacheOffset = @indexOfId( @items[0])
-        
         # See if some of this will fit in the cache.
         @onMessage( items)
+        # see if we've paged previous enough so we're back in the cache.
+        @pageCacheOffset = @indexOfId( @items[0].id)
+
+      else
+        console.log( 'SubscriptionView.pageSuccess but pagePending is ' + @pagePending)
   
   pageFailure: (items) =>
 
@@ -221,22 +223,26 @@ class SubscriptionView extends SubscriptionCache
         # Already paged past what's loaded in cache.
         @pagePending = 'previous'
         # TODO: what if length is 0!
-        pageRest.next( @items[0].id, @viewSize, @pageSuccess, @pageFailure)
+        pageRest.previous( @items[0].id, @viewSize, @pageSuccess, @pageFailure)
         'pending'
       when @pageCacheOffset == 0
         # TODO: we're already on the first page. What's up?
+        @paged = false
         'paged'
       else
         # Load page from cache
         @pageCacheOffset -= @viewSize
         @pageCacheOffset = 0 if @pageCacheOffset < 0
         @items = @itemStore[@pageCacheOffset ... (@pageCacheOffset + @viewSize)] # exclude 'to' index
-        @paged = true
+        @paged = @pageCacheOffset > 0
         # TODO: 'first' ?
         'paged'
 
   pageFirst: ->
-    foreground()
+    @pagePending = undefined // cancel pagePending
+    @pageCacheOffset = 0
+    @items = @itemStore[@pageCacheOffset ... (@pageCacheOffset + @viewSize)] # exclude 'to' index
+    @paged = false
     
 
 
