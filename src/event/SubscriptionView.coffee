@@ -23,6 +23,7 @@ class SubscriptionView extends SubscriptionCache
     if( @items.length > @viewSize)
       @items.splice( @viewSize, @items.length - @viewSize)
       
+    # TODO: I don't @paged is read by anyone
     @paged = false
     @pageCacheOffset = 0 # current page's index into cache
     @backgrounded = false
@@ -132,6 +133,7 @@ class SubscriptionView extends SubscriptionCache
       @backgrounded = false
 
 
+
   pageSuccess: (items) =>
     switch @pagePending
       when 'next'
@@ -145,9 +147,19 @@ class SubscriptionView extends SubscriptionCache
         # See if some of this will fit in the cache.
         @onMessage( items)
   
-#    if not @paged
-#      background()
-
+      when 'previous'
+        #TODO: what if items is empty!
+        @items = items
+        @items.sort( ( a, b) -> return b.time - a.time)
+        @pagePending = undefined
+        @pagePendingCache = undefined
+        @paged = true
+        # see if we've paged previous enough so we're back on the cache.
+        @pageCacheOffset = @indexOfId( @items[0])
+        
+        # See if some of this will fit in the cache.
+        @onMessage( items)
+  
   pageFailure: (items) =>
 
 
@@ -185,12 +197,6 @@ class SubscriptionView extends SubscriptionCache
         @items = @itemStore[@pageCacheOffset ... (@pageCacheOffset + @viewSize)] # exclude 'to' index
         @paged = true
         'paged'
-#      # Partially within cache
-#      when @pageCacheOffset + @viewSize + 1 < @itemStore.length
-#        limit = @itemStore.length - (@pageCacheOffset + @viewSize)
-#        @pagePending = 'next'
-#        pageRest.next( @items[@items.length], limit, @pageSuccess, @pageFailure)
-      
       else
         # At least some of the next page is off the end of what's loaded in the cache. Maybe past cache capacity.
         # Might be getting a whole or partial page.
@@ -203,12 +209,31 @@ class SubscriptionView extends SubscriptionCache
         'pending'
 
   pagePrevious: (pageRest)->
-    if not @pagePending
-      @pagePending = 'previous'
-      pageRest.previous( @pageSuccess, @pageFailure)
-      true
-    else
-      false
+    return 'pastPending' if @pagePending
+    # Page previous can be
+    #   Within the itemStore
+    #   Partially off the end of the itemStore
+    #   Fully off the end of the itemStore
+    #
+    switch
+
+      when @pageCacheOffset < 0
+        # Already paged past what's loaded in cache.
+        @pagePending = 'previous'
+        # TODO: what if length is 0!
+        pageRest.next( @items[0].id, @viewSize, @pageSuccess, @pageFailure)
+        'pending'
+      when @pageCacheOffset == 0
+        # TODO: we're already on the first page. What's up?
+        'paged'
+      else
+        # Load page from cache
+        @pageCacheOffset -= @viewSize
+        @pageCacheOffset = 0 if @pageCacheOffset < 0
+        @items = @itemStore[@pageCacheOffset ... (@pageCacheOffset + @viewSize)] # exclude 'to' index
+        @paged = true
+        # TODO: 'first' ?
+        'paged'
 
   pageFirst: ->
     foreground()

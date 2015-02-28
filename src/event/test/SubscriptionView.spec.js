@@ -5,9 +5,10 @@ describe('SubscriptionView', function () {
   beforeEach( function() {
     items = []
     for( var index = 0; index < itemCount; index++) {
+      var index10 = index * 10
       items.push( {
-        id: 'id'+index,
-        time: index * 10
+        id: 'id'+ index10,
+        time: index10
       })
     }
     itemsSorted = items.slice(0).sort( function( a, b) { return b.time - a.time})
@@ -60,13 +61,13 @@ describe('SubscriptionView', function () {
   it('onMessage should add single items sorted by reverse time and limit total items', inject( function () {
     var removed,
         view = new SubscriptionView( 3),
-        i0 = {time: 0},
-        i1 = {time: 10},
-        i2 = {time: 20},
-        i3 = {time: 30},
-        i4 = {time: 40},
-        i5 = {time: 50},
-        i6 = {time: 60}
+        i0 = {time: 0, id: 'id0'},
+        i1 = {time: 10, id: 'id10'},
+        i2 = {time: 20, id: 'id20'},
+        i3 = {time: 30, id: 'id30'},
+        i4 = {time: 40, id: 'id40'},
+        i5 = {time: 50, id: 'id50'},
+        i6 = {time: 60, id: 'id60'}
 
     removed = view.onMessage( i0)
     expect(view.items.length).toEqual(1);
@@ -103,13 +104,13 @@ describe('SubscriptionView', function () {
   it('onMessage should trim items with view limit is less than cache limit', inject( function () {
     var removed,
         view = new SubscriptionView( 2, 3),
-        i0 = {time: 0},
-        i1 = {time: 10},
-        i2 = {time: 20},
-        i3 = {time: 30},
-        i4 = {time: 40},
-        i5 = {time: 50},
-        i6 = {time: 60}
+        i0 = {time: 0, id: 'id0'},
+        i1 = {time: 10, id: 'id10'},
+        i2 = {time: 20, id: 'id20'},
+        i3 = {time: 30, id: 'id30'},
+        i4 = {time: 40, id: 'id40'},
+        i5 = {time: 50, id: 'id50'},
+        i6 = {time: 60, id: 'id60'}
 
     removed = view.onMessage( i0)
     expect(view.items.length).toEqual(1);
@@ -147,13 +148,13 @@ describe('SubscriptionView', function () {
   it('should add item arrays sorted by reverse time and limit total items', inject( function () {
     var removed,
         view = new SubscriptionView( 3),
-        i0 = {time: 0},
-        i1 = {time: 10},
-        i2 = {time: 20},
-        i3 = {time: 30},
-        i4 = {time: 40},
-        i5 = {time: 50},
-        i6 = {time: 60}
+        i0 = {time: 0, id: 'id0'},
+        i1 = {time: 10, id: 'id10'},
+        i2 = {time: 20, id: 'id20'},
+        i3 = {time: 30, id: 'id30'},
+        i4 = {time: 40, id: 'id40'},
+        i5 = {time: 50, id: 'id50'},
+        i6 = {time: 60, id: 'id60'}
 
     //removed = view.onMessage( [i0,i2])
     //expect(view.items.length).toEqual(2);
@@ -196,8 +197,8 @@ describe('SubscriptionView', function () {
   it('pageNext get from cache, cache, then GET', inject( function () {
     var removed,
         view = new SubscriptionView( 2, 6, items),
-        i6 = {time: 60},
-        i7 = {time: 70}
+        i6 = {time: 60, id: 'id60'},
+        i7 = {time: 70, id: 'id70'}
 
     expect(view.items).toEqual( itemsSorted.slice(0,2));
     expect(view.itemStore).toEqual( itemsSorted.slice(0,6));
@@ -298,7 +299,7 @@ describe('SubscriptionView', function () {
         page1 = itemsSorted.slice(0,2),
         page2 = itemsSorted.slice(2,4),
         page3 = itemsSorted.slice(4,6),
-        i6 = {time: 60}
+        i6 = {time: 60, id: 'id60'}
 
     expect(view.items).toEqual( page1);
     expect(view.itemStore).toEqual( itemsSorted.slice(0,6));
@@ -328,7 +329,7 @@ describe('SubscriptionView', function () {
         page1 = itemsSorted.slice(0,2),
         page2 = itemsSorted.slice(2,4), // times: 20, 30
         page3 = itemsSorted.slice(3,5),
-        i25 = {time: 25}
+        i25 = {time: 25, id: 'id25'}
 
     expect(view.items).toEqual( page1);
     expect(view.itemStore).toEqual( itemsSorted.slice(0,6));
@@ -355,11 +356,11 @@ describe('SubscriptionView', function () {
 
   it('when paged, onMessage after page should not affect the current page', inject( function () {
     var removed,
-        view = new SubscriptionView( 2, 7, items),
-        page1 = itemsSorted.slice(0,2),
-        page2 = itemsSorted.slice(2,4),
-        i05 = {time: 5},
-        page3 = [itemsSorted[4], i05]
+        view = new SubscriptionView( 2, 7, items),// 0, 10, 20, 30, 40, 50
+        page1 = itemsSorted.slice(0,2), // 50, 40
+        page2 = itemsSorted.slice(2,4), // 30, 20
+        i05 = {time: 5, id: 'id5'},
+        page3 = [itemsSorted[4], i05] // 10, 5
 
     expect(view.items).toEqual( page1);
     expect(view.itemStore).toEqual( itemsSorted.slice(0,6));
