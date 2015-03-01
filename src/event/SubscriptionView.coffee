@@ -52,24 +52,6 @@ class SubscriptionView extends SubscriptionCache
 
       removedItems
     
-#    if actions.many
-#      @items = @itemStore[@pageCacheOffset ... (@pageCacheOffset + @viewSize)] # exclude 'to' index
-#      # TODO: don't know which items were removed.
-#    else
-#      if actions.remove
-#        removed = @actionRemove actions.remove
-#      if actions.insert
-#        inserted = @actionInsert actions.insert
-#        if inserted
-#          if removed and removed != inserted
-#            removedItems[removedItems.length] = removed
-#          if( @items.length > @viewSize)
-#            removedItems = removedItems.concat( @items.splice( @viewSize, @items.length - @viewSize))
-#      else if removed
-#        removedItems[removedItems.length] = removed
-#
-#    removedItems
-
   act: (action) ->
     switch action.type
       when SubscriptionCacheAction.UPDATE then @actionUpdate action  # item
@@ -129,16 +111,16 @@ class SubscriptionView extends SubscriptionCache
     
   foreground: ->
     if @backgrounded
-      @items = @itemStore[0...@viewSize] # 0 to viewSize - 1
+      @replaceItems @itemStore[0...@viewSize] # 0 to viewSize - 1
       @backgrounded = false
-
-
 
   pageSuccess: (items) =>
     switch @pagePending
       when 'next'
         # TODO: What if some of the new items should overwrite pagePendingCache items.
-        @items = if @pagePendingCache then @pagePendingCache.concat( items) else items
+        if @pagePendingCache
+          items = @pagePendingCache.concat( items)
+        @replaceItems items
         @items.sort( ( a, b) -> return b.time - a.time)
         @pagePending = undefined
         @pagePendingCache = undefined
@@ -149,7 +131,7 @@ class SubscriptionView extends SubscriptionCache
   
       when 'previous'
         #TODO: what if items is empty!
-        @items = items
+        @replaceItems items
         @items.sort( ( a, b) -> return b.time - a.time)
         @pagePending = undefined
         @pagePendingCache = undefined
@@ -196,7 +178,7 @@ class SubscriptionView extends SubscriptionCache
       when @pageCacheOffset + 2 * @viewSize <= @itemStore.length
         # Load page from cache
         @pageCacheOffset += @viewSize
-        @items = @itemStore[@pageCacheOffset ... (@pageCacheOffset + @viewSize)] # exclude 'to' index
+        @replaceItems @itemStore[@pageCacheOffset ... (@pageCacheOffset + @viewSize)] # exclude 'to' index
         @paged = true
         'paged'
       else
@@ -233,7 +215,7 @@ class SubscriptionView extends SubscriptionCache
         # Load page from cache
         @pageCacheOffset -= @viewSize
         @pageCacheOffset = 0 if @pageCacheOffset < 0
-        @items = @itemStore[@pageCacheOffset ... (@pageCacheOffset + @viewSize)] # exclude 'to' index
+        @replaceItems @itemStore[@pageCacheOffset ... (@pageCacheOffset + @viewSize)] # exclude 'to' index
         @paged = @pageCacheOffset > 0
         # TODO: 'first' ?
         'paged'
@@ -241,8 +223,13 @@ class SubscriptionView extends SubscriptionCache
   pageFirst: ->
     @pagePending = undefined // cancel pagePending
     @pageCacheOffset = 0
-    @items = @itemStore[@pageCacheOffset ... (@pageCacheOffset + @viewSize)] # exclude 'to' index
+    @replaceItems @itemStore[@pageCacheOffset ... (@pageCacheOffset + @viewSize)] # exclude 'to' index
     @paged = false
-    
+
+  replaceItems: (source) ->
+    @items.splice( 0, @items.length)
+    args = [0, 0].concat(source);
+    Array.prototype.splice.apply(@items, args)
+
 
 

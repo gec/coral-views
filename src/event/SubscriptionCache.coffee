@@ -127,7 +127,7 @@ class SubscriptionCache
       type: SubscriptionCacheAction.NONE
       item: item
 
-  indexOfId = (id) ->
+  indexOfId: (id) ->
     for item, index in @itemStore
       return index if item.id is id
     -1

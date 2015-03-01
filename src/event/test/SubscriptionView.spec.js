@@ -1,5 +1,6 @@
 describe('SubscriptionView', function () {
   var items, itemsSorted, pageRest,
+      page1, page2, page3,
       itemCount = 6
 
   beforeEach( function() {
@@ -12,19 +13,22 @@ describe('SubscriptionView', function () {
       })
     }
     itemsSorted = items.slice(0).sort( function( a, b) { return b.time - a.time})
-    
+    page1 = itemsSorted.slice(0,2)
+    page2 = itemsSorted.slice(2,4)
+    page3 = itemsSorted.slice(4,6)
+
     pageRest = {
       next: function( startAfterId, limit, pageSuccess, pageFailure) {
         pageRest.nextStartAfterId = startAfterId
         pageRest.nextLimit = limit
-        pageRest.nextPageSuccess = pageSuccess
-        pageRest.nextPageFailure = pageFailure
+        pageRest.nextSuccess = pageSuccess
+        pageRest.nextFailure = pageFailure
       },
       previous: function( startAfterId, limit, pageSuccess, pageFailure) {
         pageRest.previousStartAfterId = startAfterId
         pageRest.previousLimit = limit
-        pageRest.previousPageSuccess = pageSuccess
-        pageRest.previousPageFailure = pageFailure
+        pageRest.previousSuccess = pageSuccess
+        pageRest.previousFailure = pageFailure
       }
 
     }
@@ -200,13 +204,14 @@ describe('SubscriptionView', function () {
         i6 = {time: 60, id: 'id60'},
         i7 = {time: 70, id: 'id70'}
 
-    expect(view.items).toEqual( itemsSorted.slice(0,2));
+
+    expect(view.items).toEqual( page1);
     expect(view.itemStore).toEqual( itemsSorted.slice(0,6));
 
     paged = view.pageNext( pageRest)
     expect(paged).toBe('paged');
     expect(view.items.length).toEqual(2);
-    expect(view.items).toEqual( itemsSorted.slice(2,4));
+    expect(view.items).toEqual( page2);
 
     paged = view.pageNext( pageRest)
     expect(paged).toBe('paged');
@@ -218,8 +223,9 @@ describe('SubscriptionView', function () {
     expect(view.items.length).toEqual(2);
     expect(view.items).toEqual( itemsSorted.slice(4,6));
     expect(view.pagePending).toBe('next');
+    expect( pageRest.nextStartAfterId).toBe( itemsSorted[5].id)
     
-    pageRest.nextPageSuccess( [i6, i7])
+    pageRest.nextSuccess( [i6, i7])
     expect(view.pagePending).not.toBeDefined();
     expect(view.items).toEqual( [i7, i6]);
     expect(view.itemStore).toEqual( [i7,i6].concat( itemsSorted.slice(0,4)));
@@ -228,10 +234,7 @@ describe('SubscriptionView', function () {
 
   it('pageNext should get partial from cache, then use GET  because paged. Store results in SubscriptionCache', inject( function () {
     var paged,
-        view = new SubscriptionView( 2, 6, itemsSorted.slice(0,3)),
-        page1 = itemsSorted.slice(0,2),
-        page2 = itemsSorted.slice(2,4),
-        page3 = itemsSorted.slice(4,6)
+        view = new SubscriptionView( 2, 6, itemsSorted.slice(0,3))
 
     expect(view.items).toEqual( page1);
     expect(view.itemStore).toEqual( itemsSorted.slice(0,3));
@@ -242,11 +245,12 @@ describe('SubscriptionView', function () {
     expect(view.pagePending).toEqual( 'next');
     expect(view.pagePendingCache).toEqual( itemsSorted.slice(2,3));
     expect(view.items).toEqual( page1); // not paged yet
+    expect( pageRest.nextStartAfterId).toBe( itemsSorted[1].id)
     // page while paging
     paged = view.pageNext( pageRest)
     expect(paged).toBe('pastPending');
     // GET success
-    pageRest.nextPageSuccess( [page2[1]])
+    pageRest.nextSuccess( [page2[1]])
     expect(view.pagePending).not.toBeDefined();
     expect(view.pagePendingCache).not.toBeDefined();
     expect(view.items).toEqual( page2);
@@ -258,8 +262,9 @@ describe('SubscriptionView', function () {
     expect(view.pagePending).toEqual( 'next');
     expect(view.pagePendingCache).toBeUndefined();
     expect(view.items).toEqual( page2); // not paged yet
+    expect( pageRest.nextStartAfterId).toBe( itemsSorted[3].id)
 
-    pageRest.nextPageSuccess( page3)
+    pageRest.nextSuccess( page3)
     expect(view.pagePending).not.toBeDefined();
     expect(view.pagePendingCache).not.toBeDefined();
     expect(view.items).toEqual( page3);
@@ -269,10 +274,7 @@ describe('SubscriptionView', function () {
   
   it('pageNext with view at end of cache should use GET. No current results to store in SubscriptionCache', inject( function () {
     var paged,
-        view = new SubscriptionView( 2, 2, itemsSorted.slice(0,2)),
-        page1 = itemsSorted.slice(0,2),
-        page2 = itemsSorted.slice(2,4),
-        page3 = itemsSorted.slice(4,6)
+        view = new SubscriptionView( 2, 2, itemsSorted.slice(0,2))
 
     expect(view.items).toEqual( page1);
     expect(view.itemStore).toEqual( page1);
@@ -285,7 +287,7 @@ describe('SubscriptionView', function () {
     expect(view.items).toEqual( page1); // not paged yet
     
     // GET success
-    pageRest.nextPageSuccess( page2)
+    pageRest.nextSuccess( page2)
     expect(view.pagePending).not.toBeDefined();
     expect(view.pagePendingCache).not.toBeDefined();
     expect(view.items).toEqual( page2);
@@ -296,9 +298,6 @@ describe('SubscriptionView', function () {
   it('when paged, onMessage before page should not affect the current and next page', inject( function () {
     var removed,
         view = new SubscriptionView( 2, 7, items),
-        page1 = itemsSorted.slice(0,2),
-        page2 = itemsSorted.slice(2,4),
-        page3 = itemsSorted.slice(4,6),
         i6 = {time: 60, id: 'id60'}
 
     expect(view.items).toEqual( page1);
@@ -326,9 +325,7 @@ describe('SubscriptionView', function () {
   it('when paged, onMessage within page should affect the current and next page', inject( function () {
     var removed,
         view = new SubscriptionView( 2, 7, items),
-        page1 = itemsSorted.slice(0,2),
-        page2 = itemsSorted.slice(2,4), // times: 20, 30
-        page3 = itemsSorted.slice(3,5),
+        page35 = itemsSorted.slice(3,5),
         i25 = {time: 25, id: 'id25'}
 
     expect(view.items).toEqual( page1);
@@ -350,15 +347,13 @@ describe('SubscriptionView', function () {
     paged = view.pageNext( pageRest)
     expect(paged).toBe('paged');
     expect(view.items.length).toEqual(2);
-    expect(view.items).toEqual( page3);
+    expect(view.items).toEqual( page35);
 
   }));
 
   it('when paged, onMessage after page should not affect the current page', inject( function () {
     var removed,
         view = new SubscriptionView( 2, 7, items),// 0, 10, 20, 30, 40, 50
-        page1 = itemsSorted.slice(0,2), // 50, 40
-        page2 = itemsSorted.slice(2,4), // 30, 20
         i05 = {time: 5, id: 'id5'},
         page3 = [itemsSorted[4], i05] // 10, 5
 
@@ -381,6 +376,80 @@ describe('SubscriptionView', function () {
     expect(paged).toBe('paged');
     expect(view.items.length).toEqual(2);
     expect(view.items).toEqual( page3);
+
+  }));
+
+  it('should pageNext and pagePrevious from from cache', inject( function () {
+    var view = new SubscriptionView( 2, 6, items)
+
+    expect(view.items).toEqual( page1);
+    expect(view.itemStore).toEqual( itemsSorted.slice(0,6));
+
+    paged = view.pageNext( pageRest)
+    expect(paged).toBe('paged');
+    expect(view.pagePending).not.toBeDefined();
+    expect(view.items.length).toEqual(2);
+    expect(view.items).toEqual( page2);
+
+    paged = view.pageNext( pageRest)
+    expect(paged).toBe('paged');
+    expect(view.pagePending).not.toBeDefined();
+    expect(view.items.length).toEqual(2);
+    expect(view.items).toEqual( page3);
+
+    paged = view.pagePrevious( pageRest)
+    expect(paged).toBe('paged');
+    expect(view.pagePending).not.toBeDefined();
+    expect(view.items.length).toEqual(2);
+    expect(view.items).toEqual( page2);
+
+    paged = view.pagePrevious( pageRest)
+    expect(paged).toBe('paged');
+    expect(view.pagePending).not.toBeDefined();
+    expect(view.items.length).toEqual(2);
+    expect(view.items).toEqual( page1);
+    expect(view.pageCacheOffset).toBe(0);
+
+  }));
+  
+  it('should pageNext past cache then pagePrevious back to cache', inject( function () {
+    var view = new SubscriptionView( 2, 6, items.slice(1,6)), // not t=0
+        i02 = {time: 2, id: 'id02'},
+        i04 = {time: 2, id: 'id04'},
+        i06 = {time: 2, id: 'id06'},
+        i08 = {time: 2, id: 'id08'},
+        page3 = [itemsSorted[4], i08]
+
+    expect(view.items).toEqual( page1);
+    expect(view.itemStore).toEqual( itemsSorted.slice(0,5));
+
+    // pageNext to get past cache
+    paged = view.pageNext( pageRest)
+    paged = view.pageNext( pageRest)
+    paged = view.pageNext( pageRest)
+    expect(view.pagePending).toBe('next');
+    pageRest.nextSuccess( i08)
+    expect(view.items).toEqual( page3);
+    expect(view.pageCacheOffset).toBe(-1);
+
+
+    paged = view.pagePrevious( pageRest)
+    expect(paged).toBe('pending');
+    expect(view.pagePending).toBe('previous');
+    expect(view.items.length).toEqual(2);
+    expect(view.items).toEqual( page3);
+    expect( pageRest.previousStartAfterId).toBe( page3[0].id)
+
+    pageRest.previousSuccess( page2)
+    expect(view.items).toEqual( page2);
+    expect(view.pageCacheOffset).toBe(2);
+
+    paged = view.pagePrevious( pageRest)
+    expect(paged).toBe('paged');
+    expect(view.pagePending).toBeUndefined();
+    expect(view.items.length).toEqual(2);
+    expect(view.items).toEqual( page1);
+    expect(view.pageCacheOffset).toBe(0);
 
   }));
 

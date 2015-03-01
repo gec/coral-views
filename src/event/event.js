@@ -53,12 +53,127 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
       return true
     }
 
+    /**
+     * Get the next page after startAfterId. Since events are normally sorted in reverse time,
+     * the next page is going backwards in time.
+     *
+     * @param ids Array of alarm IDs
+     * @param newState Examples; 'UNACK_SILENT','ACKNOWLEDGED'
+     */
+    function pageNext( startAfterId, limit, success, failure) {
+      return pageDo( startAfterId, limit, success, failure, true)
+    }
+
+    /**
+     * Get the next page after startAfterId. Since events are normally sorted in reverse time,
+     * the previous page is going forwards in time.
+     *
+     * @param startAfterId
+     * @param limit Number of items to get
+     * @param success Success callback
+     * @param failure Failure callback
+     */
+    function pagePrevious( startAfterId, limit, success, failure) {
+      return pageDo( startAfterId, limit, success, failure, false)
+    }
+
+    /**
+     *
+     * @param startAfterId
+     * @param limit Number of items to get
+     * @param success Success callback
+     * @param failure Failure callback
+     * @param latest boolean T: paging backwards in time, F: paging forwards in time.
+     */
+    function pageDo( startAfterId, limit, success, failure, latest) {
+
+      var url = '/models/1/events?startAfterId=' + startAfterId + '&limit=' + limit
+      if( latest === false)
+        url +=  '&latest=false'
+
+      rest.get( url, null, null,
+        function( data) {
+          success( data)
+        },
+        function( ex, statusCode, headers, config){
+          console.log( 'eventRest ERROR pageNext with URL: "' + url + '". Status: ' + statusCode + 'Exception: ' + ex.exception + ' - ' + ex.message)
+          failure( startAfterId, limit, ex, statusCode)
+        }
+      )
+
+      return true
+    }
 
     /**
      * Public API
      */
     return {
-      update: update
+      update: update,
+      pageNext: pageNext,
+      pagePrevious: pagePrevious
+    }
+  }]).
+
+  factory('eventRest', ['rest', function( rest) {
+
+    /**
+     * Get the next page after startAfterId. Since events are normally sorted in reverse time,
+     * the next page is going backwards in time. 
+     *  
+     * @param ids Array of alarm IDs
+     * @param newState Examples; 'UNACK_SILENT','ACKNOWLEDGED'
+     */
+    function pageNext( startAfterId, limit, success, failure) {
+      return pageDo( startAfterId, limit, success, failure, true)
+    }
+
+    /**
+     * Get the next page after startAfterId. Since events are normally sorted in reverse time,
+     * the previous page is going forwards in time.
+     *
+     * @param startAfterId
+     * @param limit Number of items to get
+     * @param success Success callback
+     * @param failure Failure callback
+     */
+    function pagePrevious( startAfterId, limit, success, failure) {
+      return pageDo( startAfterId, limit, success, failure, false)
+    }
+    
+    /**
+     *
+     * @param startAfterId 
+     * @param limit Number of items to get
+     * @param success Success callback
+     * @param failure Failure callback
+     * @param latest boolean T: paging backwards in time, F: paging forwards in time.
+     */
+    function pageDo( startAfterId, limit, success, failure, latest) {
+
+      var url = '/models/1/events?startAfterId=' + startAfterId + '&limit=' + limit
+      if( latest === false)
+        url +=  '&latest=false'
+      
+      rest.get( url, null, null,
+        function( data) {
+          success( data)
+        },
+        function( ex, statusCode, headers, config){
+          console.log( 'eventRest ERROR pageNext with URL: "' + url + '". Status: ' + statusCode + 'Exception: ' + ex.exception + ' - ' + ex.message)
+          failure( startAfterId, limit, ex, statusCode)
+        }
+      )
+
+      return true
+    }
+
+
+    /**
+     * Public API
+     */
+    return {
+      pageNext: pageNext,
+      pagePrevious: pagePrevious
     }
   }]).
 
