@@ -359,12 +359,23 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     $scope.limit = Number( $attrs.limit || 20);
     var subscriptionView = new SubscriptionView( $scope.limit, $scope.limit * 4)
     $scope.events = subscriptionView.items
+    $scope.paged = false
 
+    function pageNotify( paged, pageCacheOffset) {
+      $scope.paged = paged
+    }
+
+    $scope.pageFirst = function() {
+      subscriptionView.pageFirst()
+      $scope.paged = false
+    }
     $scope.pageNext = function() {
-      subscriptionView.pageNext( eventRest)
+      subscriptionView.pageNext( eventRest, pageNotify)
+      $scope.paged = subscriptionView.pageCacheOffset !== 0
     }
     $scope.pagePrevious = function() {
-      subscriptionView.pagePrevious( eventRest)
+      subscriptionView.pagePrevious( eventRest, pageNotify)
+      $scope.paged = subscriptionView.pageCacheOffset !== 0
     }
 
     $scope.onEvent = function( subscriptionId, type, event) {

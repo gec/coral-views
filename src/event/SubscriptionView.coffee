@@ -31,6 +31,7 @@ class SubscriptionView extends SubscriptionCache
     # When loading the next page, there were some items in the cache, but not enough for a full page.
     # We cache what we have in pagePendingCache to keep it in case it rolls off before the GET replies.
     @pagePendingCache = undefined
+    @pagePendingNotify = undefined
 
   # Could get the insert index for one. Copy array for n.
   # i 1
@@ -128,6 +129,7 @@ class SubscriptionView extends SubscriptionCache
         @pageCacheOffset = -1
         # See if some of this will fit in the cache.
         @onMessage( items)
+        @pagePendingNotify( @pageCacheOffset != 0, @pageCacheOffset) if @pagePendingNotify
   
       when 'previous'
         #TODO: what if items is empty!
@@ -135,11 +137,12 @@ class SubscriptionView extends SubscriptionCache
         @items.sort( ( a, b) -> return b.time - a.time)
         @pagePending = undefined
         @pagePendingCache = undefined
-        @paged = true
         # See if some of this will fit in the cache.
         @onMessage( items)
         # see if we've paged previous enough so we're back in the cache.
         @pageCacheOffset = @indexOfId( @items[0].id)
+        @paged = @pageCacheOffset != 0
+        @pagePendingNotify( @pageCacheOffset != 0, @pageCacheOffset) if @pagePendingNotify
 
       else
         console.log( 'SubscriptionView.pageSuccess but pagePending is ' + @pagePending)
@@ -160,7 +163,7 @@ class SubscriptionView extends SubscriptionCache
 
     @return string 'paged', 'pending', 'pastPending'
   ###
-  pageNext: (pageRest) ->
+  pageNext: (pageRest, notify) ->
     return 'pastPending' if @pagePending
     # Page next can be
     #   Within the itemStore
@@ -172,6 +175,7 @@ class SubscriptionView extends SubscriptionCache
       when @pageCacheOffset < 0
         # Already paged past what's loaded in cache.
         @pagePending = 'next'
+        @pagePendingNotify = notify
         # TODO: what if length is 0!
         pageRest.pageNext( @items[@items.length-1].id, @viewSize, @pageSuccess, @pageFailure)
         'pending'
@@ -192,7 +196,7 @@ class SubscriptionView extends SubscriptionCache
         pageRest.pageNext( @items[@items.length-1].id, limit, @pageSuccess, @pageFailure)
         'pending'
 
-  pagePrevious: (pageRest)->
+  pagePrevious: (pageRest, notify)->
     return 'pastPending' if @pagePending
     # Page previous can be
     #   Within the itemStore
@@ -204,6 +208,7 @@ class SubscriptionView extends SubscriptionCache
       when @pageCacheOffset < 0
         # Already paged past what's loaded in cache.
         @pagePending = 'previous'
+        @pagePendingNotify = notify
         # TODO: what if length is 0!
         pageRest.pagePrevious( @items[0].id, @viewSize, @pageSuccess, @pageFailure)
         'pending'
@@ -221,7 +226,7 @@ class SubscriptionView extends SubscriptionCache
         'paged'
 
   pageFirst: ->
-    @pagePending = undefined // cancel pagePending
+    @pagePending = undefined # cancel pagePending
     @pageCacheOffset = 0
     @replaceItems @itemStore[@pageCacheOffset ... (@pageCacheOffset + @viewSize)] # exclude 'to' index
     @paged = false

@@ -1,7 +1,10 @@
 <div>
-    <div class="btn-group pull-right" role="group" aria-label="...">
-        <button type="button" class="btn btn-default" ng-click="pagePrevious()"><i class="fa fa-chevron-left"></i></button>
-        <button type="button" class="btn btn-default" ng-click="pageNext()"><i class="fa fa-chevron-right"></i></button>
+    <div class="pull-right">
+        <button type="button" class="btn btn-default" ng-click="pageFirst()" ng-show="paged" style="margin-right: 1em;"><span style="font-weight: bolder">|</span><i class="fa fa-chevron-left" style="vertical-align: middle"></i></button>
+        <div class="btn-group pull-right" role="group" aria-label="...">
+            <button type="button" class="btn btn-default" ng-click="pagePrevious()"><i class="fa fa-chevron-left" style="vertical-align: middle"></i></button>
+            <button type="button" class="btn btn-default" ng-click="pageNext()"><i class="fa fa-chevron-right" style="vertical-align: middle"></i></button>
+        </div>
     </div>
     <h3>Events</h3>
     <div class="table-responsive" style="overflow-x: auto">
