@@ -13,9 +13,9 @@ describe('SubscriptionView', function () {
       })
     }
     itemsSorted = items.slice(0).sort( function( a, b) { return b.time - a.time})
-    page1 = itemsSorted.slice(0,2)
-    page2 = itemsSorted.slice(2,4)
-    page3 = itemsSorted.slice(4,6)
+    page1 = itemsSorted.slice(0,2) // 50, 40
+    page2 = itemsSorted.slice(2,4) // 30, 20
+    page3 = itemsSorted.slice(4,6) // 10, 0
 
     pageRest = {
       pageNext: function( startAfterId, limit, pageSuccess, pageFailure) {
@@ -149,55 +149,6 @@ describe('SubscriptionView', function () {
 
   }));
 
-  it('should add item arrays sorted by reverse time and limit total items', inject( function () {
-    var removed,
-        view = new SubscriptionView( 3),
-        i0 = {time: 0, id: 'id0'},
-        i1 = {time: 10, id: 'id10'},
-        i2 = {time: 20, id: 'id20'},
-        i3 = {time: 30, id: 'id30'},
-        i4 = {time: 40, id: 'id40'},
-        i5 = {time: 50, id: 'id50'},
-        i6 = {time: 60, id: 'id60'}
-
-    //removed = view.onMessage( [i0,i2])
-    //expect(view.items.length).toEqual(2);
-    //expect(removed.many).toBeTruthy();
-    //expect(view.items).toEqual( [i2,i0]);
-    //
-    //removed = view.onMessage( [i1])
-    //expect(view.items.length).toEqual(3);
-    //expect(removed.insert.at).toEqual( 1);
-    //expect(removed.insert.item).toEqual( i1);
-    //expect(view.items).toEqual( [i2,i1,i0]);
-    //
-    //removed = view.onMessage( [i6,i4])
-    //expect(view.items.length).toEqual(3);
-    //expect(removed.many).toBeTruthy();
-    //expect(removed.trimmed).toEqual( [i1,i0]);
-    //expect(view.items).toEqual( [i6,i4,i2]);
-    //
-    //// add then trim this message.
-    //removed = view.onMessage( [i0])
-    //expect(view.items.length).toEqual(3);
-    //expect(removed).toEqual({});
-    //expect(removed.trimmed).toBeUndefined();
-    //expect(view.items).toEqual( [i6,i4,i2]);
-    //
-    //removed = view.onMessage( [i5])
-    //expect(view.items.length).toEqual(3);
-    //expect(removed.insert.at).toEqual( 1);
-    //expect(removed.insert.item).toEqual( i5);
-    //expect(removed.trimmed).toEqual( [i2]);
-    //expect(view.items).toEqual( [i6,i5,i4]);
-    //
-    //removed = view.onMessage( [])
-    //expect(view.items.length).toEqual(3);
-    //expect(removed).toEqual({});
-    //expect(removed.trimmed).toBeUndefined();
-    //expect(view.items).toEqual( [i6,i5,i4]);
-  }));
-
   it('pageNext get from cache, cache, then GET', inject( function () {
     var removed,
         view = new SubscriptionView( 2, 6, items),
@@ -295,7 +246,7 @@ describe('SubscriptionView', function () {
 
   }));
 
-  it('when paged, onMessage before page should not affect the current and next page', inject( function () {
+  it('when paged, onMessage before page should update pageCacheOffset so pageNext is in sync', inject( function () {
     var removed,
         view = new SubscriptionView( 2, 7, items),
         i6 = {time: 60, id: 'id60'}
@@ -310,6 +261,33 @@ describe('SubscriptionView', function () {
     expect(view.pageCacheOffset).toEqual( 2);
 
     removed = view.onMessage( i6)
+    expect(removed.length).toEqual( 0);
+    expect(view.items.length).toEqual(2);
+    expect(view.items).toEqual( page2);
+    expect(view.pageCacheOffset).toEqual( 3);
+
+    paged = view.pageNext( pageRest)
+    expect(paged).toBe('paged');
+    expect(view.items.length).toEqual(2);
+    expect(view.items).toEqual( page3);
+
+  }));
+
+  it('when paged, onMessage inserted at pageCacheOffset, pageCacheOffset should be updated', inject( function () {
+    var removed,
+        view = new SubscriptionView( 2, 7, items),
+        i31 = {time: 31, id: 'id31'}
+
+    expect(view.items).toEqual( page1);
+    expect(view.itemStore).toEqual( itemsSorted.slice(0,6));
+
+    paged = view.pageNext( pageRest)
+    expect(paged).toBe('paged');
+    expect(view.items.length).toEqual(2);
+    expect(view.items).toEqual( page2);
+    expect(view.pageCacheOffset).toEqual( 2);
+
+    removed = view.onMessage( i31)
     expect(removed.length).toEqual( 0);
     expect(view.items.length).toEqual(2);
     expect(view.items).toEqual( page2);

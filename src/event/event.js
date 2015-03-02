@@ -360,22 +360,27 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     var subscriptionView = new SubscriptionView( $scope.limit, $scope.limit * 4)
     $scope.events = subscriptionView.items
     $scope.paged = false
+    $scope.lastPage = false
 
-    function pageNotify( paged, pageCacheOffset) {
+    function pageNotify( paged, pageCacheOffset, lastPage) {
       $scope.paged = paged
+      $scope.lastPage = lastPage
     }
 
     $scope.pageFirst = function() {
       subscriptionView.pageFirst()
       $scope.paged = false
+      $scope.lastPage = false
     }
     $scope.pageNext = function() {
       subscriptionView.pageNext( eventRest, pageNotify)
       $scope.paged = subscriptionView.pageCacheOffset !== 0
     }
     $scope.pagePrevious = function() {
-      subscriptionView.pagePrevious( eventRest, pageNotify)
+      var paged = subscriptionView.pagePrevious( eventRest, pageNotify)
       $scope.paged = subscriptionView.pageCacheOffset !== 0
+      if( paged === 'paged' && $scope.lastPage)
+        $scope.lastPage = false
     }
 
     $scope.onEvent = function( subscriptionId, type, event) {
@@ -554,6 +559,16 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     }
   }).
 
+  filter('pagePreviousClass', function() {
+    return function(paged) {
+      return paged ? 'btn btn-default' : 'btn btn-default disabled'
+    };
+  }).
+  filter('pageNextClass', function() {
+    return function(lastPage) {
+      return lastPage ? 'btn btn-default disabled' : 'btn btn-default'
+    };
+  }).
   filter('alarmAckClass', function() {
     return function(state, updateState) {
       var s

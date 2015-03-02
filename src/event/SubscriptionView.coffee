@@ -51,7 +51,7 @@ class SubscriptionView extends SubscriptionCache
       if( @items.length > @viewSize)
         removedItems = removedItems.concat( @items.splice( @viewSize, @items.length - @viewSize))
 
-      removedItems
+    removedItems
     
   act: (action) ->
     switch action.type
@@ -78,12 +78,13 @@ class SubscriptionView extends SubscriptionCache
   
       
   actionInsert: ( action) ->
-    inserted = undefined
     insertAt = action.at - @pageCacheOffset
-    if insertAt >= 0 and insertAt < @viewSize
+    # when pageCacheOffset == 0 and insertAt == 0 then page tracks the new item.
+    # when > 0 and < viewSize then insert within current page.
+    # when insertedAt <= 0 then insert is before this page.
+    if (@pageCacheOffset == 0 and insertAt == 0) or (insertAt > 0 and insertAt < @viewSize)
       @items.splice( insertAt, 0, action.item)
-      inserted = action.item
-    else if insertAt < 0
+    else if insertAt <= 0
       @pageCacheOffset += 1
     undefined
 
@@ -129,7 +130,7 @@ class SubscriptionView extends SubscriptionCache
         @pageCacheOffset = -1
         # See if some of this will fit in the cache.
         @onMessage( items)
-        @pagePendingNotify( @pageCacheOffset != 0, @pageCacheOffset) if @pagePendingNotify
+        @pagePendingNotify( @pageCacheOffset != 0, @pageCacheOffset, items.length < @viewSize) if @pagePendingNotify
   
       when 'previous'
         #TODO: what if items is empty!
@@ -142,7 +143,7 @@ class SubscriptionView extends SubscriptionCache
         # see if we've paged previous enough so we're back in the cache.
         @pageCacheOffset = @indexOfId( @items[0].id)
         @paged = @pageCacheOffset != 0
-        @pagePendingNotify( @pageCacheOffset != 0, @pageCacheOffset) if @pagePendingNotify
+        @pagePendingNotify( @pageCacheOffset != 0, @pageCacheOffset, false) if @pagePendingNotify
 
       else
         console.log( 'SubscriptionView.pageSuccess but pagePending is ' + @pagePending)
@@ -150,19 +151,13 @@ class SubscriptionView extends SubscriptionCache
   pageFailure: (items) =>
 
 
-  ###
-                      <- items loaded -> capacity max
-    SubscriptionCache [iiiiiiiiiiiiiiiiii            ]
-                     [page0][page1][page2][page3][page4][page5]
-
-    page1 - load from cached
-    page2 - Some in cache. GET the rest and store in cache
-    page3 - GET and store in cache
-    page4 - GET and store in cache.
-    page5 - GET and nothing to store in cache.
-
-    @return string 'paged', 'pending', 'pastPending'
-  ###
+  #
+  # Get the next page.
+  #
+  # @param pageRest has pageFirst, pageNext, pagePrevious,
+  # @param notify function( paged, pageCacheOffset, lastPage)
+  # @return string 'paged', 'pending'
+  #
   pageNext: (pageRest, notify) ->
     return 'pastPending' if @pagePending
     # Page next can be
@@ -192,6 +187,7 @@ class SubscriptionView extends SubscriptionCache
         @pagePendingCache = @itemStore[nextPageOffset...(nextPageOffset + @viewSize)] # empty or partial page.
         limit = @viewSize - @pagePendingCache.length
         @pagePending = 'next'
+        @pagePendingNotify = notify
         # TODO: what if length is 0!
         pageRest.pageNext( @items[@items.length-1].id, limit, @pageSuccess, @pageFailure)
         'pending'

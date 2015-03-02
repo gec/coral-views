@@ -127,7 +127,8 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
     }
 
     function get(url, name, $scope, successListener) {
-      $scope.loading = true;
+      if( $scope)
+        $scope.loading = true;
       //console.log( 'rest.get ' + url + ' retries:' + retries.get);
 
 
@@ -140,24 +141,26 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
       }
 
       // Register for controller.$destroy event and kill any retry tasks.
-      $scope.$on('$destroy', function(event) {
-        //console.log( 'rest.get destroy ' + url + ' retries:' + retries.get);
-        if( $scope.task ) {
-          console.log('rest.get destroy task' + url + ' retries:' + retries.get);
-          $timeout.cancel($scope.task);
-          $scope.task = null;
-          retries.get = 0;
-        }
-      });
+      if( $scope)
+        $scope.$on('$destroy', function(event) {
+          //console.log( 'rest.get destroy ' + url + ' retries:' + retries.get);
+          if( $scope.task ) {
+            console.log('rest.get destroy task' + url + ' retries:' + retries.get);
+            $timeout.cancel($scope.task);
+            $scope.task = null;
+            retries.get = 0;
+          }
+        });
 
       if( status.status !== STATUS.UP ) {
         console.log('self.get ( status.status != "UP")')
         retries.get++;
         var delay = retries.get < 5 ? 1000 : 10000
 
-        $scope.task = $timeout(function() {
-          self.get(url, name, $scope, successListener);
-        }, delay);
+        if( $scope)
+          $scope.task = $timeout(function() {
+            self.get(url, name, $scope, successListener);
+          }, delay);
 
         return;
       }
@@ -169,9 +172,11 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
       // encodeURI because objects like point names can have percents in them.
       $http.get(encodeURI(url), httpConfig).
         success(function(json) {
-          if( name && $scope)
-            $scope[name] = json;
-          $scope.loading = false;
+          if( $scope) {
+            if( name)
+              $scope[name] = json;
+            $scope.loading = false;
+          }
           console.log('rest.get success json.length: ' + json.length + ', url: ' + url);
 
           if( successListener )
