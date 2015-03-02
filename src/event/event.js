@@ -361,30 +361,39 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     $scope.events = subscriptionView.items
     $scope.paged = false
     $scope.lastPage = false
+    $scope.newEvents = undefined
+
+    function setPaged( paged) {
+      $scope.paged = paged
+      if( ! paged)
+        $scope.newEvents = undefined
+    }
 
     function pageNotify( paged, pageCacheOffset, lastPage) {
-      $scope.paged = paged
+      setPaged( paged)
       $scope.lastPage = lastPage
     }
 
     $scope.pageFirst = function() {
       subscriptionView.pageFirst()
-      $scope.paged = false
+      setPaged( false)
       $scope.lastPage = false
     }
     $scope.pageNext = function() {
       subscriptionView.pageNext( eventRest, pageNotify)
-      $scope.paged = subscriptionView.pageCacheOffset !== 0
+      setPaged( subscriptionView.pageCacheOffset !== 0)
     }
     $scope.pagePrevious = function() {
       var paged = subscriptionView.pagePrevious( eventRest, pageNotify)
-      $scope.paged = subscriptionView.pageCacheOffset !== 0
+      setPaged( subscriptionView.pageCacheOffset !== 0)
       if( paged === 'paged' && $scope.lastPage)
         $scope.lastPage = false
     }
 
     $scope.onEvent = function( subscriptionId, type, event) {
       subscriptionView.onMessage( event)
+      if( $scope.paged)
+        $scope.newEvents = 'New events'
       $scope.loading = false
       $scope.$digest()
     }
