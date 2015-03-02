@@ -354,14 +354,21 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     $scope._subscribeToAlarmsId = subscription.subscribe( subscribeToAlarms, $scope, onMessage, onError)
   }]).
 
-  controller('gbEventsController', ['$scope', '$attrs', 'subscription', function( $scope, $attrs, subscription) {
+  controller('gbEventsController', ['$scope', '$attrs', 'subscription', 'eventRest', function( $scope, $attrs, subscription, eventRest) {
     $scope.loading = true
-    $scope.events = []
     $scope.limit = Number( $attrs.limit || 20);
-    var gbEvents = new GBEvents( $scope.limit, $scope.events)
+    var subscriptionView = new SubscriptionView( $scope.limit, $scope.limit * 4)
+    $scope.events = subscriptionView.items
+
+    $scope.pageNext = function() {
+      subscriptionView.pageNext( eventRest)
+    }
+    $scope.pagePrevious = function() {
+      subscriptionView.pagePrevious( eventRest)
+    }
 
     $scope.onEvent = function( subscriptionId, type, event) {
-      gbEvents.onMessage( event)
+      subscriptionView.onMessage( event)
       $scope.loading = false
       $scope.$digest()
     }

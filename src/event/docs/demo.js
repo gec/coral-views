@@ -1,6 +1,7 @@
 angular.module('greenbus.views.demo').controller('EventDemoCtrl', function ($scope, rest, subscription) {
   var eventId = 0,
-      alarmId = 0
+      alarmId = 0,
+      eventCache = []
 
   function getScopeValue( domSelector, subscriptionKey) {
     var element, scope, value
@@ -11,17 +12,28 @@ angular.module('greenbus.views.demo').controller('EventDemoCtrl', function ($sco
   }
 
   $scope.pushEvent = function( domSelector, subscriptionKey) {
-    var subscriptionId = getScopeValue( domSelector, subscriptionKey)
+    var event,
+        subscriptionId = getScopeValue( domSelector, subscriptionKey)
 
     eventId++
+    event = {'id': eventId.toString(), 'deviceTime': 0, 'eventType': 'System.UserLogin', 'alarm': false, 'severity': 5, 'agent': 'system', 'entity': '44c0e05e-1e21-4785-a2ad-80fdfad8c51d', 'message': 'User logged in: system', 'time': Date.now()}
+    eventCache.unshift( event)
+    
     subscription.pushMessage(
       subscriptionId,
       'event',
       [
-        {'id': eventId.toString(), 'deviceTime': 0, 'eventType': 'System.UserLogin', 'alarm': false, 'severity': 5, 'agent': 'system', 'entity': '44c0e05e-1e21-4785-a2ad-80fdfad8c51d', 'message': 'User logged in: system', 'time': Date.now()},
+        event,
       ]
     )
+    
+    // Next page is one after current event.
+    var nextPage = eventCache.slice( 1, 4)
+    rest.whenGET( '/models/1/events?startAfterId=' + eventId + '&limit=3').
+      respond( nextPage)
   }
+
+
 
   $scope.pushAlarm = function( domSelector, subscriptionKey) {
     var subscriptionId = getScopeValue( domSelector, subscriptionKey)

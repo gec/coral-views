@@ -173,7 +173,7 @@ class SubscriptionView extends SubscriptionCache
         # Already paged past what's loaded in cache.
         @pagePending = 'next'
         # TODO: what if length is 0!
-        pageRest.next( @items[@items.length-1].id, @viewSize, @pageSuccess, @pageFailure)
+        pageRest.pageNext( @items[@items.length-1].id, @viewSize, @pageSuccess, @pageFailure)
         'pending'
       when @pageCacheOffset + 2 * @viewSize <= @itemStore.length
         # Load page from cache
@@ -189,7 +189,7 @@ class SubscriptionView extends SubscriptionCache
         limit = @viewSize - @pagePendingCache.length
         @pagePending = 'next'
         # TODO: what if length is 0!
-        pageRest.next( @items[@items.length-1].id, limit, @pageSuccess, @pageFailure)
+        pageRest.pageNext( @items[@items.length-1].id, limit, @pageSuccess, @pageFailure)
         'pending'
 
   pagePrevious: (pageRest)->
@@ -205,7 +205,7 @@ class SubscriptionView extends SubscriptionCache
         # Already paged past what's loaded in cache.
         @pagePending = 'previous'
         # TODO: what if length is 0!
-        pageRest.previous( @items[0].id, @viewSize, @pageSuccess, @pageFailure)
+        pageRest.pagePrevious( @items[0].id, @viewSize, @pageSuccess, @pageFailure)
         'pending'
       when @pageCacheOffset == 0
         # TODO: we're already on the first page. What's up?

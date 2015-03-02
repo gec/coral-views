@@ -1,5 +1,5 @@
 describe('gb-events', function () {
-  var scope, $compile, _subscription, _authentication,
+  var scope, $compile, _subscription,
     subscribeInstance = {};
   var element,
     eventCount = 3,
@@ -23,6 +23,19 @@ describe('gb-events', function () {
     var messageKey = Object.keys( request)[0]
     return 'subscription.' + messageKey + '.' + idCounter;
   }
+
+  var authToken = 'some auth token',
+      authenticationMock =   {
+        isLoggedIn:   function() {
+          return true
+        },
+        getAuthToken: function() {
+          return authToken
+        },
+        getHttpHeaders: function() {
+          return {'Authorization': authToken}
+        }
+      }
 
 
   beforeEach(module('greenbus.views.authentication'));
@@ -48,11 +61,10 @@ describe('gb-events', function () {
       }
     };
 
-    _authentication = {}
     _websocketFactory = {}
     module( function ($provide) {
       $provide.value('websocketFactory', _websocketFactory);
-      $provide.value('authentication', _authentication);
+      $provide.value('authentication', authenticationMock);
       $provide.value('subscription', _subscription);
     });
 

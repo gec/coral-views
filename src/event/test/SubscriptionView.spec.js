@@ -18,13 +18,13 @@ describe('SubscriptionView', function () {
     page3 = itemsSorted.slice(4,6)
 
     pageRest = {
-      next: function( startAfterId, limit, pageSuccess, pageFailure) {
+      pageNext: function( startAfterId, limit, pageSuccess, pageFailure) {
         pageRest.nextStartAfterId = startAfterId
         pageRest.nextLimit = limit
         pageRest.nextSuccess = pageSuccess
         pageRest.nextFailure = pageFailure
       },
-      previous: function( startAfterId, limit, pageSuccess, pageFailure) {
+      pagePrevious: function( startAfterId, limit, pageSuccess, pageFailure) {
         pageRest.previousStartAfterId = startAfterId
         pageRest.previousLimit = limit
         pageRest.previousSuccess = pageSuccess
