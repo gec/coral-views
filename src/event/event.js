@@ -359,40 +359,42 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     $scope.limit = Number( $attrs.limit || 20);
     var subscriptionView = new SubscriptionView( $scope.limit, $scope.limit * 4)
     $scope.events = subscriptionView.items
-    $scope.paged = false
+    $scope.pageState = SubscriptionViewState.CURRENT
     $scope.lastPage = false
     $scope.newEvents = undefined
 
-    function setPaged( paged) {
-      $scope.paged = paged
-      if( ! paged)
+    function updatePageState( state) {
+      // 0: paged, not paged, paging.
+      $scope.pageState = state
+      if( state === SubscriptionViewState.CURRENT)
         $scope.newEvents = undefined
     }
 
-    function pageNotify( paged, pageCacheOffset, lastPage) {
-      setPaged( paged)
+    function pageNotify( state, pageCacheOffset, lastPage) {
+      updatePageState( state)
       $scope.lastPage = lastPage
     }
 
     $scope.pageFirst = function() {
-      subscriptionView.pageFirst()
-      setPaged( false)
-      $scope.lastPage = false
+      var state = subscriptionView.pageFirst()
+      updatePageState( state)
+      $scope.lastPage = false // TODO: what if there is only one page?
     }
     $scope.pageNext = function() {
-      subscriptionView.pageNext( eventRest, pageNotify)
-      setPaged( subscriptionView.pageCacheOffset !== 0)
+      var state = subscriptionView.pageNext( eventRest, pageNotify)
+      updatePageState( state)
     }
     $scope.pagePrevious = function() {
-      var paged = subscriptionView.pagePrevious( eventRest, pageNotify)
-      setPaged( subscriptionView.pageCacheOffset !== 0)
-      if( paged === 'paged' && $scope.lastPage)
+      var state = subscriptionView.pagePrevious( eventRest, pageNotify)
+      updatePageState( state)
+      // TODO: We're assuming that if previous was successful, there must be a next page. This may not always be true, especially with search!
+      if( state !== SubscriptionViewState.PAGING && $scope.lastPage)
         $scope.lastPage = false
     }
 
     $scope.onEvent = function( subscriptionId, type, event) {
       subscriptionView.onMessage( event)
-      if( $scope.paged)
+      if( $scope.pageState)
         $scope.newEvents = 'New events'
       $scope.loading = false
       $scope.$digest()
@@ -569,13 +571,19 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
   }).
 
   filter('pagePreviousClass', function() {
-    return function(paged) {
-      return paged ? 'btn btn-default' : 'btn btn-default disabled'
+    return function(pageState) {
+      return pageState !== SubscriptionViewState.PAGED ? 'btn btn-default disabled' : 'btn btn-default'
     };
   }).
   filter('pageNextClass', function() {
-    return function(lastPage) {
-      return lastPage ? 'btn btn-default disabled' : 'btn btn-default'
+    return function(pageState, lastPage) {
+      return lastPage || pageState === SubscriptionViewState.PAGING_NEXT ? 'btn btn-default disabled' : 'btn btn-default'
+    };
+  }).
+  filter('pagingIcon', function() {
+    return function(pageState, direction) {
+      var spin = (direction === 'right' && pageState === SubscriptionViewState.PAGING_NEXT) || (direction === 'left' && pageState === SubscriptionViewState.PAGING_PREVIOUS)
+      return spin ? 'fa fa-spin fa-chevron-' + direction : 'fa fa-chevron-' + direction
     };
   }).
   filter('alarmAckClass', function() {
