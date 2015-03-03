@@ -429,35 +429,4 @@ describe('SubscriptionView', function () {
 
   }));
 
-  it('pageNext off the end of cache needs to be able to pagePrevious successfully', inject( function () {
-    var state,
-        view = new SubscriptionView( 2, 2, itemsSorted.slice(0,2))
-
-    expect(view.items).toEqual( page1);
-    expect(view.itemStore).toEqual( page1);
-
-    state = view.pageNext( pageRest)
-    expect(state).toBe(SubscriptionViewState.PAGING_NEXT);
-    expect(view.pagePending.direction).toEqual( 'next');
-    expect(view.pagePending.cache).toEqual( []);
-    expect(view.items).toEqual( page1); // not paged yet
-
-    // GET success but no items
-    pageRest.nextSuccess( [])
-    expect(view.pagePending).not.toBeDefined();
-    expect(view.items).toEqual( []);
-    expect(view.itemStore).toEqual( page1);
-    expect(view.state).toEqual( SubscriptionViewState.NO_ITEMS);
-    expect(view.previousPageCache).toEqual( page1);
-
-
-    state = view.pagePrevious( pageRest)
-    expect(state).toBe(SubscriptionViewState.CURRENT);
-    expect(view.pagePending).toBeUndefined();
-    expect(view.items).toEqual( page1); // not paged yet
-    expect(view.previousPageCache).toBeUndefined();
-
-  }));
-
-
 });

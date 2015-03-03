@@ -452,6 +452,11 @@ table.gb-row-radius {
   padding: 6px 12px;
 }
 
+.gb-alert-md {
+  margin-bottom: 0;
+  padding: 6px 12px;
+}
+
 .animate {
   /*line-height:40px;*/
   /*list-style:none;*/

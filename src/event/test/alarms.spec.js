@@ -246,12 +246,12 @@ describe('gb-alarms', function () {
     scope.removeSelected()
     parentScope.$digest();
 
-    var alert = element.find('div.alert')
+    var alert = angular.element( element.find('div.alert')[0])
     expect( alert).not.toHaveClass('ng-hide')
 
     expect( scope.alarms.length).toBe( 3)
-    expect( scope.alarms[0]._updateState).toBe('none')
-    expect( scope.alarms[2]._updateState).toBe('none')
+    expect( scope.alarms[0]._updateState).toBeUndefined()
+    expect( scope.alarms[2]._updateState).toBeUndefined()
 
     $timeout.flush()
     expect( scope.notification).toBeUndefined()
@@ -280,13 +280,13 @@ describe('gb-alarms', function () {
     $httpBackend.flush()
     parentScope.$digest();
 
-    var alert = element.find('div.alert')
+    var alert = angular.element( element.find('div.alert')[0])
     expect( alert).not.toHaveClass('ng-hide')
     expect( findAlertText( alert)).toBe( ' Unacknowledged alarms were not removed.')
 
     expect( scope.alarms.length).toBe( 2)
-    expect( scope.alarms[0]._updateState).toBe('none')
-    expect( scope.alarms[1]._updateState).toBe('none')
+    expect( scope.alarms[0]._updateState).toBeUndefined()
+    expect( scope.alarms[1]._updateState).toBeUndefined()
 
     $timeout.flush()
     expect( scope.notification).toBeUndefined()

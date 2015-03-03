@@ -14,10 +14,8 @@
         <!--</div>-->
     </div>
     <div class="row">
-        <div class="col-md-1">
+        <div class="col-md-4">
             <gb-select-all model="alarms" notify="selectAllChanged(state)"></gb-select-all>
-        </div>
-        <div class="col-md-11">
             <div class="btn-group gb-toolbar" ng-show="selectAllState!==0" role="group"  style-="margin-left: 1.2em;">
                 <button class="btn btn-default" ng-click="silenceSelected()" style="width: 60px;" title="Silence selected alarms"><i class="fa fa-volume-off" style="font-size: 124%;"></i></button>
                 <button class="btn btn-default" ng-click="acknowledgeSelected()" style="width: 60px;" title="Acknowledge selected alarms"><i class="fa fa-bell-slash-o"></i></button>
@@ -26,10 +24,19 @@
             <div class="btn-group gb-toolbar" ng-show="selectAllState!==0" role="group"  style-="margin-left: 1.2em;">
                 <button class="btn btn-default" ng-click="removeSelected()" style="width: 60px;" title="Remove selected acknowledged alarms"><i class="fa fa-trash-o"></i></button>
             </div>
-            <div class="alert alert-{{notification.type}} gb-alert-inline" ng-show="notification" role="alert" style="margin-left: 1em;">
-                <span><i class="fa fa-info-circle"></i> {{ notification.message }}</span>
+        </div>
+        <div class="col-md-4">
+            <div class="alert alert-{{notification.type}} gb-alert-md" ng-show="notification" role="alert"><span><i class="fa fa-info-circle"></i> {{ notification.message }}</span></div>
+            <div class="alert alert-info gb-alert-md" ng-show="newItems" role="alert"><span><i class="fa fa-info-circle"></i> {{ newItems }}</span></div>
+        </div>
+        <div class="col-md-4 text-right">
+            <button type="button" class="btn btn-default" ng-click="pageFirst()" ng-show="pageState !== 0" style="margin-right: 1em;" popover="Go to current events" popover-trigger="mouseenter" popover-placement="bottom"><span style="font-weight: bolder">|</span><i class="fa fa-chevron-left" style="vertical-align: middle"></i></button>
+            <div class="btn-group" role="group" aria-label="...">
+                <button type="button" ng-class="pageState | pagePreviousClass" ng-click="pagePrevious()" popover="Previous page" popover-trigger="mouseenter" popover-placement="bottom"><i ng-class="pageState | pagingIcon: 'left'" style="vertical-align: middle"></i></button>
+                <button type="button" ng-class="pageState | pageNextClass: lastPage" ng-click="pageNext()" popover="Next page" popover-trigger="mouseenter" popover-placement="bottom"><i ng-class="pageState | pagingIcon: 'right'" style="vertical-align: middle"></i></button>
             </div>
         </div>
+
     </div>
 
     <div class="table-responsive" style="overflow-x: auto">
@@ -63,5 +70,8 @@
             </tr>
             </tbody>
         </table>
+    </div>
+    <div ng-show="pageState === 4">
+        No alarms
     </div>
 </div>

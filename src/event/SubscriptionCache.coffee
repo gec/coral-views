@@ -64,7 +64,12 @@ class SubscriptionCache
       
   itemAboveIsEarlier: ( item, index) -> index > 0 and @itemStore[index-1].time < item.time
   itemBelowIsLater: ( item, index) -> index < @itemStore.length - 1 and @itemStore[index+1].time > item.time
-  itemIsOutOfOrder: ( item, index) -> @itemAboveIsEarlier( item, index) or @itemBelowIsLater( item, index)  
+  itemIsOutOfOrder: ( item, index) -> @itemAboveIsEarlier( item, index) or @itemBelowIsLater( item, index)
+
+  # Should this item be removed after an update?
+  # @param item - The item after it's been updated.
+  #
+  shouldRemoveItemOnUpdate: ( item) -> false
   
   convertInsertActionToIncludeRemove: (item, index, action) ->
     if action.type is SubscriptionCacheAction.INSERT
@@ -82,7 +87,12 @@ class SubscriptionCache
     angular.extend( item, update)
     index = @itemStore.indexOf( item)
     if index >= 0
-      if @itemIsOutOfOrder( item, index)
+      if @shouldRemoveItemOnUpdate( item)
+        @itemStore.splice( index, 1)
+        type: SubscriptionCacheAction.REMOVE
+        from: index
+        item: item
+      else if @itemIsOutOfOrder( item, index)
         @itemStore.splice( index, 1)
         action = @insert item
         @convertInsertActionToIncludeRemove item, index, action
@@ -123,6 +133,7 @@ class SubscriptionCache
       at: insertAt
       item: item
     else
+      # Insert is past @cacheSize
       #return
       type: SubscriptionCacheAction.NONE
       item: item
@@ -132,6 +143,8 @@ class SubscriptionCache
       return index if item.id is id
     -1
 
+  getItemById: (id) ->
+    @itemIdMap[id]
 
 #  sortByTime: ->
 #    @itemStore.sort( ( a, b) -> return b.time - a.time)

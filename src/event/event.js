@@ -87,7 +87,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
      */
     function pageDo( startAfterId, limit, success, failure, latest) {
 
-      var url = '/models/1/events?startAfterId=' + startAfterId + '&limit=' + limit
+      var url = '/models/1/alarms?startAfterId=' + startAfterId + '&limit=' + limit
       if( latest === false)
         url +=  '&latest=false'
 
@@ -96,7 +96,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
           success( data)
         },
         function( ex, statusCode, headers, config){
-          console.log( 'eventRest ERROR pageNext with URL: "' + url + '". Status: ' + statusCode + 'Exception: ' + ex.exception + ' - ' + ex.message)
+          console.log( 'alarmRest ERROR pageNext with URL: "' + url + '". Status: ' + statusCode + 'Exception: ' + ex.exception + ' - ' + ex.message)
           failure( startAfterId, limit, ex, statusCode)
         }
       )
@@ -190,19 +190,19 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
      * Operator is updating one or more alarm states
      * @param ids Alarm IDs
      * @param newState
-     * @param gbAlarms
+     * @param subscriptionView
      */
-    function updateRequest( gbAlarms, ids, newState) {
+    function updateRequest( subscriptionView, ids, newState) {
       if( ! ids || ids.length === 0)
         return false
 
-      return alarmRest.update( ids, newState, gbAlarms, gbAlarms.onMessage, gbAlarms.onUpdateFailure)
+      return alarmRest.update( ids, newState, subscriptionView, subscriptionView.onMessage, subscriptionView.onUpdateFailure)
     }
 
-    function silence( gbAlarms, alarm) {
+    function silence( subscriptionView, alarm) {
       var requestSucceeded = false
       if( alarm.state === 'UNACK_AUDIBLE') {
-        if( updateRequest( gbAlarms, [alarm.id], 'UNACK_SILENT')) {
+        if( updateRequest( subscriptionView, [alarm.id], 'UNACK_SILENT')) {
           alarm._updateState = 'updating' // TODO: what if already updating?
           requestSucceeded = true
         }
@@ -210,10 +210,10 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
       return requestSucceeded
     }
 
-    function acknowledge( gbAlarms, alarm) {
+    function acknowledge( subscriptionView, alarm) {
       var requestSucceeded = false
       if( alarm.state === 'UNACK_AUDIBLE' || alarm.state === 'UNACK_SILENT') {
-        if( updateRequest( gbAlarms, [alarm.id], 'ACKNOWLEDGED')) {
+        if( updateRequest( subscriptionView, [alarm.id], 'ACKNOWLEDGED')) {
           alarm._updateState = 'updating' // TODO: what if already updating?
           requestSucceeded = true
         }
@@ -221,10 +221,10 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
       return requestSucceeded
     }
 
-    function remove( gbAlarms, alarm) {
+    function remove( subscriptionView, alarm) {
       var requestSucceeded = false
       if( alarm.state === 'ACKNOWLEDGED' && alarm._updateState !== 'removing') {
-        if( updateRequest( gbAlarms, [alarm.id], 'REMOVED')) {
+        if( updateRequest( subscriptionView, [alarm.id], 'REMOVED')) {
           alarm._updateState = 'removing' // TODO: what if already updating?
           requestSucceeded = true
         }
@@ -251,28 +251,28 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     function getId( alarm) { return alarm.id }
 
 
-    function updateSelected( gbAlarms, notification, filter, newState, newUpdateState, allSelectedAreNotValidMessage, someSelectedAreNotValidMessage) {
+    function updateSelected( subscriptionView, notification, filter, newState, newUpdateState, allSelectedAreNotValidMessage, someSelectedAreNotValidMessage) {
       var requestSucceeded = false,
-          selectedAndValid = gbAlarms.filter( filter)
+          selectedAndValid = subscriptionView.filter( filter)
 
       if( selectedAndValid.length > 0) {
         var ids = selectedAndValid.map( getId)
         selectedAndValid.forEach( function( a) { a._updateState = newUpdateState})
         if( someSelectedAreNotValidMessage) {
-          var selected = gbAlarms.filter( filters.isSelected)
+          var selected = subscriptionView.filter( filters.isSelected)
           if( selected.length > selectedAndValid.length)
             notification( 'info', someSelectedAreNotValidMessage, 5000)
         }
-        requestSucceeded = updateRequest( gbAlarms, ids, newState)
+        requestSucceeded = updateRequest( subscriptionView, ids, newState)
       } else {
         notification( 'info', allSelectedAreNotValidMessage, 5000)
       }
       return requestSucceeded
     }
 
-    function silenceSelected( gbAlarms, notification) { return updateSelected( gbAlarms, notification, filters.isSelectedAndUnackAudible, 'UNACK_SILENT', 'updating', 'No audible alarms are selected.') }
-    function acknowledgeSelected( gbAlarms, notification) { return updateSelected( gbAlarms, notification, filters.isSelectedAndUnack, 'ACKNOWLEDGED', 'updating', 'No unacknowledged alarms are selected.') }
-    function removeSelected( gbAlarms, notification) { return updateSelected( gbAlarms, notification, filters.isSelectedAndRemovable, 'REMOVED', 'removing', 'No acknowledged alarms are selected.', 'Unacknowledged alarms were not removed.') }
+    function silenceSelected( subscriptionView, notification) { return updateSelected( subscriptionView, notification, filters.isSelectedAndUnackAudible, 'UNACK_SILENT', 'updating', 'No audible alarms are selected.') }
+    function acknowledgeSelected( subscriptionView, notification) { return updateSelected( subscriptionView, notification, filters.isSelectedAndUnack, 'ACKNOWLEDGED', 'updating', 'No unacknowledged alarms are selected.') }
+    function removeSelected( subscriptionView, notification) { return updateSelected( subscriptionView, notification, filters.isSelectedAndRemovable, 'REMOVED', 'removing', 'No acknowledged alarms are selected.', 'Unacknowledged alarms were not removed.') }
 
 
     /**
@@ -288,15 +288,53 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     }
   }]).
 
-  controller('gbAlarmsController', ['$scope', '$attrs', 'rest', 'subscription', 'alarmWorkflow', '$timeout', function( $scope, $attrs, rest, subscription, alarmWorkflow, $timeout) {
+  controller('gbAlarmsController', ['$scope', '$attrs', 'rest', 'subscription', 'alarmWorkflow', 'alarmRest', '$timeout', function( $scope, $attrs, rest, subscription, alarmWorkflow, alarmRest, $timeout) {
     $scope.loading = true
     $scope.limit = Number( $attrs.limit || 20);
-    $scope.alarms = []
-    var gbAlarms = new GBAlarms( $scope.limit, $scope.alarms)
+    var subscriptionView = new AlarmSubscriptionView( $scope.limit, $scope.limit * 4)
+    $scope.alarms = subscriptionView.items
+    // Paging
+    $scope.pageState = SubscriptionViewState.CURRENT
+    $scope.lastPage = false
+    $scope.newItems = undefined
+    // Alarm workflow
     $scope.selectAllState = 0
     $scope.searchText = ''
     $scope.notification = undefined // {type: 'danger', message: ''}  types: success, info, warning, danger
     $scope.notificationTask = undefined // $timeout task
+
+    // Paging functions
+    //
+    function updatePageState( state) {
+      $scope.pageState = state
+      if( state === SubscriptionViewState.CURRENT)
+        $scope.newItems = undefined
+    }
+    function pageNotify( state, pageCacheOffset, lastPage, oldItems) {
+      updatePageState( state)
+      $scope.lastPage = lastPage
+      oldItems.forEach( function( i) {
+        if( i._checked)
+          $scope.selectItem( i, 0) // 0: unchecked. Selection needs to decrement its select count.
+      })
+    }
+    $scope.pageFirst = function() {
+      var state = subscriptionView.pageFirst()
+      updatePageState( state)
+      $scope.lastPage = false // TODO: what if there is only one page?
+    }
+    $scope.pageNext = function() {
+      var state = subscriptionView.pageNext( alarmRest, pageNotify)
+      updatePageState( state)
+    }
+    $scope.pagePrevious = function() {
+      var state = subscriptionView.pagePrevious( alarmRest, pageNotify)
+      updatePageState( state)
+      // TODO: We're assuming that if previous was successful, there must be a next page. This may not always be true, especially with search!
+      if( state !== SubscriptionViewState.PAGING_PREVIOUS && $scope.lastPage)
+        $scope.lastPage = false
+    }
+
 
     function setNotification( typ, message, timeout) {
       if( $scope.notificationTask) {
@@ -315,13 +353,13 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     }
 
 
-    $scope.silence = function( alarm) { alarmWorkflow.silence( gbAlarms, alarm) }
-    $scope.acknowledge = function( alarm) { alarmWorkflow.acknowledge( gbAlarms, alarm) }
-    $scope.remove = function( alarm) { alarmWorkflow.remove( gbAlarms, alarm) }
+    $scope.silence = function( alarm) { alarmWorkflow.silence( subscriptionView, alarm) }
+    $scope.acknowledge = function( alarm) { alarmWorkflow.acknowledge( subscriptionView, alarm) }
+    $scope.remove = function( alarm) { alarmWorkflow.remove( subscriptionView, alarm) }
 
-    $scope.silenceSelected = function() { alarmWorkflow.silenceSelected( gbAlarms, setNotification) }
-    $scope.acknowledgeSelected = function() { alarmWorkflow.acknowledgeSelected( gbAlarms, setNotification) }
-    $scope.removeSelected = function() { alarmWorkflow.removeSelected( gbAlarms, setNotification) }
+    $scope.silenceSelected = function() { alarmWorkflow.silenceSelected( subscriptionView, setNotification) }
+    $scope.acknowledgeSelected = function() { alarmWorkflow.acknowledgeSelected( subscriptionView, setNotification) }
+    $scope.removeSelected = function() { alarmWorkflow.removeSelected( subscriptionView, setNotification) }
 
     // Called by selection
     $scope.selectAllChanged = function( state) {
@@ -330,11 +368,14 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     }
 
     function onMessage( subscriptionId, type, alarms) {
-      var removedAlarms = gbAlarms.onMessage( alarms)
+      var removedAlarms = subscriptionView.onMessage( alarms)
       removedAlarms.forEach( function( a) {
         if( a._checked)
           $scope.selectItem( a, 0) // 0: unchecked. Selection needs to decrement its select count.
       })
+
+      if( $scope.pageState !== SubscriptionViewState.CURRENT)
+        $scope.newItems = 'New alarms'
 
       $scope.loading = false
       $scope.$digest()
@@ -361,19 +402,19 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     $scope.events = subscriptionView.items
     $scope.pageState = SubscriptionViewState.CURRENT
     $scope.lastPage = false
-    $scope.newEvents = undefined
+    $scope.newItems = undefined
 
+    // Paging functions
+    //
     function updatePageState( state) {
       $scope.pageState = state
       if( state === SubscriptionViewState.CURRENT)
-        $scope.newEvents = undefined
+        $scope.newItems = undefined
     }
-
-    function pageNotify( state, pageCacheOffset, lastPage) {
+    function pageNotify( state, pageCacheOffset, lastPage, oldItems) {
       updatePageState( state)
       $scope.lastPage = lastPage
     }
-
     $scope.pageFirst = function() {
       var state = subscriptionView.pageFirst()
       updatePageState( state)
@@ -391,10 +432,11 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
         $scope.lastPage = false
     }
 
+
     $scope.onEvent = function( subscriptionId, type, event) {
       subscriptionView.onMessage( event)
       if( $scope.pageState !== SubscriptionViewState.CURRENT)
-        $scope.newEvents = 'New events'
+        $scope.newItems = 'New events'
       $scope.loading = false
       $scope.$digest()
     }
@@ -571,12 +613,12 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
 
   filter('pagePreviousClass', function() {
     return function(pageState) {
-      return pageState !== SubscriptionViewState.PAGED ? 'btn btn-default disabled' : 'btn btn-default'
+      return pageState !== SubscriptionViewState.PAGED && pageState !== SubscriptionViewState.NO_ITEMS ? 'btn btn-default disabled' : 'btn btn-default'
     };
   }).
   filter('pageNextClass', function() {
     return function(pageState, lastPage) {
-      return lastPage || pageState === SubscriptionViewState.PAGING_NEXT ? 'btn btn-default disabled' : 'btn btn-default'
+      return lastPage || pageState === SubscriptionViewState.PAGING_NEXT || pageState === SubscriptionViewState.NO_ITEMS ? 'btn btn-default disabled' : 'btn btn-default'
     };
   }).
   filter('pagingIcon', function() {

@@ -4,7 +4,7 @@
             <h3>Events</h3>
         </div>
         <div class="col-md-4">
-            <alert type="info" ng-show="newEvents" role="alert" style=" margin-bottom: 0;padding-top: 6px; padding-bottom: 6px;"><i class="fa fa-info-circle"></i> {{ newEvents }}</alert>
+            <alert type="info" ng-show="newItems" role="alert" style=" margin-bottom: 0;padding-top: 6px; padding-bottom: 6px;"><i class="fa fa-info-circle"></i> {{ newItems }}</alert>
         </div>
         <div class="col-md-4 text-right" style="padding-top: 20px">
             <button type="button" class="btn btn-default" ng-click="pageFirst()" ng-show="pageState !== 0" style="margin-right: 1em;" popover="Go to current events" popover-trigger="mouseenter" popover-placement="bottom"><span style="font-weight: bolder">|</span><i class="fa fa-chevron-left" style="vertical-align: middle"></i></button>
@@ -40,6 +40,9 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+        <div ng-show="pageState === 4">
+            No events
         </div>
     </div>
 </div>
