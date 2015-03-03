@@ -364,7 +364,6 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     $scope.newEvents = undefined
 
     function updatePageState( state) {
-      // 0: paged, not paged, paging.
       $scope.pageState = state
       if( state === SubscriptionViewState.CURRENT)
         $scope.newEvents = undefined
@@ -388,13 +387,13 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
       var state = subscriptionView.pagePrevious( eventRest, pageNotify)
       updatePageState( state)
       // TODO: We're assuming that if previous was successful, there must be a next page. This may not always be true, especially with search!
-      if( state !== SubscriptionViewState.PAGING && $scope.lastPage)
+      if( state !== SubscriptionViewState.PAGING_PREVIOUS && $scope.lastPage)
         $scope.lastPage = false
     }
 
     $scope.onEvent = function( subscriptionId, type, event) {
       subscriptionView.onMessage( event)
-      if( $scope.pageState)
+      if( $scope.pageState !== SubscriptionViewState.CURRENT)
         $scope.newEvents = 'New events'
       $scope.loading = false
       $scope.$digest()
