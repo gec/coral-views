@@ -1,0 +1,32 @@
+<div ng-controller="MeasurementValueDemoCtrl">
+
+    <table class="table table-condensed gb-row-radius">
+        <thead>
+            <tr>
+                <th>Point</th>
+                <th>Value</th>
+                <th>Unit</th>
+                <th>Quality</th>
+                <th>Type</th>
+                <th>Set Short Quality</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="point in points">
+                <td>{{point.name}}</td>
+                <td><gb-measurement-value model="point"></gb-measurement-value></td>
+                <td>{{point.unit}}</td>
+                <td>{{point.currentMeasurement.shortQuality}}</td>
+                <td>{{point.pointType}}</td>
+                <td>
+                    <div class="btn-group" role="group" aria-label="actions">
+                        <button ng-click="setShortQuality( $index, '')" type="button" class="btn btn-default"><i class="fa fa-check" style="color: green"></i></button>
+                        <button ng-click="setShortQuality( $index, 'N')" type="button" class="btn btn-default">NIS</button>
+                        <button ng-click="setShortQuality( $index, 'R')" type="button" class="btn btn-default">R</button>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>

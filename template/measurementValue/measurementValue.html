@@ -1,0 +1,21 @@
+<span>
+    <span ng-if="!editMode" ng-click="edit()">{{ model.currentMeasurement.value }}</span>
+
+    <div ng-if="editMode">
+        <input type="text" class="form-control" ng-model="value" ng-onblur="onBlur()" ng-focus="onFocus()" name="measurement_value" ng-pattern="" style="width:6em;" placeholder="{{ placeHolder}}">
+        <div ng-if="model.currentMeasurement.shortQuality==='R'" class="btn-group" role="group" aria-label="...">
+            <button ng-click="replace()" type="button" class="btn btn-info" popover="Replace" popover-trigger="mouseenter" popover-placement="bottom">R</button>
+            <button ng-click="nis()"     type="button" class="btn btn-info" popover="Not In Service" popover-trigger="mouseenter" popover-placement="bottom">N</button>
+            <button ng-click="remove()"  type="button" class="btn btn-danger" popover="{{removeTooltip}}" popover-trigger="mouseenter" popover-placement="bottom"><i class="fa fa-minus"></i></button>
+        </div>
+        <div ng-if="model.currentMeasurement.shortQuality==='N'" class="btn-group" role="group" aria-label="...">
+            <button ng-click="replace()" type="button" class="btn btn-info" popover="Replace" popover-trigger="mouseenter" popover-placement="bottom">R</button>
+            <button ng-click="nis()"     type="button" class="btn btn-info disabled" popover="Not In Service" popover-trigger="mouseenter" popover-placement="bottom">N</button>
+            <button ng-click="remove()"  type="button" class="btn btn-danger" popover="{{removeTooltip}}" popover-trigger="mouseenter" popover-placement="bottom"><i class="fa fa-minus"></i></button>
+        </div>
+        <div ng-if="model.currentMeasurement.shortQuality!=='N' && model.currentMeasurement.shortQuality!=='R'" class="btn-group" role="group" aria-label="...">
+            <button ng-click="replace()" type="button" class="btn btn-info" popover="Replace" popover-trigger="mouseenter" popover-placement="bottom">R</button>
+            <button ng-click="nis()"     type="button" class="btn btn-info" popover="Not In Service" popover-trigger="mouseenter" popover-placement="bottom">N</button>
+        </div>
+    </div>
+</span>
