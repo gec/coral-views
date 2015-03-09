@@ -410,8 +410,8 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
         deselect: function( lockId, success, failure) {
           rest.delete( '/models/1/commandlock/' + lockId, null, $scope, success, failure)
         },
-        execute: function( commandId, success, failure) {
-          rest.post( '/models/1/commands/' + commandId, success, failure)
+        execute: function( commandId, args, success, failure) {
+          rest.post( '/models/1/commands/' + commandId, args, null, $scope, success, failure)
         }
       }
 

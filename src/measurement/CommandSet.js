@@ -135,7 +135,7 @@ CommandSet.prototype.select = function( command) {
         console.log( 'commandLock delay: ' + delay)
         // It the clock for client vs server is off, we'll use a minimum delay.
         delay = Math.max( delay, 10)
-        self.selectTimeout = this.timeout(function () {
+        self.selectTimeout = self.timeout(function () {
           delete self.lock;
           delete self.selectTimeout;
           if( self.state === CommandSet.States.Selected || self.state === CommandSet.States.Executing) {
@@ -237,7 +237,7 @@ CommandSet.prototype.execute = function( command, commandIndex) {
   self.setState( CommandSet.States.Executing, command)
 
 
-  self.commandRest.execute( command.id,
+  self.commandRest.execute( command.id, args,
     function( commandResult) {
       self.alertCommandResult( commandResult)
       self.deselected()
