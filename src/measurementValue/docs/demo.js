@@ -1,4 +1,4 @@
-angular.module('greenbus.views.demo').controller('MeasurementValueDemoCtrl', function ($scope) {
+angular.module('greenbus.views.demo').controller('MeasurementValueDemoCtrl', function ($scope, rest) {
   $scope.points = [
     {'name': 'one', 'id': '1', 'pointType': 'ANALOG', 'types': ['Imported', 'DemandPower', 'Point'], 'unit': 'kW', 'endpoint': '11'},
     {'name': 'bkr', 'id': '2', 'pointType': 'STATUS', 'types': ['Imported', 'CustomerBreakerStatus', 'BreakerStatus', 'Point'], 'unit': 'status', 'endpoint': '22'},
@@ -40,4 +40,20 @@ angular.module('greenbus.views.demo').controller('MeasurementValueDemoCtrl', fun
   $scope.setShortQuality = function( index, shortQuality) {
     $scope.points[index].currentMeasurement.shortQuality = shortQuality
   }
+
+
+  rest.whenPOST( '/models/1/points/1/override', {value: '10.0', valueType: 'DOUBLE'}).
+    respond( {
+      pointId: '1',
+      measurement: {
+        'value':        '10.0',
+        'type':         'DOUBLE',
+        'unit':         'kW',
+        'time':         1417724070142,
+        'validity':     'GOOD',
+        'shortQuality': 'R',
+        'longQuality':  'Good'
+      }
+    })
+
 });

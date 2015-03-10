@@ -22,17 +22,108 @@
 
 angular.module('greenbus.views.measurementValue', []).
 
-  controller( 'gbMeasurementValueController', ['$scope', function( $scope) {
+  factory('gbMeasurementValueRest', ['rest', function( rest) {
+
+    /**
+     * Override measurements for a point.
+     *
+     * @param pointId Point ID to be overridden
+     * @param value The new value as a string
+     * @param valueType The type of the value to override. BOOL, INT, DOUBLE, STRING
+     * @param success Success callback
+     * @param failure Failure callback
+     */
+    function override( pointId, value, valueType, callee, success, failure) {
+
+      var arg = {
+            value: value,
+            valueType: valueType
+          },
+          url = '/models/1/points/' + pointId + '/override'
+
+      rest.post( url, arg, null, null,
+        function( data) {
+          success.call( callee, data)
+        },
+        function( ex, statusCode, headers, config){
+          console.log( 'gbMeasurementValueRest ERROR overriding point with ID: ' + pointId + ' to value "' + value + '" with type: "' + valueType + '". Exception: ' + ex.exception + ' - ' + ex.message)
+          failure.call( callee, pointId, ex, statusCode)
+        }
+      )
+
+      return true
+    }
+
+    /**
+     * Put a point NIS (Not In Service)
+     *
+     * @param pointId Point ID to be overridden
+     */
+    function nis( pointId, callee, success, failure) {
+
+      var arg,
+          url = '/models/1/points/' + pointId + '/nis'
+
+      rest.post( url, arg, null, null,
+        function( data) {
+          success.call( callee, data)
+        },
+        function( ex, statusCode, headers, config){
+          console.log( 'gbMeasurementValueRest ERROR setting NIS point with ID: ' + pointId + '. Exception: ' + ex.exception + ' - ' + ex.message)
+          failure.call( callee, pointId, ex, statusCode)
+        }
+      )
+
+      return true
+    }
+
+    /**
+     * Remove a point's override or NIS (Not In Service)
+     *
+     * @param pointId Point ID to remove the override or NIS.
+     */
+    function remove( pointId, callee, success, failure, nisOrOverride) {
+
+      var url = '/models/1/points/' + pointId + '/' + nisOrOverride
+
+      rest.delete( url, null, null,
+        function( data) {
+          success.call( callee, data)
+        },
+        function( ex, statusCode, headers, config){
+          console.log( 'gbMeasurementValueRest ERROR removing ' + nisOrOverride + ' on point with ID: ' + pointId + '. Exception: ' + ex.exception + ' - ' + ex.message)
+          failure.call( callee, pointId, ex, statusCode)
+        }
+      )
+
+      return true
+    }
+
+    function removeNis( pointId, callee, success, failure) { remove( pointId, callee, success, failure, 'nis')}
+    function removeOverride( pointId, callee, success, failure) { remove( pointId, callee, success, failure, 'override')}
+
+
+    /**
+     * Public API
+     */
+    return {
+      override: override,
+      nis: nis,
+      removeNis: removeNis,
+      removeOverride: removeOverride
+    }
+  }]).
+
+  controller( 'gbMeasurementValueController', ['$scope', 'gbMeasurementValueRest', function( $scope, gbMeasurementValueRest) {
     var self = this
-    $scope.editMode = false
+    $scope.editMode = undefined // {value: '', valueType: ''}
     $scope.canRemove = false
     $scope.canNis = false
     $scope.removeTooltip = undefined // Remove NIS, Remove Replace
     $scope.placeHolder = ''
+    $scope.requestPending = undefined
+    $scope.requestError = undefined
 
-
-    self.uncheckItem = function(item) {
-    }
 
     self.configureInput = function() {
       var m = $scope.model.currentMeasurement
@@ -66,25 +157,48 @@ angular.module('greenbus.views.measurementValue', []).
       }
     }
 
+    function beforeRequest( requestType ) {
+      $scope.requestError = undefined
+      $scope.requestPending = requestType
+    }
+    function afterRequestSuccessful( requestType ) {
+      $scope.requestError = undefined
+      $scope.requestPending = undefined
+    }
+    function afterRequestFailure( pointId, ex, statusCode ) {
+      $scope.requestError = '"Exception: ' + ex.exception + ' - ' + ex.message
+      $scope.requestPending = undefined
+    }
+
     $scope.nis = function() {
+      if( $scope.requestPending)
+        return false
       var m = $scope.model.currentMeasurement
       if( m.shortQuality !== 'R' && m.shortQuality !== 'N') {
-
+        beforeRequest( 'nis')
+        gbMeasurementValueRest.nis($scope.model.id, this, afterRequestSuccessful, afterRequestFailure)
       }
-
     }
-    $scope.replace = function() {
+    $scope.override = function() {
+      if( $scope.requestPending)
+        return false
 
+      var m = $scope.model.currentMeasurement
+      beforeRequest( 'override')
+      gbMeasurementValueRest.override($scope.model.id, $scope.editMode.value, $scope.editMode.valueType, this, afterRequestSuccessful, afterRequestFailure)
     }
     $scope.remove = function() {
+      if( $scope.requestPending)
+        return false
+
       var m = $scope.model.currentMeasurement
-      if( m.shortQuality === 'R' || m.shortQuality === 'N') {
-
-      }
-
+      beforeRequest( 'remove')
+      gbMeasurementValueRest.remove($scope.model.id, this, afterRequestSuccessful, afterRequestFailure)
     }
     $scope.onBlur = function() {
-
+      if( ! $scope.editMode)
+        return
+      $scope.editMode = undefined
     }
     $scope.onFocus = function() {
 
@@ -94,8 +208,9 @@ angular.module('greenbus.views.measurementValue', []).
       if( $scope.editMode)
         return
 
-      $scope.editMode = true
-      $scope.value = $scope.model.currentMeasurement.value
+      $scope.editMode = {
+        value: $scope.model.currentMeasurement.value
+      }
       $scope.removeTooltip = self.getRemoveTooltip()
     }
 
@@ -115,12 +230,16 @@ angular.module('greenbus.views.measurementValue', []).
       link: function(scope, element, attrs, controller) {
         var focusedElement
         element.on('click', function () {
+          console.log( 'gbMeasurementValue onClick')
           if ( ! scope.editMode) {
             scope.edit()
             scope.$digest()
-
-            this.select();
-            focusedElement = this;
+            console.log( 'gbMeasurementValue onClick selecting input')
+            var input = element.find( 'input')
+            if( input && input.length > 0) {
+              input[0].select()
+              focusedElement = input[0];
+            }
           }
         })
         element.on('blur', function () {
@@ -135,6 +254,12 @@ angular.module('greenbus.views.measurementValue', []).
         }
       }
     }
+  }).
+
+  filter('buttonDisabled', function() {
+    return function(disabled, classes) {
+      return disabled ? classes + ' disabled' : classes
+    };
   })
 
 

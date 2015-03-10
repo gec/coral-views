@@ -33,8 +33,8 @@ td.event-agent {
 }
 
 .icon-spin {
-  -animation: icon-spin1 .7s infinite linear;
-  -webkit-animation: icon-spin2 .7s infinite linear;
+  -animation: icon-spin1 1.6s infinite linear;
+  -webkit-animation: icon-spin2 1.6s infinite linear;
 }
 
 @-webkit-keyframes icon-spin2 {
@@ -444,6 +444,17 @@ table.gb-row-radius {
   top: 28%;
   position: absolute;
   right: 1em;
+}
+
+
+.gb-btn-replacenis-remove {
+  font-size: 200%;
+  vertical-align: middle;
+  cursor: pointer;
+  margin-left: .2em;
+}
+.gb-btn-replacenis-remove i {
+  vertical-align: text-top;
 }
 
 .gb-alert-inline {

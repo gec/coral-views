@@ -1,21 +1,22 @@
 <span>
-    <span ng-if="!editMode" ng-click="edit()">{{ model.currentMeasurement.value }}</span>
+    <span ng-if="!editMode">{{ model.currentMeasurement.value }}</span>
 
-    <div ng-if="editMode">
-        <input type="text" class="form-control" ng-model="value" ng-onblur="onBlur()" ng-focus="onFocus()" name="measurement_value" ng-pattern="" style="width:6em;" placeholder="{{ placeHolder}}">
+    <div ng-if="editMode" class="form-inline">
+        <input type="text" class="form-control" ng-model="editMode.value" ng-blur="onBlur()" ng-focus="onFocus()" name="measurement_value" ng-pattern="" style="width:6em;" placeholder="{{ placeHolder}}">
         <div ng-if="model.currentMeasurement.shortQuality==='R'" class="btn-group" role="group" aria-label="...">
-            <button ng-click="replace()" type="button" class="btn btn-info" popover="Replace" popover-trigger="mouseenter" popover-placement="bottom">R</button>
-            <button ng-click="nis()"     type="button" class="btn btn-info" popover="Not In Service" popover-trigger="mouseenter" popover-placement="bottom">N</button>
-            <button ng-click="remove()"  type="button" class="btn btn-danger" popover="{{removeTooltip}}" popover-trigger="mouseenter" popover-placement="bottom"><i class="fa fa-minus"></i></button>
+            <button ng-click="override()" type="button" ng-class="requestPending | buttonDisabled: 'btn btn-info gb-btn-override'" popover="Replace" popover-trigger="mouseenter" popover-placement="bottom"><span ng-class="(requestPending==='override')?'icon-spin':''">R</span></button>
+            <button ng-click="nis()"     type="button" ng-class="requestPending | buttonDisabled: 'btn btn-info gb-btn-nis'" popover="Not In Service" popover-trigger="mouseenter" popover-placement="bottom"><span ng-class="(requestPending==='nis')?'icon-spin':''">N</span></button>
+            <a ng-click="remove()"  type="button" class="text-danger gb-btn-replacenis-remove" popover="{{removeTooltip}}" popover-trigger="mouseenter" popover-placement="bottom"><i ng-class="(requestPending==='remove')?'fa-spin fa fa-minus-circle':'fa fa-minus-circle'" class="fa fa-minus-circle"></i></a>
         </div>
         <div ng-if="model.currentMeasurement.shortQuality==='N'" class="btn-group" role="group" aria-label="...">
-            <button ng-click="replace()" type="button" class="btn btn-info" popover="Replace" popover-trigger="mouseenter" popover-placement="bottom">R</button>
-            <button ng-click="nis()"     type="button" class="btn btn-info disabled" popover="Not In Service" popover-trigger="mouseenter" popover-placement="bottom">N</button>
-            <button ng-click="remove()"  type="button" class="btn btn-danger" popover="{{removeTooltip}}" popover-trigger="mouseenter" popover-placement="bottom"><i class="fa fa-minus"></i></button>
+            <button ng-click="override()" type="button" ng-class="requestPending | buttonDisabled: 'btn btn-info gb-btn-override'" popover="Replace" popover-trigger="mouseenter" popover-placement="bottom"><span ng-class="(requestPending==='override')?'icon-spin':''">R</span></button>
+            <button ng-click="nis()"     type="button" class="btn btn-info disabled gb-btn-nis" popover="Not In Service" popover-trigger="mouseenter" popover-placement="bottom">N</button>
+            <a ng-click="remove()"  type="button" class="text-danger gb-btn-replacenis-remove" popover="{{removeTooltip}}" popover-trigger="mouseenter" popover-placement="bottom"><i class="fa fa-minus-circle"></i></a>
         </div>
         <div ng-if="model.currentMeasurement.shortQuality!=='N' && model.currentMeasurement.shortQuality!=='R'" class="btn-group" role="group" aria-label="...">
-            <button ng-click="replace()" type="button" class="btn btn-info" popover="Replace" popover-trigger="mouseenter" popover-placement="bottom">R</button>
-            <button ng-click="nis()"     type="button" class="btn btn-info" popover="Not In Service" popover-trigger="mouseenter" popover-placement="bottom">N</button>
+            <button ng-click="override()" type="button" ng-class="requestPending | buttonDisabled: 'btn btn-info gb-btn-override'" popover="Replace" popover-trigger="mouseenter" popover-placement="bottom"><span ng-class="(requestPending==='override')?'icon-spin':''">R</span></button>
+            <button ng-click="nis()"     type="button" ng-class="requestPending | buttonDisabled: 'btn btn-info gb-btn-nis'" popover="Not In Service" popover-trigger="mouseenter" popover-placement="bottom"><span ng-class="(requestPending==='nis')?'icon-spin':''">N</span></button>
         </div>
+        <!--<a ng-if="model.currentMeasurement.shortQuality==='N' || model.currentMeasurement.shortQuality==='R'" ng-click="remove()"  type="button" class="text-danger gb-remove" popover="{{removeTooltip}}" popover-trigger="mouseenter" popover-placement="bottom"><i class="fa fa-minus-circle"></i></a>-->
     </div>
 </span>
