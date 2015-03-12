@@ -338,8 +338,8 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
             currentMeasurement = {
               value: '-',
               time: null,
-              shortQuality: '-',
-              longQuality: '-',
+              shortQuality: '',
+              longQuality: '',
               validity: 'NOTLOADED',
               expandRow: false,
               commandSet: undefined

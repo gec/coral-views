@@ -49,7 +49,7 @@
                             <gb-measurement-value model="point"></gb-measurement-value>
                         </td>
                         <td ng-if="!point.rowDetail" ng-click="togglePointRowById(point.id)">{{point.unit}}</td>
-                        <td ng-if="!point.rowDetail" ng-click="togglePointRowById(point.id)" style="padding-bottom: 0"><span ng-class="point.currentMeasurement.validity | validityIcon" title="{{point.currentMeasurement.longQuality}}"></span></td>
+                        <td ng-if="!point.rowDetail" ng-click="togglePointRowById(point.id)" style="padding-bottom: 0"><span ng-class="point.currentMeasurement.validity | validityIcon" title="{{point.currentMeasurement.longQuality}}"></span> <strong>{{point.currentMeasurement.shortQuality}}</strong></td>
                         <td ng-if="!point.rowDetail" ng-click="togglePointRowById(point.id)">{{point.currentMeasurement.time | date:'h:mm:ss a, MM-dd-yyyy'}}</td>
                         <td ng-if="!point.rowDetail" ng-click="togglePointRowById(point.id)">{{ point.pointType }}</td>
 
