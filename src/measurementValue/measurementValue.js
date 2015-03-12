@@ -114,39 +114,89 @@ angular.module('greenbus.views.measurementValue', []).
     }
   }]).
 
-  controller( 'gbMeasurementValueController', ['$scope', 'gbMeasurementValueRest', function( $scope, gbMeasurementValueRest) {
+  controller( 'gbMeasurementValueController', ['$scope', 'gbMeasurementValueRest', '$timeout', function( $scope, gbMeasurementValueRest, $timeout) {
     var self = this
-    $scope.editMode = undefined // {value: '', valueType: ''}
-    $scope.canRemove = false
-    $scope.canNis = false
+    
+    // When editing === undefined, we are not editing the value. The value is a view only span.
+    // When editing === {value: '', valueType: ''}, we are editing.
+    //
+    $scope.editing = undefined
+    
     $scope.removeTooltip = undefined // Remove NIS, Remove Replace
     $scope.placeHolder = ''
     $scope.requestPending = undefined
-    $scope.requestError = undefined
+    $scope.replyError = undefined
 
+    function getValueTypeFromPointType() {
+      if( ! $scope.model.pointType)
+        return 'DOUBLE'
 
-    self.configureInput = function() {
-      var m = $scope.model.currentMeasurement
-      switch( m.shortQuality) {
-        case 'R':
-          $scope.canRemove = true
-          $scope.canNis = true
-          $scope.removeTooltip = 'Remove replace'
-          break
-        case 'N':
-          $scope.canRemove = true
-          $scope.canNis = false
-          $scope.removeTooltip = 'Remove NIS'
-          break
+      switch( $scope.model.pointType) {
+        case 'ANALOG': return 'DOUBLE'
+        case 'STATUS': return 'BOOL'
+        case 'COUNTER': return 'INT'
         default:
-          $scope.canRemove = false
-          $scope.canNis = true
-          $scope.removeTooltip = undefined
-          break
+          return 'DOUBLE'
       }
-
-      // set focus and select text
     }
+    function getValueType() {
+      if( ! $scope.model.currentMeasurement)
+        return getValueTypeFromPointType()
+
+      var m = $scope.model.currentMeasurement
+      if( ! m.type)
+        return getValueTypeFromPointType()
+
+      switch( m.type) {
+        case 'DOUBLE': return m.type
+        case 'INT': return m.type
+        case 'STRING': return m.type
+        case 'BOOL': return m.type
+        default:
+          return getValueTypeFromPointType()
+      }
+    }
+    
+    $scope.editStart = function() {
+      if( $scope.editing)
+        return
+
+      $scope.editing = {
+        value: $scope.model.currentMeasurement.value,
+        valueType: getValueType()
+      }
+      $scope.removeTooltip = self.getRemoveTooltip()
+    }
+    
+    function editEnd() {
+      $scope.editing = undefined
+      pendingEditEndCancel() // just in case
+    }
+
+
+
+    //self.configureInput = function() {
+    //  var m = $scope.model.currentMeasurement
+    //  switch( m.shortQuality) {
+    //    case 'R':
+    //      $scope.canRemove = true
+    //      $scope.canNis = true
+    //      $scope.removeTooltip = 'Remove replace'
+    //      break
+    //    case 'N':
+    //      $scope.canRemove = true
+    //      $scope.canNis = false
+    //      $scope.removeTooltip = 'Remove NIS'
+    //      break
+    //    default:
+    //      $scope.canRemove = false
+    //      $scope.canNis = true
+    //      $scope.removeTooltip = undefined
+    //      break
+    //  }
+    //
+    //  // set focus and select text
+    //}
 
     self.getRemoveTooltip = function() {
       var m = $scope.model.currentMeasurement
@@ -158,21 +208,44 @@ angular.module('greenbus.views.measurementValue', []).
     }
 
     function beforeRequest( requestType ) {
-      $scope.requestError = undefined
+      $scope.replyError = undefined
       $scope.requestPending = requestType
     }
     function afterRequestSuccessful( requestType ) {
-      $scope.requestError = undefined
+      $scope.replyError = undefined
       $scope.requestPending = undefined
+      editEnd()
     }
     function afterRequestFailure( pointId, ex, statusCode ) {
-      $scope.requestError = '"Exception: ' + ex.exception + ' - ' + ex.message
+      $scope.replyError = '"Exception: ' + ex.exception + ' - ' + ex.message
       $scope.requestPending = undefined
     }
 
+    // If user clicks one of our buttons (NIS, Override, or Remove), then the input gets a blur event.
+    // We don't want to end the edit mode in this case. We set a timeout to see if someone
+    // did, in fact, click a button (or tab and a button got focus). If not, then we go ahead with
+    // ending edit mode.
+    //
+    function pendingEditEndStart() {
+      if( ! $scope.editing)
+        return
+      $scope.pendingEditEndTimer = $timeout( function() {
+        $scope.editing = undefined
+        $scope.pendingEditEndTimer = undefined
+      }, 300)
+    }
+    function pendingEditEndCancel() {
+      if( $scope.pendingEditEndTimer) {
+        $timeout.cancel( $scope.pendingEditEndTimer)
+        $scope.pendingEditEndTimer = undefined
+      }
+    }
+
     $scope.nis = function() {
+      pendingEditEndCancel()
       if( $scope.requestPending)
         return false
+
       var m = $scope.model.currentMeasurement
       if( m.shortQuality !== 'R' && m.shortQuality !== 'N') {
         beforeRequest( 'nis')
@@ -180,14 +253,16 @@ angular.module('greenbus.views.measurementValue', []).
       }
     }
     $scope.override = function() {
+      pendingEditEndCancel()
       if( $scope.requestPending)
         return false
 
       var m = $scope.model.currentMeasurement
       beforeRequest( 'override')
-      gbMeasurementValueRest.override($scope.model.id, $scope.editMode.value, $scope.editMode.valueType, this, afterRequestSuccessful, afterRequestFailure)
+      gbMeasurementValueRest.override($scope.model.id, $scope.editing.value, $scope.editing.valueType, this, afterRequestSuccessful, afterRequestFailure)
     }
     $scope.remove = function() {
+      pendingEditEndCancel()
       if( $scope.requestPending)
         return false
 
@@ -195,23 +270,22 @@ angular.module('greenbus.views.measurementValue', []).
       beforeRequest( 'remove')
       gbMeasurementValueRest.remove($scope.model.id, this, afterRequestSuccessful, afterRequestFailure)
     }
-    $scope.onBlur = function() {
-      if( ! $scope.editMode)
-        return
-      $scope.editMode = undefined
+    $scope.inputKeyDown = function($event) {
+      if( $event.keyCode === 27) // escape key
+        editEnd()
     }
-    $scope.onFocus = function() {
-
+    $scope.inputOnFocus = function() {
+      pendingEditEndCancel()
+    }
+    $scope.buttonOnFocus = function() {
+      pendingEditEndCancel()
     }
 
-    $scope.edit = function() {
-      if( $scope.editMode)
-        return
-
-      $scope.editMode = {
-        value: $scope.model.currentMeasurement.value
-      }
-      $scope.removeTooltip = self.getRemoveTooltip()
+    $scope.inputOnBlur = function() {
+      pendingEditEndStart()
+    }
+    $scope.buttonOnBlur = function() {
+      pendingEditEndStart()
     }
 
   }]).
@@ -231,8 +305,8 @@ angular.module('greenbus.views.measurementValue', []).
         var focusedElement
         element.on('click', function () {
           console.log( 'gbMeasurementValue onClick')
-          if ( ! scope.editMode) {
-            scope.edit()
+          if ( ! scope.editing) {
+            scope.editStart()
             scope.$digest()
             console.log( 'gbMeasurementValue onClick selecting input')
             var input = element.find( 'input')

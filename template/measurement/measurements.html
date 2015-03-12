@@ -46,7 +46,7 @@
                         </td>
                         <td  ng-if="!point.rowDetail" class="gb-value" ng-click="togglePointRowById(point.id)">
                             <span class="glyphicon glyphicon-edit pull-left text-muted" style="padding-right: 10px; opacity: {{ point.commandSet ? 1 : 0 }}" title="Control or Setpoint"></span>
-                            {{point.currentMeasurement.value}}
+                            <gb-measurement-value model="point"></gb-measurement-value>
                         </td>
                         <td ng-if="!point.rowDetail" ng-click="togglePointRowById(point.id)">{{point.unit}}</td>
                         <td ng-if="!point.rowDetail" ng-click="togglePointRowById(point.id)" style="padding-bottom: 0"><span ng-class="point.currentMeasurement.validity | validityIcon" title="{{point.currentMeasurement.longQuality}}"></span></td>

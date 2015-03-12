@@ -42,7 +42,7 @@ angular.module('greenbus.views.demo').controller('MeasurementValueDemoCtrl', fun
   }
 
 
-  rest.whenPOST( '/models/1/points/1/override', {value: '10.0', valueType: 'DOUBLE'}).
+  rest.whenPOST( '/models/1/points/1/override', {value: '10', valueType: 'DOUBLE'}).
     respond( {
       pointId: '1',
       measurement: {

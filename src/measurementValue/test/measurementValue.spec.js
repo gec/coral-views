@@ -77,15 +77,18 @@ describe('gb-measurement-value', function () {
 
     element = angular.element( '<gb-measurement-value model="point"></gb-measurement-value>')
     $compile(element)(parentScope)
-    scope = element.isolateScope() || element.scope()
+    // Controller hasn't run.
     parentScope.$digest()
+    // Controller has run and all scope variables are available.
+    scope = element.isolateScope() || element.scope()
   }));
 
   afterEach( function() {
   });
 
   function findInnerSpan() {
-    return angular.element( element[0].children[0])
+    // Skip the error icon and go for index 1.
+    return angular.element( element[0].children[1])
   }
 
   function findInput( innerSpan) {
@@ -120,6 +123,7 @@ describe('gb-measurement-value', function () {
   it('should switch to edit mode, copy value, and select value', inject( function () {
     var input, innerSpan
     element.trigger( 'click')
+    expect( scope.editing).toBeDefined()
 
     innerSpan = findInnerSpan()
     input = findInput( innerSpan)
@@ -196,6 +200,20 @@ describe('gb-measurement-value', function () {
     //expect( buttons.override).not.toHaveClass('disabled');
     //expect( buttons.nis).toHaveClass('disabled');
     //expect( buttons.remove).not.toHaveClass('disabled');
+  }))
+
+  it('inputOnBlur() should not exit edit mode until it\'s clear a button was not clicked', inject( function ($timeout) {
+    var innerSpan, buttons, input
+
+    currentMeasurement.shortQuality = ''
+    element.trigger( 'click')
+
+    scope.inputOnBlur()
+    expect( scope.editing).toBeDefined()
+
+    $timeout.flush()
+    expect( scope.editing).toBeUndefined()
+
   }))
 
 
