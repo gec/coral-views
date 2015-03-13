@@ -196,7 +196,8 @@ module.exports = function(grunt) {
       },
       coverage: {
         preprocessors: {
-          'src/*/*.js': 'coverage'
+          'src/*/*.js': 'coverage',
+          'target/*/*.js': 'coverage' // coffescripts
         },
         reporters: ['progress', 'coverage']
       }
