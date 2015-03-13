@@ -1,9 +1,9 @@
 greenbus-web-views
 ===========
 
-AngularJS components using GreenBus Server for rapid application development.
+AngularJS components accessing GreenBus Server for rapid application development.
 
-## Build
+## Build & Test
 
 ```
 git clone https://github.com/gec/greenbus-web-views.git
@@ -11,6 +11,18 @@ cd greenbus-web-views/
 npm install
 bower install
 grunt
+```
+
+## Continuous Test
+```
+grunt watch
+```
+
+## Coverage Coverage
+
+```
+grunt --coverage
+grunt test --coverage
 ```
 
 ## Dependencies

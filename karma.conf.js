@@ -6,7 +6,7 @@ module.exports = function(config) {
 
     // Added this so grunt watch would auto-compile coffeescript. Still doesn't do it.
     preprocessors: {
-      'gec-views-tpls-*-SNAPSHOT.js': 'coverage',
+      'greenbus-views-tpls-*-SNAPSHOT.js': 'coverage',
       'src/**/*.coffee': 'coffee'
     },
     coffeePreprocessor: {
@@ -68,7 +68,8 @@ module.exports = function(config) {
     ],
 
     coverageReporter: {
-      type : 'text-summary',
+      //type : 'text-summary',
+      type : 'html',
       dir : 'coverage/'
     },
 
