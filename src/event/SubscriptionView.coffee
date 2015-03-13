@@ -142,7 +142,7 @@ class SubscriptionView extends SubscriptionCache
   updateState: ->
     @state = switch
       when @items.length == 0 then SubscriptionViewState.NO_ITEMS
-      when @pageCacheOffset > 0 then SubscriptionViewState.PAGED
+      when @pageCacheOffset != 0 then SubscriptionViewState.PAGED  # -1 or > 0
       else SubscriptionViewState.CURRENT
 
   pageSuccess: (items) =>

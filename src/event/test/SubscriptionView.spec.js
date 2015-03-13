@@ -180,6 +180,7 @@ describe('SubscriptionView', function () {
     expect(view.pagePending).not.toBeDefined();
     expect(view.items).toEqual( [i7, i6]);
     expect(view.itemStore).toEqual( [i7,i6].concat( itemsSorted.slice(0,4)));
+    expect(view.state).toBe(SubscriptionViewState.PAGED);
 
   }));
 
@@ -205,6 +206,7 @@ describe('SubscriptionView', function () {
     expect(view.pagePending).not.toBeDefined();
     expect(view.items).toEqual( page2);
     expect(view.itemStore).toEqual( itemsSorted.slice(0,4));
+    expect(view.state).toBe(SubscriptionViewState.PAGED);
 
     // pageNext all from GET.
     state = view.pageNext( pageRest)
@@ -218,6 +220,7 @@ describe('SubscriptionView', function () {
     expect(view.pagePending).not.toBeDefined();
     expect(view.items).toEqual( page3);
     expect(view.itemStore).toEqual( itemsSorted.slice(0,6));
+    expect(view.state).toBe(SubscriptionViewState.PAGED);
 
   }));
   
@@ -240,6 +243,7 @@ describe('SubscriptionView', function () {
     expect(view.pagePending).not.toBeDefined();
     expect(view.items).toEqual( page2);
     expect(view.itemStore).toEqual( page1);
+    expect(view.state).toBe(SubscriptionViewState.PAGED);
 
   }));
 
