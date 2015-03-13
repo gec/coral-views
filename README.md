@@ -18,7 +18,7 @@ grunt
 grunt watch
 ```
 
-## Coverage Coverage
+## Code Coverage
 
 ```
 grunt --coverage
