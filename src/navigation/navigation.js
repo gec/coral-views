@@ -126,12 +126,26 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
 
     function cacheNavItems( items) {
       items.forEach( function( item) {
-        if( item.type === 'item')
+        if( item.class === 'NavigationItem' || item.class === 'NavigationItemSource')
           menuIdToTreeNodeCache.put( item.id, item)
         if( item.children.length > 0)
           cacheNavItems( item.children)
       })
     }
+
+    /**
+     * Convert array of { 'class': 'className', data: {...}} to { 'class': 'className', ...}
+     * @param navigationElements
+     */
+    function flattenNavigationElements( navigationElements) {
+      navigationElements.forEach( function( element, index) {
+        var data = element.data;
+        delete element.data;
+        angular.extend( element, data)
+        flattenNavigationElements( element.children)
+      })
+    }
+
 
     /**
      * Public API
@@ -176,7 +190,8 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
 
       getNavTree: function( url, name, scope, successListener) {
         rest.get( url, name, scope, function(data) {
-          // example: [ {type:item, label:Dashboard, id:dashboard, route:#/dashboard, selected:false, children:[]}, ...]
+          // example: [ {class:'NavigationItem', data: {label:Dashboard, id:dashboard, route:#/dashboard, selected:false, children:[]}}, ...]
+          flattenNavigationElements( data)
           cacheNavItems( data)
           if( successListener)
             successListener( data)
@@ -224,17 +239,19 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
   }).
 
   controller('NavListController', ['$scope', '$attrs', 'rest', function( $scope, $attrs, rest) {
-        $scope.navItems = [ {type: 'header', label: 'loading...'}]
+      $scope.navItems = [ {'class': 'NavigationHeader', label: 'loading...'}]
 
-        $scope.getClass = function( item) {
-            switch( item.type) {
-                case 'divider': return 'divider'
-                case 'header': return 'nav-header'
-                case 'item': return ''
-            }
+      $scope.getClass = function( item) {
+        switch( item.class) {
+          case 'NavigationDivider': return 'divider'
+          case 'NavigationHeader': return 'nav-header'
+          case 'NavigationItem': return ''
+          case 'NavigationItemSource': return ''
+          default: return ''
         }
+      }
 
-        return rest.get( $attrs.href, 'navItems', $scope)
+      return rest.get( $attrs.href, 'navItems', $scope)
     }]).
   directive('navList', function(){
     // <nav-list href='/coral/menus/admin'>
@@ -302,7 +319,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
                     replaceTreeNodeAtIndexAndPreserveChildren( parentTree, index, newTreeNodes)
                     break;
                 default:
-                    console.error( 'navTreeController.getSuccess.get Unknown insertLocation: ' + child.insertLocation)
+                    console.error( 'navTreeController.loadTreeNodesFromSource.getTreeNodes Unknown insertLocation: ' + child.insertLocation)
             }
         })
 
@@ -372,14 +389,15 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
             }
         }
     }
-    function getSuccess( data) {
-        data.forEach( function(node, index) {
-            if( node.sourceUrl)
-                loadTreeNodesFromSource( data, index, node)
-        })
+
+    function getNavTreeSuccess( data) {
+      data.forEach( function(node, index) {
+        if( node.sourceUrl)
+          loadTreeNodesFromSource( data, index, node)
+      })
     }
 
-    return navigation.getNavTree( $attrs.href, 'navTree', $scope, getSuccess)
+    return navigation.getNavTree( $attrs.href, 'navTree', $scope, getNavTreeSuccess)
   }]).
   directive('navTree', function(){
     // <nav-tree href='/coral/menus/analysis'>
