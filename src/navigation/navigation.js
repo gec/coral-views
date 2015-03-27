@@ -202,28 +202,42 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
   }]). // end factory 'navigation'
 
   controller('NavBarTopController', ['$scope', '$attrs', '$location', '$cookies', 'rest', function( $scope, $attrs, $location, $cookies, rest) {
-      $scope.loading = true
-      $scope.applicationMenuItems = []
-      $scope.sessionMenuItems = []
-      $scope.application = {
-          label: 'loading...',
-          route: ''
-      }
-      $scope.userName = $cookies.userName
+    $scope.loading = true
+    $scope.applicationMenuItems = []
+    $scope.sessionMenuItems = []
+    $scope.application = {
+        label: 'loading...',
+        route: ''
+    }
+    $scope.userName = $cookies.userName
 
-      $scope.getActiveClass = function( item) {
-          return ( $location.absUrl().indexOf( item.route) >= 0) ? 'active' : ''
-      }
+    $scope.getActiveClass = function( item) {
+        return ( $location.absUrl().indexOf( item.route) >= 0) ? 'active' : ''
+    }
 
-      function onSuccess( json) {
-          $scope.application = json[0]
-          $scope.applicationMenuItems = json[0].children
-          $scope.sessionMenuItems = json[1].children
-          console.log( 'navBarTopController onSuccess ' + $scope.application.label)
-          $scope.loading = false
-      }
+    /**
+     * Convert array of { 'class': 'className', data: {...}} to { 'class': 'className', ...}
+     * @param navigationElements
+     */
+    function flattenNavigationElements( navigationElements) {
+      navigationElements.forEach( function( element, index) {
+        var data = element.data;
+        delete element.data;
+        angular.extend( element, data)
+        flattenNavigationElements( element.children)
+      })
+    }
 
-      return rest.get( $attrs.href, 'data', $scope, onSuccess)
+    function onSuccess( json) {
+      flattenNavigationElements( json)
+      $scope.application = json[0]
+      $scope.applicationMenuItems = json[0].children
+      $scope.sessionMenuItems = json[1].children
+      console.log( 'navBarTopController onSuccess ' + $scope.application.label)
+      $scope.loading = false
+    }
+
+    return rest.get( $attrs.href, 'data', $scope, onSuccess)
   }]).
   directive('navBarTop', function(){
     // <nav-bar-top route='/menus/admin'
