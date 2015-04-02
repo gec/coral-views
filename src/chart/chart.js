@@ -34,7 +34,7 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
       var REQUEST_ADD_CHART = 'gb-chart.addChart',
           historyConstraints ={
             time: 1000 * 60 * 60 * 2, // 2 hours
-            size: 60 * 60 * 2, // 2 hours of 1 second data
+            size: 60 * 60 * 2 * 10, // 2 hours of 10 measurements per second data
             throttling: 5000
           }
 
@@ -155,7 +155,7 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
         firstPointLoaded = false,
         historyConstraints ={
           time: 1000 * 60 * 60 * 4, // 4 hours
-          size: 60 * 60 * 4, // 4 hours of 1 second data
+          size: 60 * 60 * 4 * 10, // 4 hours of 10 measurements per second data
           throttling: 5000
         }
 
