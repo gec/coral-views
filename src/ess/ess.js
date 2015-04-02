@@ -191,7 +191,7 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
       equipmentIdsQueryString = rest.queryParameterFromArrayOrString( 'equipmentIds', equipmentIds)
 
 
-      pointsUrl = '/models/1/points?' + equipmentIdsQueryString // TODO: include when fixed! + '&' + pointTypesQueryString
+      pointsUrl = '/models/1/points?' + equipmentIdsQueryString + '&' + pointTypesQueryString
       rest.get( pointsUrl, 'points', $scope, function( data) {
         var sampleData = {
           'e57170fd-2a13-4420-97ab-d1c0921cf60d': [
