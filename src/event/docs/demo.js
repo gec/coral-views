@@ -23,7 +23,7 @@ angular.module('greenbus.views.demo').controller('EventDemoCtrl', function ($sco
       subscriptionId,
       'event',
       [
-        event,
+        event
       ]
     )
     

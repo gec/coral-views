@@ -83,7 +83,7 @@ describe('subscription', function () {
       expect(mock.authentication.isLoggedIn).toHaveBeenCalled();
       expect(mock.websocketFactory).toHaveBeenCalledWith('ws://localhost:9000/websocket?authToken=' + authToken);
       expect(mock.on).toHaveBeenCalledWith('$destroy', jasmine.any(Function));
-      expect(scope.subscriptionIds.length).toBe(1)
+      expect(scope.__subscriptionIds.length).toBe(1)
 
       expect(mock.rootScope.$apply).not.toHaveBeenCalled();
       expect(subscription.getStatus().status).toBe( subscription.STATUS.OPENING)
@@ -111,7 +111,7 @@ describe('subscription', function () {
 
       // on $destroy, unsubscribe and remove subscriptionId
       mock.onEvents['$destroy']('some event')
-      expect(scope.subscriptionIds.length).toBe(0)
+      expect(scope.__subscriptionIds.length).toBe(0)
       expect(mock.websocket.send).toHaveBeenCalledWith(JSON.stringify({unsubscribe: subscriptionId}));
 
       // next message should be for unknown subscriptionId, so it doesn't know the messageListener any more
@@ -122,7 +122,7 @@ describe('subscription', function () {
 
     it('should handle close after open', inject(function(subscription) {
       var subscriptionId = subscription.subscribe(json, scope, mock.messageListener, mock.errorListener)
-      expect(scope.subscriptionIds.length).toBe(1)
+      expect(scope.__subscriptionIds.length).toBe(1)
       mock.websocket.onopen('open event')
 
       mock.websocket.onclose({
@@ -143,7 +143,7 @@ describe('subscription', function () {
       expect(subscriptionId === subscriptionId2).toBeFalse()
       expect(mock.websocketFactory.calls.count()).toBe(1);
       expect(mock.on.calls.count()).toBe(2);
-      expect(scope.subscriptionIds.length).toBe(2)
+      expect(scope.__subscriptionIds.length).toBe(2)
 
       // Don't call send until socket is open
       expect(mock.websocket.send).not.toHaveBeenCalled();
@@ -181,7 +181,7 @@ describe('subscription', function () {
 
       // on $destroy, unsubscribe and remove subscriptionId
       mock.onEvents['$destroy']('some event')
-      expect(scope.subscriptionIds.length).toBe(0)
+      expect(scope.__subscriptionIds.length).toBe(0)
       expect(mock.websocket.send).toHaveBeenCalledWith(JSON.stringify({unsubscribe: subscriptionId}));
 
       // next message should be for unknown subscriptionId, so it doesn't know the messageListener any more
@@ -323,7 +323,7 @@ describe('subscription', function () {
       expect(subscriptionId).toBeNull()
       expect(mock.authentication.isLoggedIn).toHaveBeenCalled();
       expect(mock.on).not.toHaveBeenCalled();
-      expect(scope.subscriptionIds).toBeUndefined()
+      expect(scope.__subscriptionIds).toBeUndefined()
 
       expect(mock.rootScope.$apply).not.toHaveBeenCalled();
       expect(subscription.getStatus().status).toBe( subscription.STATUS.CLOSED)

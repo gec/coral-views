@@ -168,9 +168,9 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
     }
 
     function saveSubscriptionOnScope( $scope, subscriptionId) {
-      if( ! $scope.subscriptionIds)
-        $scope.subscriptionIds = []
-      $scope.subscriptionIds.push( subscriptionId)
+      if( ! $scope.__subscriptionIds)
+        $scope.__subscriptionIds = []
+      $scope.__subscriptionIds.push( subscriptionId)
     }
 
     function registerSubscriptionOnScope( $scope, subscriptionId) {
@@ -180,13 +180,13 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
       // Register for controller.$destroy event and kill any retry tasks.
       // TODO save return value as unregister function. Could have multiples on one $scope.
       $scope.$on( '$destroy', function( event) {
-        if( $scope.subscriptionIds) {
-          console.log( 'subscription $destroy ' + $scope.subscriptionIds.length);
-          $scope.subscriptionIds.forEach( function( subscriptionId) {
+        if( $scope.__subscriptionIds) {
+          console.log( 'subscription $destroy ' + $scope.__subscriptionIds.length);
+          $scope.__subscriptionIds.forEach( function( subscriptionId) {
             unsubscribe( subscriptionId)
             delete subscription.listeners[ subscriptionId]
           })
-          $scope.subscriptionIds = []
+          $scope.__subscriptionIds = []
         }
       });
 
