@@ -109,10 +109,16 @@ function makeSubscription() {
   function Subscription() {
 
   }
+  Subscription.saveSubscriptionOnScope = function( $scope, subscriptionId) {
+    if( ! $scope.__subscriptionIds)
+      $scope.__subscriptionIds = []
+    $scope.__subscriptionIds.push( subscriptionId)
+  }
 
   Subscription.subscribe = function( json, $scope, messageListener, errorListener) {
     var subscriptionId = 'subscription.' + Object.keys( json)[0] + '.' + generateUUID()
     listeners[ subscriptionId] = { 'message': messageListener, 'error': errorListener}
+    this.saveSubscriptionOnScope( $scope, subscriptionId)
     return subscriptionId
   }
   Subscription.unsubscribe = function( subscriptionId) {
