@@ -25,25 +25,25 @@
                 <th><a href="" ng-click="sortColumn = 'state'; reverse=!reverse">State</a></th>
                 <th title="State of Charge %" style="text-align: center">SOC %</th>
                 <th></th>
-                <th class="gb-cell-highlight gb-cell-highlight-left"><a href="" ng-click="sortColumn = 'CapacityPower'; reverse=!reverse">Power</a></th>
-                <th class="gb-cell-highlight gb-cell-highlight-right"><a href="" ng-click="sortColumn = 'CapacityEnergy'; reverse=!reverse">Energy</a></th>
+                <th class="gb-cell-highlight gb-cell-highlight-left"><a href="" ng-click="sortColumn = 'powerCapacity'; reverse=!reverse">Power</a></th>
+                <th class="gb-cell-highlight gb-cell-highlight-right"><a href="" ng-click="sortColumn = 'energyCapacity'; reverse=!reverse">Energy</a></th>
             </tr>
             </thead>
             <tbody>
             <tr ng-repeat="ces in ceses | filter:searchText | orderBy:sortColumn:reverse">
                 <td>{{ces.name}}</td>
-                <td>{{ces.Charging}}</td>
+                <td>{{ces.power}}</td>
                 <td><img class="ces-state-icon" ng-src="{{ces.state | essStateIcon}}" title="{{ces.state | essStateDescription}}" style="margin-top:2px"/></td>
                 <td style="width: 60px">
                     <div class="battery-wrapper" title="{{ces.state | essStateDescription}}" >
-                        <div class="{{ces['%SOC'] | essBatterySocChargedClass: ces.state}}" style="width:{{ces.percentSocMax100}}%"></div>
-                        <div class="{{ces['%SOC'] | essBatterySocUnchargedClass: ces.state}}" style="width:{{100-ces.percentSocMax100}}%"></div>
+                        <div class="{{ces.percentSoc | essBatterySocChargedClass: ces.state}}" style="width:{{ces.percentSocMax100}}%"></div>
+                        <div class="{{ces.percentSoc | essBatterySocUnchargedClass: ces.state}}" style="width:{{100-ces.percentSocMax100}}%"></div>
                         <div class="battery-overlay"></div>
                     </div>
                 </td>
-                <td>{{ces['%SOC']}}%</td>
-                <td class="gb-cell-highlight gb-cell-highlight-left">{{ces.CapacityPower}}</td>
-                <td class="gb-cell-highlight gb-cell-highlight-right">{{ces.CapacityEnergy}}</td>
+                <td>{{ces.percentSoc}}%</td>
+                <td class="gb-cell-highlight gb-cell-highlight-left">{{ces.powerCapacity}}</td>
+                <td class="gb-cell-highlight gb-cell-highlight-right">{{ces.energyCapacity}}</td>
             </tr>
             </tbody>
         </table>
