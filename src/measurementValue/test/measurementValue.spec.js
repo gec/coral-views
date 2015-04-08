@@ -1,5 +1,5 @@
 describe('gb-measurement-value', function () {
-  var point, currentMeasurement, element, parentScope, scope, $compile
+  var gbMeasurementValueRest, point, currentMeasurement, element, parentScope, scope, $compile
 
   beforeEach(module('greenbus.views.measurementValue'));
   beforeEach(module('greenbus.views.template/measurementValue/measurementValue.html'));

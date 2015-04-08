@@ -1,4 +1,4 @@
-describe('alarmRest', function () {
+describe('measurementValueRest', function () {
   var $httpBackend, replyMock
 
   var authToken = 'some auth token'
