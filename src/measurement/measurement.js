@@ -144,8 +144,8 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
     }
   }]).
 
-  controller( 'gbMeasurementsController', ['$scope', '$window', '$routeParams', 'rest', 'navigation', 'subscription', 'measurement', 'request', '$timeout',
-    function( $scope, $window, $routeParams, rest, navigation, subscription, measurement, request, $timeout) {
+  controller( 'gbMeasurementsController', ['$scope', '$window', '$stateParams', 'rest', 'navigation', 'subscription', 'measurement', 'request', '$timeout',
+    function( $scope, $window, $stateParams, rest, navigation, subscription, measurement, request, $timeout) {
       var self = this
       $scope.points = []
       $scope.pointsFiltered = []
@@ -156,9 +156,12 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
       $scope.sortColumn = 'name'
       $scope.reverse = false
 
-      var navId = $routeParams.navId,
-          depth = rest.queryParameterFromArrayOrString( 'depth', $routeParams.depth ),
-          equipmentIdsQueryParams = rest.queryParameterFromArrayOrString( 'equipmentIds', $routeParams.equipmentIds)
+      var navId,
+          //navId = $stateParams.navId,
+          microgridId = $stateParams.microgrid,
+          navigationElement = $stateParams.navigationElement,
+          depth = $stateParams.navigationElement && $stateParams.navigationElement.children && $stateParams.navigationElement.children.length > 0 ? rest.queryParameterFromArrayOrString( 'depth', '9999' ) : '',
+          equipmentIdsQueryParams = rest.queryParameterFromArrayOrString( 'equipmentIds', $stateParams.id)
 
       function findPoint( id ) {
         var index = findPointIndex( id)
@@ -359,7 +362,7 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
 
 
       function notifyWhenEquipmentNamesAreAvailable( equipmentId) {
-        $scope.equipmentName = nameFromEquipmentIds( $routeParams.equipmentIds) + ' '
+        $scope.equipmentName = nameFromEquipmentIds( $stateParams.equipmentIds) + ' '
       }
 
       function nameFromEquipmentIds( equipmentIds) {
@@ -455,7 +458,7 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
         if( equipmentIdsQueryParams.length > 0) {
           url += delimeter + equipmentIdsQueryParams
           delimeter = '&'
-          $scope.equipmentName = nameFromEquipmentIds( $routeParams.equipmentIds) + ' '
+          $scope.equipmentName = nameFromEquipmentIds( $stateParams.equipmentIds) + ' '
         }
         if( depth.length > 0)
           url += delimeter + depth

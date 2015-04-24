@@ -319,6 +319,12 @@ angular.module('greenbus.views.measurementValue', []).
             var input = element.find( 'input')
             if( input && input.length > 0) {
               input[0].select()
+              //if( input[0].selectionStart !== 0)
+              //  input[0].setSelectionRange( 0, 9999)
+              //if( input[0].hasOwnProperty('selectionStart')) {
+              //  if( input[0].selectionStart !== 0)
+              //    input[0].selectionStart = 0
+              //}
               focusedElement = input[0];
             }
           }

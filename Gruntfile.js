@@ -131,7 +131,8 @@ module.exports = function(grunt) {
       bowerassets: {
         files: [{
           expand: true,
-          src: ['moment/moment.js'],
+          flatten: true,
+          src: ['moment/moment.js','angular-ui-router/release/angular-ui-router.min.js'],
           cwd: 'bower_components',
           dest: 'dist/assets'
         }]

@@ -79,7 +79,8 @@ describe('gb-measurements', function () {
       $provide.value('subscription', _subscription);
       $provide.value('request', mocks.request);
       $provide.value('navigation', {});
-      $provide.value('$routeParams', {}); // no $routeParams.navId, depth, or equipmentIds
+      //$provide.value('$routeParams', {}); // no $routeParams.navId, depth, or equipmentIds
+      $provide.value('$stateParams', {});
     });
 
   });

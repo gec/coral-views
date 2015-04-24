@@ -3,23 +3,38 @@ angular.module('greenbus.views.demo').controller('NavigationDemoCtrl', function 
 
   rest.whenGET( '/coral/menus/operator').
     respond([
-      { 'class': 'NavigationItemSource',
-        data: { 'label': 'Loading...', 'id': 'equipment', 'route': '#/someRoute', 'sourceUrl': '/models/1/equipment?depth=1&rootTypes=Root', 'insertLocation': 'REPLACE', 'selected': true, 'children': [
-            {'class': 'NavigationItemSource', data: { 'label': 'Equipment', 'id': 'equipment', 'route': '/measurements/equipment', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=1', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}},
-            {'class': 'NavigationItemSource', data: { 'label': 'Solar', 'id': 'solar', 'route': '/measurements/solar', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=0&childTypes=PV', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}},
-            {'class': 'NavigationItemSource', data: { 'label': 'Energy Storage', 'id': 'ceses', 'route': '/ceses/', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=0&childTypes=CES', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}},
-            {'class': 'NavigationItemSource', data: { 'label': 'Generator', 'id': 'generator', 'route': '/measurements/generator', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=0&childTypes=Generator', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}},
-            {'class': 'NavigationItemSource', data: { 'label': 'Load', 'id': 'load', 'route': '/measurements/load', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=0&childTypes=Load', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}}
+      {
+        'class': 'NavigationItemSource',
+        'data': { 'label': 'Loading...', 'state': 'microgrids', 'url': '/microgrids/$this', 'component': 'gb-measurements', 'componentType': 'COMPONENT', 'sourceUrl': '/models/1/equipment?depth=1&rootTypes=MicroGrid', 'insertLocation': 'REPLACE', 'selected': true, 'children': [
+            { 'class': 'NavigationItemSource', 'data': { 'label': 'Equipment', 'state': 'equipments', 'url': '/microgrids/$parent/equipments', 'component': 'gb-measurements', 'componentType': 'COMPONENT', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=1', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}},
+            { 'class': 'NavigationItemSource', 'data': { 'label': 'Solar', 'state': 'pvs', 'url': '/microgrids/$parent/pvs', 'component': 'gb-measurements', 'componentType': 'COMPONENT', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=0&childTypes=PV', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}},
+            { 'class': 'NavigationItemSource', 'data': { 'label': 'Energy Storage', 'state': 'esses', 'url': '/microgrids/$parent/esses/', 'component': 'gb-esses', 'componentType': 'COMPONENT', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=0&childTypes=ESS', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}},
+            { 'class': 'NavigationItemSource', 'data': { 'label': 'Generation', 'state': 'generations', 'url': '/microgrids/$parent/generations', 'component': 'gb-measurements', 'componentType': 'COMPONENT', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=0&childTypes=Generation', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}},
+            { 'class': 'NavigationItemSource', 'data': { 'label': 'Load', 'state': 'loads', 'url': '/microgrids/$parent/loads', 'component': 'gb-measurements', 'componentType': 'COMPONENT', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=0&childTypes=Load', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}}
           ]
         }
       },
-      {'class': 'NavigationItem', data: { 'label': 'Endpoints', 'id': 'endpoints', 'route': '/endpoints', 'selected': false, 'children': []}},
-      {'class': 'NavigationItem', data: { 'label': 'Events', 'id': 'events', 'route': '/events', 'selected': false, 'children': []}},
-      {'class': 'NavigationItem', data: { 'label': 'Alarms', 'id': 'alarms', 'route': '/alarms', 'selected': false, 'children': []}}
+      { 'class': 'NavigationItem', 'data': { 'label': 'Endpoints', 'state': 'endpoints', 'url': '/endpoints', 'component': 'gb-endpoints', 'componentType': 'COMPONENT', 'selected': false, 'children': []}},
+      { 'class': 'NavigationItem', 'data': { 'label': 'Events', 'state': 'events', 'url': '/events', 'component': '<gb-events limit="40"/>', 'componentType': 'TEMPLATE', 'selected': false, 'children': []}},
+      { 'class': 'NavigationItem', 'data': { 'label': 'Alarms', 'state': 'alarms', 'url': '/alarms', 'component': '<gb-alarms limit="40"/>', 'componentType': 'TEMPLATE', 'selected': false, 'children': []}}
+
+      //{ 'class': 'NavigationItemSource',
+      //  data: { 'label': 'Loading...', 'id': 'equipment', 'route': '#/someRoute', 'sourceUrl': '/models/1/equipment?depth=1&rootTypes=Root', 'insertLocation': 'REPLACE', 'selected': true, 'children': [
+      //      {'class': 'NavigationItemSource', data: { 'label': 'Equipment', 'id': 'equipment', 'route': '/measurements/equipment', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=1', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}},
+      //      {'class': 'NavigationItemSource', data: { 'label': 'Solar', 'id': 'solar', 'route': '/measurements/solar', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=0&childTypes=PV', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}},
+      //      {'class': 'NavigationItemSource', data: { 'label': 'Energy Storage', 'id': 'ceses', 'route': '/ceses/', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=0&childTypes=CES', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}},
+      //      {'class': 'NavigationItemSource', data: { 'label': 'Generator', 'id': 'generator', 'route': '/measurements/generator', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=0&childTypes=Generator', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}},
+      //      {'class': 'NavigationItemSource', data: { 'label': 'Load', 'id': 'load', 'route': '/measurements/load', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=0&childTypes=Load', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}}
+      //    ]
+      //  }
+      //},
+      //{'class': 'NavigationItem', data: { 'label': 'Endpoints', 'id': 'endpoints', 'route': '/endpoints', 'selected': false, 'children': []}},
+      //{'class': 'NavigationItem', data: { 'label': 'Events', 'id': 'events', 'route': '/events', 'selected': false, 'children': []}},
+      //{'class': 'NavigationItem', data: { 'label': 'Alarms', 'id': 'alarms', 'route': '/alarms', 'selected': false, 'children': []}}
     ])
 
 
-  rest.whenGET( '/models/1/equipment?depth=1&rootTypes=Root').
+  rest.whenGET( '/models/1/equipment?depth=1&rootTypes=MicroGrid').
     respond([
       {'entity': {'name': 'Eugene', 'id': 'a6be3d8e-7862-4ff8-b096-4c87f2939bd0', 'types': ['Root', 'MicroGrid', 'EquipmentGroup']}, 'children': []}
     ])

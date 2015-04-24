@@ -82,35 +82,45 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
 
       // Types: (Microgrid, Root), (EquipmentGroup, Equipment), (Equipment, Breaker)
       var containerType = getContainerType( entity)
-      var route = null
-      switch( containerType) {
-        case ContainerType.MicroGrid:
-          route = '/measurements?equipmentIds=' + entity.id + '&depth=9999'
-          break;
-        case ContainerType.EquipmentGroup:
-          route = '/measurements?equipmentIds=' + entity.id + '&depth=9999'
-          break;
-        case ContainerType.EquipmentLeaf:
-          route = '/measurements?equipmentIds=' + entity.id
-          break;
-        case ContainerType.Sourced:
-          break;
-        default:
-      }
+      var url = null
+      //switch( containerType) {
+      //  case ContainerType.MicroGrid:
+      //    url = '/measurements?equipmentIds=' + entity.id + '&depth=9999'
+      //    break;
+      //  case ContainerType.EquipmentGroup:
+      //    url = '/measurements?equipmentIds=' + entity.id + '&depth=9999'
+      //    break;
+      //  case ContainerType.EquipmentLeaf:
+      //    url = '/measurements?equipmentIds=' + entity.id
+      //    break;
+      //  case ContainerType.Sourced:
+      //    break;
+      //  default:
+      //}
 
-      var name = entity.name
+      var microgridId,
+          shortName = entity.name,
+          name = entity.name
+
+
       if( entity.parentName)
-        name = stripParentName( name, entity.parentName)
+        shortName = stripParentName( name, entity.parentName)
       else if( parent)
-        name = stripParentName( name, parent.parentName)
+        shortName = stripParentName( name, parent.parentName)
+
+      if( parent && parent.microgridId)
+        microgridId = parent.microgridId
 
       return {
-        label: name,
+        microgrid: microgridId,
+        name: name,
+        entity: entity,
+        label: shortName,
         id: entity.id,
         type: 'item',
         types: entity.types,
         containerType: containerType,
-        route: route,
+        //url: url,
         children: entityWithChildren.children ? entityChildrenListToTreeNodes( entityWithChildren.children, entity) : []
       }
     }
@@ -119,7 +129,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
       entityWithChildrenList.forEach( function( entityWithChildren) {
         var treeNode = entityToTreeNode( entityWithChildren, parent)
         ra.push( treeNode)
-        equipmentIdToTreeNodeCache.put( treeNode.id, treeNode)
+        equipmentIdToTreeNodeCache.put( treeNode.state, treeNode)
       })
       return ra
     }
@@ -127,7 +137,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
     function cacheNavItems( items) {
       items.forEach( function( item) {
         if( item.class === 'NavigationItem' || item.class === 'NavigationItemSource')
-          menuIdToTreeNodeCache.put( item.id, item)
+          menuIdToTreeNodeCache.put( item.state, item)
         if( item.children.length > 0)
           cacheNavItems( item.children)
       })
@@ -190,7 +200,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
 
       getNavTree: function( url, name, scope, successListener) {
         rest.get( url, name, scope, function(data) {
-          // example: [ {class:'NavigationItem', data: {label:Dashboard, id:dashboard, route:#/dashboard, selected:false, children:[]}}, ...]
+          // example: [ {class:'NavigationItem', data: {label:Dashboard, state:dashboard, url:#/dashboard, selected:false, children:[]}}, ...]
           flattenNavigationElements( data)
           cacheNavItems( data)
           if( successListener)
@@ -207,12 +217,12 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
     $scope.sessionMenuItems = []
     $scope.application = {
         label: 'loading...',
-        route: ''
+        url: ''
     }
     $scope.userName = $cookies.userName
 
     $scope.getActiveClass = function( item) {
-        return ( $location.absUrl().indexOf( item.route) >= 0) ? 'active' : ''
+        return ( $location.absUrl().indexOf( item.url) >= 0) ? 'active' : ''
     }
 
     /**
@@ -240,7 +250,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
     return rest.get( $attrs.href, 'data', $scope, onSuccess)
   }]).
   directive('navBarTop', function(){
-    // <nav-bar-top route='/menus/admin'
+    // <nav-bar-top url='/menus/admin'
     return {
       restrict: 'E', // Element name
       // This HTML will replace the alarmBanner directive.
@@ -259,6 +269,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
         switch( item.class) {
           case 'NavigationDivider': return 'divider'
           case 'NavigationHeader': return 'nav-header'
+          case 'NavigationItemToPage': return ''
           case 'NavigationItem': return ''
           case 'NavigationItemSource': return ''
           default: return ''
@@ -280,7 +291,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
     }
   }).
 
-  controller('NavTreeController', ['$scope', '$attrs', '$location', '$cookies', 'rest', 'navigation', function( $scope, $attrs, $location, $cookies, rest, navigation) {
+  controller('NavTreeController', ['$scope', '$attrs', '$location', '$state', '$cookies', 'rest', 'navigation', function( $scope, $attrs, $location, $state, $cookies, rest, navigation) {
 
     $scope.navTree = [
         {
@@ -315,18 +326,40 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
     ]
 
     $scope.menuSelect = function( branch) {
-        console.log( 'navTreeController.menuSelect ' + branch.label + ', route=' + branch.route)
-        var url = branch.route
-        if( branch.sourceUrl)
-            url = url + '?sourceUrl=' + encodeURIComponent(branch.sourceUrl)
-        $location.url( url)
+      console.log( 'navTreeController.menuSelect ' + branch.label + ', state=' + branch.state + ', url=' + branch.url)
+
+      var params = {
+        navigationElement: branch,
+        microgrid: branch.microgridId,
+        name: branch.name,      // full entity name
+        shortName: branch.label,
+        entity: branch.entity,
+        id: branch.id  // same as entity.id
+      }
+      if( branch.sourceUrl)
+        params.sourceUrl = branch.sourceUrl
+
+      $state.go( branch.state, params)
+
+      //var url = branch.url
+      //if( branch.sourceUrl)
+      //    url = url + '?sourceUrl=' + encodeURIComponent(branch.sourceUrl)
+      //$location.url( url)
     }
 
-    function loadTreeNodesFromSource( parentTree, index, child) {
+    function populateChildrenUrlsFromParent( parent, children) {
+      children.forEach( function( child) {
+        child.url = parent.url + '/' + child.id
+        child.microgridId = parent.microgridId
+      })
+    }
+
+    function loadTreeNodesFromSource( parentTree, index, child, selected) {
         navigation.getTreeNodes( child.sourceUrl, $scope, child, function( newTreeNodes) {
             switch( child.insertLocation) {
                 case 'CHILDREN':
                     // Insert the resultant children before any existing static children.
+                    populateChildrenUrlsFromParent( child, newTreeNodes)
                     child.children = newTreeNodes.concat( child.children)
                     break;
                 case 'REPLACE':
@@ -335,6 +368,8 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
                 default:
                     console.error( 'navTreeController.loadTreeNodesFromSource.getTreeNodes Unknown insertLocation: ' + child.insertLocation)
             }
+            if( selected)
+              $scope.menuSelect( child)
         })
 
     }
@@ -373,12 +408,17 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
      */
     function replaceTreeNodeAtIndexAndPreserveChildren( parentTree, index, newTreeNodes) {
         var i,
-            oldChildren = parentTree[index].children
+            oldParent = parentTree[index],
+            oldChildren = oldParent.children
         // Remove the child we're replacing.
         parentTree.splice( index, 1)
+
         for( i=newTreeNodes.length-1; i >= 0; i-- ) {
-            var node = newTreeNodes[i]
-            parentTree.splice( index, 0, node)
+            var newParent = newTreeNodes[i]
+            newParent.url = oldParent.url.replace( '$this', newParent.id)
+            newParent.state = oldParent.state
+            newParent.microgridId = newParent.id
+            parentTree.splice( index, 0, newParent)
             // For each new child that we're adding, replicate the old children.
             // Replace $parent in the sourceUrl with its current parent.
             if( oldChildren && oldChildren.length > 0) {
@@ -386,28 +426,72 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
                 for( i2 = 0; i2 < oldChildren.length; i2++) {
                     var child = safeCopy( oldChildren[i2] ),
                         sourceUrl = child.sourceUrl
-                    child.id = child.id + '.' + node.id
-                    child.route = child.route + '.' + node.id;
-                    child.parentName = node.label
+                    //child.state = child.state + '.' + node.id
+                    //child.url = child.url + '.' + node.id;
+                    child.parentName = newParent.label
+                    child.parentId = newParent.id
+                    child.micrigridId = newParent.microgridId
+                    child.state = newParent.state + '.' + child.state
+                    child.url = child.url.replace( '$parent', newParent.id)
                     // The child is a copy. We need to put it in the cache.
                     // TODO: We need better coordination with navigation. This works, but I think it's a kludge
                     // TODO: We didn't remove the old treeNode from the cache. It might even have a listener that will fire.
-                    navigation.putTreeNodeByMenuId( child.id, child)
-                    node.children.push( child)
+                    navigation.putTreeNodeByMenuId( child.state, child)
+                    newParent.children.push( child)
                     if( sourceUrl) {
                         if( sourceUrl.indexOf( '$parent'))
-                            child.sourceUrl = sourceUrl.replace( '$parent', node.id)
-                        loadTreeNodesFromSource( node.children, node.children.length-1, child)
+                            child.sourceUrl = sourceUrl.replace( '$parent', newParent.id)
+                        loadTreeNodesFromSource( newParent.children, newParent.children.length-1, child)
                     }
                 }
             }
         }
     }
 
-    function getNavTreeSuccess( data) {
-      data.forEach( function(node, index) {
+    /**
+     * Breadth-first search of first menu item where selected = true.
+     * If none found, return undefined. This means the designer doesn't want a menu item selected at
+     * startup.
+     *
+     * @param navigationElements The array of Navigation Elements.
+     * @returns The first NavigationElement where selected is true; otherwise return undefined.
+     */
+    function findFirstSelected( navigationElements) {
+      var i, node, selected
+
+      if( ! navigationElements || navigationElements.children === 0)
+        return undefined
+
+      // Breadth first search
+      for( i = 0; i < navigationElements.length; i++) {
+        node = navigationElements[i]
+        if( node.selected) {
+          return node
+        }
+      }
+
+      // Deep search
+      for( i = 0; i < navigationElements.length; i++) {
+        node = navigationElements[i]
+        if( node.children && node.children.length > 0) {
+          selected = findFirstSelected( node.children)
+          if( selected)
+            return selected
+        }
+      }
+
+      return undefined
+    }
+
+    function getNavTreeSuccess( navigationElements) {
+      var selected = findFirstSelected( navigationElements)
+      navigationElements.forEach( function(node, index) {
         if( node.sourceUrl)
-          loadTreeNodesFromSource( data, index, node)
+          loadTreeNodesFromSource( navigationElements, index, node, node === selected)
+        else {
+          if( node === selected)
+            $scope.menuSelect( node)
+        }
       })
     }
 
