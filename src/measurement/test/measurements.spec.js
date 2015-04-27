@@ -4,7 +4,8 @@ describe('gb-measurements', function () {
   var element,
       measurements = [];
 
-  var points = [
+  var equipmentId = 'equipmentId',
+      points = [
         {'name': 'MG1.Device1.Status', 'id': 'Device1.Status', 'pointType': 'STATUS', 'types': ['UtilityBreakerStatus', 'BreakerStatus', 'Point'], 'unit': 'status', 'endpoint': 'someEndpointUuid' },
         {'name': 'MG1.Device0.Status', 'id': 'Device0.Status', 'pointType': 'STATUS', 'types': ['Imported', 'CustomerBreakerStatus', 'BreakerStatus', 'Point'], 'unit': 'status', 'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6'},
         {'name': 'MG1.Device2.kW_tot', 'id': 'Device2.kW_tot', 'pointType': 'ANALOG', 'types': ['Imported', 'DemandPower', 'Point'], 'unit': 'kW', 'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6' },
@@ -80,14 +81,22 @@ describe('gb-measurements', function () {
       $provide.value('request', mocks.request);
       $provide.value('navigation', {});
       //$provide.value('$routeParams', {}); // no $routeParams.navId, depth, or equipmentIds
-      $provide.value('$stateParams', {});
+      $provide.value('$stateParams', {
+        microgridId: 'abc',
+        navigationElement: {
+          id: equipmentId,
+          name: 'name',      // full entity name
+          shortName: 'shortName',
+          childIds: []
+        },
+      });
     });
 
   });
 
   beforeEach( inject(function( $injector) {
     $httpBackend = $injector.get('$httpBackend')
-    $httpBackend.whenGET( '/models/1/points').respond( points)
+    $httpBackend.whenGET( '/models/1/points?equipmentIds=' + equipmentId + '&depth=9999').respond( points)
     $httpBackend.whenPOST( '/models/1/points/commands').respond( commands)
   }))
 
