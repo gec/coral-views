@@ -56,8 +56,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
           EquipmentLeaf:  'EquipmentLeaf',
           Sourced:        'Sourced'   // Ex: 'All PVs'. Has sourceUrl, bit no data
         },
-        equipmentIdToTreeNodeCache = new NotifyCache(),
-        menuIdToTreeNodeCache      = new NotifyCache()
+        equipmentIdToTreeNodeCache = new NotifyCache()
 
 
     function getNavigationClass(entity) {
@@ -174,18 +173,9 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
       entityWithChildrenList.forEach(function(entityWithChildren) {
         var treeNode = entityToTreeNode(entityWithChildren, parent)
         ra.push(treeNode)
-        equipmentIdToTreeNodeCache.put(treeNode.state, treeNode)
+        equipmentIdToTreeNodeCache.put(treeNode.id, treeNode)
       })
       return ra
-    }
-
-    function cacheNavItems(items) {
-      items.forEach(function(item) {
-        if( item.class === 'NavigationItem' || item.class === 'NavigationItemSource' )
-          menuIdToTreeNodeCache.put(item.state, item)
-        if( item.children.length > 0 )
-          cacheNavItems(item.children)
-      })
     }
 
     /**
@@ -402,31 +392,12 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
        */
       getTreeNodeByEquipmentId: function(equipmentId, notifyWhenAvailable) { return equipmentIdToTreeNodeCache.get(equipmentId, notifyWhenAvailable)},
 
-      /**
-       * Get the tree node by menu Id. This returns immediately with the value
-       * or null if the menu item is not available yet. If not available,
-       * notifyWhenAvailable will be called when available.
-       *
-       * @param menuId The menu id to retrieve
-       * @param notifyWhenAvailable function( id, treeNode)
-       * @returns TreeNode if available, otherwise null.
-       */
-      getTreeNodeByMenuId: function(menuId, notifyWhenAvailable) { return menuIdToTreeNodeCache.get(menuId, notifyWhenAvailable)},
-
-      /**
-       *
-       * @param menuId The menu id to put
-       * @param treeNode
-       */
-      //putTreeNodeByMenuId: function(menuId, treeNode) { return menuIdToTreeNodeCache.put(menuId, treeNode)},
-
       getTreeNodes: getTreeNodes,
 
       getNavTree: function(url, name, scope, menuSelect) {
         rest.get(url, name, scope, function(navigationElements) {
           // example: [ {class:'NavigationItem', data: {label:Dashboard, state:dashboard, url:#/dashboard, selected:false, children:[]}}, ...]
           flattenNavigationElements(navigationElements)
-          cacheNavItems(navigationElements)
 
           var selected = findFirstSelected(navigationElements)
           if( selected) {

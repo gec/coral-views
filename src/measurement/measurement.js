@@ -373,30 +373,31 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
         return pointIds
       }
 
-
-      function notifyWhenEquipmentNamesAreAvailable(equipmentId) {
-        $scope.equipmentName = nameFromEquipmentIds($stateParams.equipmentIds) + ' '
-      }
-
-      function nameFromEquipmentIds(equipmentIds) {
-        var result = ''
-        if( equipmentIds ) {
-
-          if( angular.isArray(equipmentIds) ) {
-            equipmentIds.forEach(function(equipmentId, index) {
-              var treeNode = navigation.getTreeNodeByEquipmentId(equipmentId, notifyWhenEquipmentNamesAreAvailable)
-              if( index === 0 )
-                result += nameFromTreeNode(treeNode)
-              else
-                result += ', ' + nameFromTreeNode(treeNode)
-            })
-          } else {
-            var treeNode = navigation.getTreeNodeByEquipmentId(equipmentIds, notifyWhenEquipmentNamesAreAvailable)
-            result = nameFromTreeNode(treeNode)
-          }
-        }
-        return result
-      }
+      // Now getting name from NavTreeController.menuSelect and menuSelect waits until the name is loaded before calling us.
+      //
+      //function notifyWhenEquipmentNamesAreAvailable(equipmentId) {
+      //  $scope.equipmentName = nameFromEquipmentIds($stateParams.equipmentIds) + ' '
+      //}
+      //
+      //function nameFromEquipmentIds(equipmentIds) {
+      //  var result = ''
+      //  if( equipmentIds ) {
+      //
+      //    if( angular.isArray(equipmentIds) ) {
+      //      equipmentIds.forEach(function(equipmentId, index) {
+      //        var treeNode = navigation.getTreeNodeByEquipmentId(equipmentId, notifyWhenEquipmentNamesAreAvailable)
+      //        if( index === 0 )
+      //          result += nameFromTreeNode(treeNode)
+      //        else
+      //          result += ', ' + nameFromTreeNode(treeNode)
+      //      })
+      //    } else {
+      //      var treeNode = navigation.getTreeNodeByEquipmentId(equipmentIds, notifyWhenEquipmentNamesAreAvailable)
+      //      result = nameFromTreeNode(treeNode)
+      //    }
+      //  }
+      //  return result
+      //}
 
       // commandType: CONTROL, SETPOINT_INT, SETPOINT_DOUBLE, SETPOINT_STRING
       var exampleControls = [
@@ -454,21 +455,10 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
 
       }
 
-      // 'NE_City.Big_Hotel.DR2_cntl'
-      // 'NE_City.Big_Hotel.DR3_cntl'
-
-      //if( navId ) {
-      //  // If treeNode exists, it's returned immediately. If it's still being loaded,
-      //  // navIdListener will be called when it's finally available.
-      //  //
-      //  var treeNode = navigation.getTreeNodeByMenuId(navId, navIdListener)
-      //  if( treeNode )
-      //    navIdListener(navId, treeNode)
-      //
-      //} else {
-
+      function getPointsAndSubscribeToMeasurements() {
         var delimeter = '?'
         var url = '/models/1/points'
+
         if( equipmentIdsQueryParams.length > 0 ) {
           url += delimeter + equipmentIdsQueryParams
           delimeter = '&'
@@ -491,8 +481,10 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
           subscribeToMeasurements(pointIds)
           getPointsCommands(pointIds)
         })
-      //}
 
+      }
+
+      getPointsAndSubscribeToMeasurements()
     }
   ]).
 
