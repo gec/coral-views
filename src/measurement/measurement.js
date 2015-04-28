@@ -158,7 +158,7 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
 
 
 
-      var navId, depth, equipmentIdsQueryParams,
+      var depth, equipmentIds, equipmentIdsQueryParams,
           //navId = $stateParams.navId,
           microgridId       = $stateParams.microgridId,
           navigationElement = $stateParams.navigationElement
@@ -168,8 +168,9 @@ angular.module('greenbus.views.measurement', ['greenbus.views.subscription', 'gr
       if( ! navigationElement)
         return
 
-      if( navigationElement.childIds.length > 0 ) {
-        equipmentIdsQueryParams = rest.queryParameterFromArrayOrString('equipmentIds', navigationElement.childIds)
+      if( navigationElement.equipmentChildren.length > 0 ) {
+        equipmentIds = navigationElement.equipmentChildren.map( function( child) { return child.id })
+        equipmentIdsQueryParams = rest.queryParameterFromArrayOrString('equipmentIds', equipmentIds)
       } else {
         equipmentIdsQueryParams = rest.queryParameterFromArrayOrString('equipmentIds', navigationElement.id)
       }

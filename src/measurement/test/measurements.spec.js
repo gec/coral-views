@@ -87,7 +87,7 @@ describe('gb-measurements', function () {
           id: equipmentId,
           name: 'name',      // full entity name
           shortName: 'shortName',
-          childIds: []
+          equipmentChildren: []
         },
       });
     });

@@ -21,7 +21,7 @@
 
 angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.views.navigation', 'greenbus.views.rest']).
   
-  controller( 'gbEssesController', ['$scope', '$filter', 'rest', 'measurement', '$location', function( $scope, $filter, rest, measurement, $location) {
+  controller( 'gbEssesController', ['$scope', '$filter', '$stateParams', 'rest', 'measurement', '$location', function( $scope, $filter, $stateParams, rest, measurement, $location) {
     var PT = {
           Point: 'Point',
           Power: 'OutputPower',
@@ -39,13 +39,29 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
         }
 
     $scope.ceses = []     // our mappings of data from the server
-    $scope.equipment = [] // from the server. TODO this should not be scope, but get assigns to scope.
     $scope.searchText = ''
     $scope.sortColumn = 'name'
     $scope.reverse = false
     var pointIdToInfoMap = {},
         searchArgs = $location.search(),
         sourceUrl = searchArgs.sourceUrl || null
+
+    var microgridId       = $stateParams.microgridId,
+        navigationElement = $stateParams.navigationElement
+
+    // Initialized from URL or menu click or both
+    //
+    if( ! navigationElement)
+      return
+
+    var equipment = navigationElement.equipmentChildren,
+        equipmentIds = [],
+        equipmentIdMap = {}
+    equipment.forEach( function( eq) {
+      equipmentIdMap[eq.id] = eq
+      equipmentIds.push( eq.id)
+    })
+
 
     var number = $filter('number')
     function formatNumberValue( value) {
@@ -197,22 +213,14 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
 
 
     // Called after get sourceUrl is successful
-    function getEquipmentListener( ) {
+    function getPointsForEquipmentAndSubscribeToMeasurements( ) {
       var cesIndex, pointsUrl,
           pointIds = [],
-          pointTypesQueryString = rest.queryParameterFromArrayOrString( 'pointTypes', POINT_TYPES),
-          equipmentIdMap = {},
-          equipmentIds = [],
-          equipmentIdsQueryString = ''
-
-      $scope.equipment.forEach( function( eq) {
-        equipmentIdMap[eq.id] = eq
-        equipmentIds.push( eq.id)
-      })
-      equipmentIdsQueryString = rest.queryParameterFromArrayOrString( 'equipmentIds', equipmentIds)
+          pointTypesQueryParams = rest.queryParameterFromArrayOrString( 'pointTypes', POINT_TYPES),
+          equipmentIdsQueryParams = rest.queryParameterFromArrayOrString('equipmentIds', equipmentIds)
 
 
-      pointsUrl = '/models/1/points?' + equipmentIdsQueryString + '&' + pointTypesQueryString
+      pointsUrl = '/models/1/points?' + equipmentIdsQueryParams + '&' + pointTypesQueryParams
       rest.get( pointsUrl, 'points', $scope, function( data) {
         var sampleData = {
           'e57170fd-2a13-4420-97ab-d1c0921cf60d': [
@@ -242,7 +250,7 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
             POINT_TYPES.forEach( function( typ) {
               point = getPointByType( points, typ)
               if( point) {
-                console.log( 'gbEssesController.getEquipmentListener point: name=' + point.name + ', types = ' + point.types)
+                console.log( 'gbEssesController.getPointsForEquipmentAndSubscribeToMeasurements point: name=' + point.name + ', types = ' + point.types)
                 pointIdToInfoMap[point.id] = {
                   'cesIndex': cesIndex,
                   'type': getInterestingType( point.types),
@@ -250,13 +258,13 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
                 }
                 pointIds.push( point.id)
               } else {
-                console.error( 'gbEssesController.getEquipmentListener  GET /models/n/points entity[' + eqId + '] does not have point with type ' + typ)
+                console.error( 'gbEssesController.getPointsForEquipmentAndSubscribeToMeasurements  GET /models/n/points entity[' + eqId + '] does not have point with type ' + typ)
               }
 
             })
             $scope.ceses.push( makeCes( equipmentIdMap[eqId]))
           } else {
-            console.error( 'gbEssesController.getEquipmentListener  GET /models/n/points did not return UUID=' + eqId)
+            console.error( 'gbEssesController.getPointsForEquipmentAndSubscribeToMeasurements  GET /models/n/points did not return UUID=' + eqId)
           }
         })
 
@@ -265,11 +273,12 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
 
     }
 
-    var eqTypes = rest.queryParameterFromArrayOrString( 'eqTypes', ['CES', 'DESS'])
-    var pointTypes = rest.queryParameterFromArrayOrString( 'pointTypes', POINT_TYPES)
-    var url = '/equipmentwithpointsbytype?' + eqTypes + '&' + pointTypes
-//    reef.get( url, 'equipment', $scope, $scope.getSuccessListener);
-    rest.get( sourceUrl, 'equipment', $scope, getEquipmentListener);
+    //var eqTypes = rest.queryParameterFromArrayOrString( 'eqTypes', ['ESS'])
+    //var pointTypes = rest.queryParameterFromArrayOrString( 'pointTypes', POINT_TYPES)
+    //var url = '/equipmentwithpointsbytype?' + eqTypes + '&' + pointTypes
+    //rest.get( sourceUrl, 'equipment', $scope, getPointsForEquipmentAndSubscribeToMeasurements);
+
+    getPointsForEquipmentAndSubscribeToMeasurements()
   }]).
 
 
