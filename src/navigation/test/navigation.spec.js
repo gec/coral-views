@@ -1,7 +1,23 @@
 describe('navigation', function () {
   var parentScope, scope, $httpBackend, replyMock, appsOperatorMenusLeft,
       alarmCount = 3,
-      alarms = []
+      alarms = [],
+      microgridsUrl = '/models/1/equipment?depth=1&rootTypes=MicroGrid',
+      microgrids = [
+        { id: 'microgrid-1', name: 'Microgrid1'},
+        { id: 'microgrid-2', name: 'Microgrid2'}
+      ],
+      microgridsReverse = microgrids.slice().reverse()
+
+  microgrids.forEach( function( mg) {
+    mg.urls = {
+      equipments: '/models/1/equipment/' + mg.id + '/descendants?depth=1',
+      pvs: '/models/1/equipment/' + mg.id + '/descendants?depth=0&childTypes=PV',
+      esses: '/models/1/equipment/' + mg.id + '/descendants?depth=0&childTypes=ESS',
+      generations: '/models/1/equipment/' + mg.id + '/descendants?depth=0&childTypes=Generation',
+      loads: '/models/1/equipment/' + mg.id + '/descendants?depth=0&childTypes=Load'
+    }
+  })
 
 
   var authToken = 'some auth token'
@@ -17,38 +33,45 @@ describe('navigation', function () {
       }
     }
 
+  function whenGETOneMicrogrid( mg) {
+
+    console.log( 'whenGETOneMicrogrid: ' + mg.urls.equipments)
+    $httpBackend.whenGET( mg.urls.equipments).
+      respond([
+        {'name': mg.name + '.ESS',      'id': mg.id + '-ESS',       'types': ['Equipment', 'ESS']},
+        {'name': mg.name + '.PCC_Util', 'id': mg.id + '-PCC-Util',  'types': ['Equipment', 'Breaker']},
+        {'name': mg.name + '.CHP',      'id': mg.id + '-CHP',       'types': ['Equipment', 'Generation', 'CHP']},
+        {'name': mg.name + '.PCC_Cust', 'id': mg.id + '-PCC-Cust',  'types': ['Equipment', 'Breaker']},
+        {'name': mg.name + '.PVUnit',   'id': mg.id + '-PVUnit',    'types': ['Equipment', 'Generation', 'PV']},
+        {'name': mg.name + '.Building', 'id': mg.id + '-Building',  'types': ['Equipment', 'Load', 'DemandResponse']},
+        {'name': mg.name + '.Grid',     'id': mg.id + '-Grid',      'types': ['Equipment', 'Grid', 'Substation']}
+      ])
+    $httpBackend.whenGET( mg.urls.pvs).
+      respond([
+        {'name': mg.name + '.PVUnit',   'id': mg.id + '-PVUnit',    'types': ['Equipment', 'Generation', 'PV']}
+      ])
+    $httpBackend.whenGET( mg.urls.esses).
+      respond([
+        {'name': mg.name + '.ESS',      'id': mg.id + '-ESS',       'types': ['Equipment', 'ESS']}
+      ])
+    $httpBackend.whenGET( mg.urls.generations).
+      respond([
+        {'name': mg.name + '.CHP',      'id': mg.id + '-CHP',       'types': ['Equipment', 'Generation', 'CHP']},
+        {'name': mg.name + '.PVUnit',   'id': mg.id + '-PVUnit',    'types': ['Equipment', 'Generation', 'PV']}
+      ])
+    $httpBackend.whenGET( mg.urls.loads).
+      respond([
+        {'name': mg.name + '.Building', 'id': mg.id + '-Building',  'types': ['Equipment', 'Load', 'DemandResponse']}
+      ])
+  }
   function whenGETFullModel() {
-    $httpBackend.whenGET( '/models/1/equipment?depth=1&rootTypes=MicroGrid').
-      respond([
-        {'entity': {'name': 'Microgrid1', 'id': 'a6be3d8e-7862-4ff8-b096-4c87f2939bd0', 'types': ['Root', 'MicroGrid', 'EquipmentGroup']}, 'children': []}
-      ])
-    $httpBackend.whenGET( '/models/1/equipment/a6be3d8e-7862-4ff8-b096-4c87f2939bd0/descendants?depth=1').
-      respond([
-        {'name': 'Microgrid1.ESS', 'id': '4e9a2bca-593d-491f-b8a4-1ed4ae2b6633', 'types': ['ESS', 'Imported', 'Equipment']},
-        {'name': 'Microgrid1.PCC_Util', 'id': '52f50614-ae5d-4a92-b7c3-4c5ab979d90a', 'types': ['Equipment', 'Breaker']},
-        {'name': 'Microgrid1.CHP', 'id': '60901f24-910e-422b-bc4b-04d5f8de3964', 'types': ['Generation', 'Equipment', 'Imported']},
-        {'name': 'Microgrid1.PCC_Cust', 'id': 'ac674796-686c-41e5-815a-fb897514f5ce', 'types': ['Imported', 'Equipment', 'Breaker']},
-        {'name': 'Microgrid1.PVUnit', 'id': 'c0a2e729-e5e8-4d54-9b89-8f9d3130d1b9', 'types': ['Equipment', 'PV', 'Generation','Imported']},
-        {'name': 'Microgrid1.Building', 'id': 'ec50507e-50d2-4705-a64c-328d3df48599', 'types': ['Load', 'DemandResponse', 'Equipment', 'Imported']},
-        {'name': 'Microgrid1.Grid', 'id': 'f42b850f-ceae-4809-9b84-c8e1dd072ca8', 'types': ['Grid', 'Substation', 'Equipment', 'Imported']}
-      ])
-    $httpBackend.whenGET( '/models/1/equipment/a6be3d8e-7862-4ff8-b096-4c87f2939bd0/descendants?depth=0&childTypes=PV').
-      respond([
-        {'name': 'Microgrid1.PVUnit', 'id': 'c0a2e729-e5e8-4d54-9b89-8f9d3130d1b9', 'types': ['Imported', 'PV', 'Equipment']}
-      ])
-    $httpBackend.whenGET( '/models/1/equipment/a6be3d8e-7862-4ff8-b096-4c87f2939bd0/descendants?depth=0&childTypes=ESS').
-      respond([
-        {'name': 'Microgrid1.ESS', 'id': '4e9a2bca-593d-491f-b8a4-1ed4ae2b6633', 'types': ['Imported', 'ESS', 'Equipment']}
-      ])
-    $httpBackend.whenGET( '/models/1/equipment/a6be3d8e-7862-4ff8-b096-4c87f2939bd0/descendants?depth=0&childTypes=Generation').
-      respond([
-        {'name': 'Microgrid1.CHP', 'id': '60901f24-910e-422b-bc4b-04d5f8de3964', 'types': ['Imported', 'Equipment', 'Generation']},
-        {'name': 'Microgrid1.PVUnit', 'id': 'c0a2e729-e5e8-4d54-9b89-8f9d3130d1b9', 'types': ['Equipment', 'PV', 'Generation','Imported']}
-      ])
-    $httpBackend.whenGET( '/models/1/equipment/a6be3d8e-7862-4ff8-b096-4c87f2939bd0/descendants?depth=0&childTypes=Load').
-      respond([
-        {'name': 'Microgrid1.Building', 'id': 'ec50507e-50d2-4705-a64c-328d3df48599', 'types': ['Imported', 'Equipment', 'DemandResponse', 'Load']}
-      ])
+    var microgridsResponse = microgrids.map( function( mg) {
+      return {'entity': {'name': mg.name, 'id': mg.id, 'types': ['Root', 'MicroGrid', 'EquipmentGroup']}, 'children': []}
+    })
+
+    $httpBackend.whenGET( microgridsUrl).respond(microgridsResponse)
+    // order matters. replaceTreeNodeAtIndexAndPreserveChildren inserts in reverse order.
+    microgridsReverse.forEach( function( mg) { whenGETOneMicrogrid( mg)})
   }
 
   beforeEach(module('greenbus.views.authentication'));
@@ -65,18 +88,18 @@ describe('navigation', function () {
     appsOperatorMenusLeft = [
       {
         'class': 'NavigationItemSource',
-        'data': { 'label': 'Loading...', 'state': 'microgrids.dashboard', 'url': '/microgrids/$this/dashboard', 'component': 'gb-measurements', 'componentType': 'COMPONENT', 'sourceUrl': '/models/1/equipment?depth=1&rootTypes=MicroGrid', 'insertLocation': 'REPLACE', 'selected': true, 'children': [
-          { 'class': 'NavigationItemSource', 'data': { 'label': 'Equipment', 'state': '.equipments', 'url': '/microgrids/$parent/equipments', 'component': 'gb-measurements', 'componentType': 'COMPONENT', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=1', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}},
-          { 'class': 'NavigationItemSource', 'data': { 'label': 'Solar', 'state': '.pvs', 'url': '/microgrids/$parent/pvs', 'component': 'gb-measurements', 'componentType': 'COMPONENT', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=0&childTypes=PV', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}},
-          { 'class': 'NavigationItemSource', 'data': { 'label': 'Energy Storage', 'state': '.esses', 'url': '/microgrids/$parent/esses/', 'component': 'gb-esses', 'componentType': 'COMPONENT', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=0&childTypes=ESS', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}},
-          { 'class': 'NavigationItemSource', 'data': { 'label': 'Generation', 'state': '.generations', 'url': '/microgrids/$parent/generations', 'component': 'gb-measurements', 'componentType': 'COMPONENT', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=0&childTypes=Generation', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}},
-          { 'class': 'NavigationItemSource', 'data': { 'label': 'Load', 'state': '.loads', 'url': '/microgrids/$parent/loads', 'component': 'gb-measurements', 'componentType': 'COMPONENT', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=0&childTypes=Load', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}}
+        'data': { 'label': 'Loading...', 'state': 'microgrids.dashboard', 'sourceUrl': '/models/1/equipment?depth=1&rootTypes=MicroGrid', 'insertLocation': 'REPLACE', 'selected': true, 'children': [
+          { 'class': 'NavigationItemSource', 'data': { 'label': 'Equipment',      'state': '.equipments',  'sourceUrl': '/models/1/equipment/$parent/descendants?depth=1', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}},
+          { 'class': 'NavigationItemSource', 'data': { 'label': 'Solar',          'state': '.pvs',         'sourceUrl': '/models/1/equipment/$parent/descendants?depth=0&childTypes=PV', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}},
+          { 'class': 'NavigationItemSource', 'data': { 'label': 'Energy Storage', 'state': '.esses',       'sourceUrl': '/models/1/equipment/$parent/descendants?depth=0&childTypes=ESS', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}},
+          { 'class': 'NavigationItemSource', 'data': { 'label': 'Generation',     'state': '.generations', 'sourceUrl': '/models/1/equipment/$parent/descendants?depth=0&childTypes=Generation', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}},
+          { 'class': 'NavigationItemSource', 'data': { 'label': 'Load',           'state': '.loads',       'sourceUrl': '/models/1/equipment/$parent/descendants?depth=0&childTypes=Load', 'insertLocation': 'CHILDREN', 'selected': false, 'children': []}}
         ]
         }
       },
-      { 'class': 'NavigationItem', 'data': { 'label': 'Endpoints', 'state': 'endpoints', 'url': '/endpoints', 'component': 'gb-endpoints', 'componentType': 'COMPONENT', 'selected': false, 'children': []}},
-      { 'class': 'NavigationItem', 'data': { 'label': 'Events', 'state': 'events', 'url': '/events', 'component': '<gb-events limit="40"/>', 'componentType': 'TEMPLATE', 'selected': false, 'children': []}},
-      { 'class': 'NavigationItem', 'data': { 'label': 'Alarms', 'state': 'alarms', 'url': '/alarms', 'component': '<gb-alarms limit="40"/>', 'componentType': 'TEMPLATE', 'selected': false, 'children': []}}
+      { 'class': 'NavigationItem', 'data': { 'label': 'Endpoints', 'state': 'endpoints', 'selected': false, 'children': []}},
+      { 'class': 'NavigationItem', 'data': { 'label': 'Events',    'state': 'events',    'selected': false, 'children': []}},
+      { 'class': 'NavigationItem', 'data': { 'label': 'Alarms',    'state': 'alarms',    'selected': false, 'children': []}}
     ]
   });
 
@@ -92,7 +115,7 @@ describe('navigation', function () {
 
 
   it('should get navigation elements, model entities, and populate tree menu.', inject( function ( navigation) {
-    var navTree, microgrid1, equipments, pvs, esses, generations, loads,
+    var navTree, microgrid1, microgrid2, equipments, pvs, esses, generations, loads,
         scope = {
           menuSelect: jasmine.createSpy('menuSelect'),
           $on: jasmine.createSpy('$on')
@@ -105,24 +128,28 @@ describe('navigation', function () {
     navigation.getNavTree( menuUrl, 'navTree', scope, scope.menuSelect)
     $httpBackend.verifyNoOutstandingExpectation();
 
-    $httpBackend.expectGET( '/models/1/equipment?depth=1&rootTypes=MicroGrid')
-    $httpBackend.expectGET( '/models/1/equipment/a6be3d8e-7862-4ff8-b096-4c87f2939bd0/descendants?depth=1')
-    $httpBackend.expectGET( '/models/1/equipment/a6be3d8e-7862-4ff8-b096-4c87f2939bd0/descendants?depth=0&childTypes=PV')
-    $httpBackend.expectGET( '/models/1/equipment/a6be3d8e-7862-4ff8-b096-4c87f2939bd0/descendants?depth=0&childTypes=ESS')
-    $httpBackend.expectGET( '/models/1/equipment/a6be3d8e-7862-4ff8-b096-4c87f2939bd0/descendants?depth=0&childTypes=Generation')
-    $httpBackend.expectGET( '/models/1/equipment/a6be3d8e-7862-4ff8-b096-4c87f2939bd0/descendants?depth=0&childTypes=Load')
+    $httpBackend.expectGET( microgridsUrl)
+    microgridsReverse.forEach( function( mg) {
+      $httpBackend.expectGET( mg.urls.equipments)
+      $httpBackend.expectGET( mg.urls.pvs)
+      $httpBackend.expectGET( mg.urls.esses)
+      $httpBackend.expectGET( mg.urls.generations)
+      $httpBackend.expectGET( mg.urls.loads)
+    })
     $httpBackend.flush()
     $httpBackend.verifyNoOutstandingExpectation();
     $httpBackend.verifyNoOutstandingRequest();
 
     navTree = scope.navTree
-    expect( navTree.length).toBe( 4)
-    expect( navTree[0].label).toBe( 'Microgrid1')
-    expect( navTree[1].label).toBe( 'Endpoints')
-    expect( navTree[2].label).toBe( 'Events')
-    expect( navTree[3].label).toBe( 'Alarms')
+    expect( navTree.length).toBe( 5)
+    expect( navTree[0].label).toBe( microgrids[0].name)
+    expect( navTree[1].label).toBe( microgrids[1].name)
+    expect( navTree[2].label).toBe( 'Endpoints')
+    expect( navTree[3].label).toBe( 'Events')
+    expect( navTree[4].label).toBe( 'Alarms')
 
     microgrid1 = navTree[0]
+    microgrid2 = navTree[1]
     expect( microgrid1.children.length).toBe( 5)
     expect( microgrid1.state).toBe( 'microgrids.dashboard')
 

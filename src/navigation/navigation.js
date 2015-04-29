@@ -272,6 +272,13 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
       // Append to any existing children
       parent.children = parent.children.concat(newChildren)
       parent.equipmentChildren = shallowCopyEquipmentChildren( parent)
+
+      parent.loading = false
+      if( parent.selectWhenLoaded) {
+        parent.selectWhenLoaded( parent);
+        delete parent.selectWhenLoaded;
+      }
+
     }
 
     function getParentStatePrefix( parentState) {
@@ -293,14 +300,16 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
     }
 
     /**
-     * Replace parentTree[index] with newTreeNodes, but copy any current children and insert them
-     * after the new tree's children.
+     * Generate newTreeNodes using parentTree[index] as a template.
+     * - Remove parentTree[index]
+     * - For each newTreeNode, insert at index and copy the removed templates children as childrent for newTreeNode.
      *
      * BEFORE:
      *
      *   loading...
-     *     All PVs
-     *     All Energy Storage
+     *     Equipment
+     *     Solar
+     *     Energy Storage
      *
      * AFTER:
      *
@@ -309,18 +318,19 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
      *       Brkr1
      *       PV1
      *       ...
-     *     All PVs
+     *     Solar
      *       PV1
      *       ...
-     *     All Energy Storage
+     *     Energy Storage
      *       ...
-     *
+     *   Microgrid2
+     *     ...
      *
      * @param parentTree
      * @param index
      * @param newTreeNodes
      */
-    function replaceTreeNodeAtIndexAndPreserveChildren(parentTree, index, newTreeNodes, scope) {
+    function generateNewTreeNodesAtIndexAndPreserveChildren(parentTree, index, newTreeNodes, scope) {
       var i,
           oldParent   = parentTree[index],
           oldChildren = oldParent.children
@@ -332,13 +342,8 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
             newParent = newTreeNodes[i]
         newParent.state = oldParent.state
         newParentStatePrefix = getParentStatePrefix( newParent.state)
-        if( oldParent.selectWhenLoaded) {
-          newParent.selectWhenLoaded = oldParent.selectWhenLoaded;
-          // The oldParent may be replaced with multiple entities. We just want to select the first one.
-          delete oldParent.selectWhenLoaded;
-        }
-        //newParent.microgridId = newParent.id  // already set in entityToTreeNode
         parentTree.splice(index, 0, newParent)
+
         // For each new child that we're adding, replicate the old children.
         // Replace $parent in the sourceUrl with its current parent.
         if( oldChildren && oldChildren.length > 0 ) {
@@ -363,6 +368,15 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
             }
           }
         }
+
+        // If the oldParent was marked selected and waiting until it was loaded; now we're loaded and we
+        // need to select one of these new menu items. We'll pick the first one (which is i === 0).
+        //
+        if( i === 0 && oldParent.selectWhenLoaded) {
+          oldParent.selectWhenLoaded( newParent);
+          delete oldParent.selectWhenLoaded; // just in case
+        }
+
       }
     }
 
@@ -375,7 +389,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
             insertTreeNodeChildren(child, newTreeNodes)
             break;
           case 'REPLACE':
-            replaceTreeNodeAtIndexAndPreserveChildren(parentTree, index, newTreeNodes, scope)
+            generateNewTreeNodesAtIndexAndPreserveChildren(parentTree, index, newTreeNodes, scope)
             // original child was replaced.
             child = parentTree[index]
             break;
@@ -383,11 +397,11 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
             console.error('navTreeController.loadTreeNodesFromSource.getTreeNodes Unknown insertLocation: ' + child.insertLocation)
         }
 
-        child.loading = false
-        if( child.selectWhenLoaded) {
-          child.selectWhenLoaded( child);
-          delete child.selectWhenLoaded;
-        }
+        //child.loading = false
+        //if( child.selectWhenLoaded) {
+        //  child.selectWhenLoaded( child);
+        //  delete child.selectWhenLoaded;
+        //}
       })
 
     }
