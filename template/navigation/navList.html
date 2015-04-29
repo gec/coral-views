@@ -1,6 +1,6 @@
 <ul class="nav nav-list">
     <li ng-repeat="item in navItems" ng-class="getClass(item)" ng-switch="item.type">
-        <a ng-switch-when="item" href="{{ item.route }}">{{ item.label }}</a>
+        <a ng-switch-when="item" href="{{ item.url }}">{{ item.label }}</a>
         <span ng-switch-when="header">{{ item.label }}</span>
     </li>
 </ul>

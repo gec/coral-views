@@ -8,20 +8,20 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" href="{{ application.route }}">{{ application.label }}</a>
+        <a class="navbar-brand" href="{{ application.url }}">{{ application.label }}</a>
     </div>
 
     <div class="collapse navbar-collapse" collapse="isCollapsed">
         <ul class="nav navbar-nav" ng-hide="loading">
             <li  ng-repeat="item in applicationMenuItems" ng-class="getActiveClass( item)">
-                <a href="{{ item.route }}">{{ item.label }}</a>
+                <a href="{{ item.url }}">{{ item.label }}</a>
             </li>
         </ul>
         <ul class="nav navbar-nav navbar-right" ng-hide="loading">
             <li class="dropdown" dropdown>
                 <a class="dropdown-toggle" dropdown-toggle href>Logged in as {{ userName }} <b class="caret"></b></a>
                 <ul class="dropdown-menu">
-                    <li ng-repeat="item in sessionMenuItems"><a href="{{ item.route }}">{{ item.label }}</a></li>
+                    <li ng-repeat="item in sessionMenuItems"><a href="{{ item.url }}">{{ item.label }}</a></li>
                 </ul>
             </li>
         </ul>
