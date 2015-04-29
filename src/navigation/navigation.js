@@ -269,11 +269,6 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
     }
 
     function insertTreeNodeChildren(parent, newChildren) {
-      newChildren.forEach(function(child) {
-        child.url = parent.url + '/' + child.id
-        //child.microgridId = parent.microgridId
-      })
-
       // Append to any existing children
       parent.children = parent.children.concat(newChildren)
       parent.equipmentChildren = shallowCopyEquipmentChildren( parent)
@@ -335,7 +330,6 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
       for( i = newTreeNodes.length - 1; i >= 0; i-- ) {
         var newParentStatePrefix,
             newParent = newTreeNodes[i]
-        newParent.url = oldParent.url.replace('$this', newParent.id)
         newParent.state = oldParent.state
         newParentStatePrefix = getParentStatePrefix( newParent.state)
         if( oldParent.selectWhenLoaded) {
@@ -353,12 +347,10 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
             var child     = safeCopy(oldChildren[i2]),
                 sourceUrl = child.sourceUrl
             //child.state = child.state + '.' + node.id
-            //child.url = child.url + '.' + node.id;
             child.parentName = newParent.label
             child.parentId = newParent.id
             child.microgridId = newParent.microgridId
             child.state = getNestedChildState( newParentStatePrefix, child.state)
-            child.url = child.url.replace('$parent', newParent.id)
             // The child is a copy. We need to put it in the cache.
             // TODO: We need better coordination with  This works, but I think it's a kludge
             // TODO: We didn't remove the old treeNode from the cache. It might even have a listener that will fire.
@@ -579,10 +571,10 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
     ]
 
     $scope.menuSelect = function(branch) {
-      console.log('NavTreeController.menuSelect ' + branch.label + ', state=' + branch.state + ', class=' + branch.class + ', microgridId=' + branch.microgridId + ', url=' + branch.url)
+      console.log('NavTreeController.menuSelect ' + branch.label + ', state=' + branch.state + ', class=' + branch.class + ', microgridId=' + branch.microgridId)
 
       if( branch.loading ) {
-        console.errror('NavTreeController.menuSelect LOADING! ' + branch.label + ', state=' + branch.state + ', class=' + branch.class + ', microgridId=' + branch.microgridId + ', url=' + branch.url)
+        console.errror('NavTreeController.menuSelect LOADING! ' + branch.label + ', state=' + branch.state + ', class=' + branch.class + ', microgridId=' + branch.microgridId)
         $state.go('loading')
         return
       }
@@ -613,11 +605,6 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
         params.sourceUrl = branch.sourceUrl
 
       $state.go(branch.state, params, options)
-
-      //var url = branch.url
-      //if( branch.sourceUrl)
-      //    url = url + '?sourceUrl=' + encodeURIComponent(branch.sourceUrl)
-      //$location.url( url)
     }
 
 
