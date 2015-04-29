@@ -18,7 +18,33 @@
  * the License.
  */
 
-angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.rest']).
+angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'greenbus.views.rest']).
+
+/**
+ * Service for getting NavigationElements from server and populating NavTree menu items.
+ * Each level of the NavTree is loaded incrementally based on the NavigationElements and the
+ * current model.
+ *
+ * Goals:
+ *
+ * The view controller waits for the menu items to be loaded before being initialized. The
+ * NavigationElement, in turn, calls menuSelect when items are finished loading (to initialize
+ * the controller).
+ *
+ * When menu item is selected, the navigation controller needs to pass some information to the target controller.
+ *
+ * Params:
+ *
+ * id - If the menu item is Equipment, we pass the entity id (UUID); otherwise, it's undefined.
+ * equipmentChildren - Immediate children that are Equipment or EquipmentGroup.
+ *
+ * TODO: We don't need the microgridId. It's in the hierarchical ui-router state params.
+ *
+ * Usage Scenarios:
+ *
+ * navigation.getNavTree($attrs.href, 'navTree', $scope, $scope.menuSelect)
+ *
+ */
   factory('navigation', ['rest', function(rest) {   // was navigation
 
     function NotifyCache() {
@@ -114,11 +140,9 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
       if( entity.state)
         console.error( 'entityToTreeNode entity.state=' + entity.state)
 
-      //var url = null
       switch( containerType ) {
         case NavigationClass.MicroGrid:
           microgridId = entity.id
-          //url = '/measurements?equipmentIds=' + entity.id + '&depth=9999'
           break;
         case NavigationClass.EquipmentGroup:
           if( parent ) {
@@ -126,7 +150,6 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
               microgridId = parent.microgridId
             state = entity.state || ( parent.state + 'Id')
           }
-          //url = '/measurements?equipmentIds=' + entity.id + '&depth=9999'
           break;
         case NavigationClass.EquipmentLeaf:
           if( parent ) {
@@ -134,7 +157,6 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
               microgridId = parent.microgridId
             state = entity.state || ( parent.state + 'Id')
           }
-          //url = '/measurements?equipmentIds=' + entity.id
           break;
         case NavigationClass.Sourced:
           if( parent ) {
@@ -155,14 +177,12 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
       return {
         microgridId:   microgridId,
         name:          name,
-        //entity: entity,
         label:         shortName,
         id:            entity.id,
         type:          'item',
         types:         entity.types,
         class:         containerType,
         state:         state,
-        //url: url,
         equipmentChildren: shallowCopyEquipmentChildren(entity),
         children:      entityWithChildren.children ? entityChildrenListToTreeNodes(entityWithChildren.children, entity) : []
       }
@@ -224,6 +244,20 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
       }
 
       return undefined
+    }
+
+    function callMenuSelectOnFirstSelectedItem_or_callWhenLoaded( navigationElements, scope, menuSelect) {
+      var selected = findFirstSelected(navigationElements)
+      if( selected) {
+        if( selected.sourceUrl) {
+          // @param menuItem  The selected item. The original (current scoped variable 'selected') could have been replaced.
+          selected.selectWhenLoaded = function( menuItem) {
+            menuSelect.call( scope, menuItem)
+          }
+        } else {
+          menuSelect.call( scope, selected)
+        }
+      }
     }
 
     function safeCopy(o) {
@@ -373,7 +407,6 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
       })
     }
 
-
     /**
      * Public API
      */
@@ -394,30 +427,27 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
 
       getTreeNodes: getTreeNodes,
 
+      /**
+       * Main call to get NavigationElements and populate the navTree menu. After retieving the NavigationElements,
+       * start retrieving the model entities referenced by NavigationElements (via sourceUrl).
+       *
+       * @param url URL for retrieving the NavigationElements.
+       * @param name Store the navTree on scope.name
+       * @param scope The controller scope
+       * @param menuSelect Notify method to call when the NavigationElement marked as selected is finished loading.
+       */
       getNavTree: function(url, name, scope, menuSelect) {
         rest.get(url, name, scope, function(navigationElements) {
           // example: [ {class:'NavigationItem', data: {label:Dashboard, state:dashboard, url:#/dashboard, selected:false, children:[]}}, ...]
           flattenNavigationElements(navigationElements)
 
-          var selected = findFirstSelected(navigationElements)
-          if( selected) {
-            if( selected.sourceUrl) {
-              // Take a menu item in case 'selected' is being replaced.
-              selected.selectWhenLoaded = function( menuItem) {
-                menuSelect.call( scope, menuItem)
-              }
-            } else {
-              menuSelect.call( scope, selected)
-            }
-          }
+          callMenuSelectOnFirstSelectedItem_or_callWhenLoaded( navigationElements, scope, menuSelect)
 
           navigationElements.forEach(function(node, index) {
             if( node.sourceUrl )
               loadTreeNodesFromSource(navigationElements, index, node, scope)
           })
 
-          //if( successListener )
-          //  successListener(data)
         })
       }
     } // end return Public API
@@ -571,6 +601,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'greenbus.views.res
           }
         },
         options = {
+          // TODO: Added this when didn't fully understand hierarchical states. May not need reload.
           // reload controller even if the same state. All equipment under "Equipment" is state: microgrids.equipments.id.
           // The controller needs to be reloaded with the equipment ID.
           // Seems to have a bug. If it's NOT the same state, it reloads the current state.
