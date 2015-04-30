@@ -31,14 +31,21 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
  * NavigationElement, in turn, calls menuSelect when items are finished loading (to initialize
  * the controller).
  *
- * When menu item is selected, the navigation controller needs to pass some information to the target controller.
+ * When menu item is selected, the NavTreeController needs to pass some information to the target controller.
  *
  * Params:
  *
- * id - If the menu item is Equipment, we pass the entity id (UUID); otherwise, it's undefined.
- * equipmentChildren - Immediate children that are Equipment or EquipmentGroup.
- *
- * TODO: We don't need the microgridId. It's in the hierarchical ui-router state params.
+ * microgridId - If we're coming from the 'loading' state, there is no microgridId specified in the URL, so we need to
+ *               supply it. Once we have a nested state, the microgridId will be propagated by ui.router; unless,
+ *               of course, we are selecting a menu item under a different microgrid or no microgrid (ex: alarms).
+ * navigationElement: {
+ *   class:             NavigationElement class name or entity type. Examples: NavigationItem, MicroGrid, EquipmentLeaf
+ *   id:                Entity UUID or undefined
+ *   name:              Full entity name
+ *   shortName:         Visible menu tree label
+ *   equipmentChildren: Array of immediate children that are Equipment or EquipmentGroup.
+  *                     Each element is {id, name, shortName}
+ * }
  *
  * Usage Scenarios:
  *
@@ -593,6 +600,11 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
         return
       }
 
+      // For now, we always supply microgridId. This is needed with we're coming from the 'loading' (or 'alarms')
+      // state . It's not needed when we're going from one nested state to another (in the same microgrid).
+      // TODO: Perhaps we should check if the microgridId is already known and isn't changing and not supply it. This might help with microgrid view reloads.
+      //
+      //
       // NOTE: These params are only passed to the controller if each parameter is defined in
       // the target state's URL params or non-URL params. Ex: params: {navigationElement: null}
       //
