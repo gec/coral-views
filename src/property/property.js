@@ -65,10 +65,16 @@ angular.module('greenbus.views.property', [ 'ui.router', 'greenbus.views.rest', 
         return 0;
       }
 
+      function applyIsObject( property) {
+        property.isObject = angular.isObject( property.value)
+      }
+
       function updateOrAddProperty( property) {
         var currentProperty = findProperty( property.key)
-        if( currentProperty)
+        if( currentProperty) {
           currentProperty.value = property.value
+          applyIsObject( currentProperty)
+        }
         else {
           $scope.properties.push( property)
           $scope.properties.sort( compare)
@@ -92,6 +98,7 @@ angular.module('greenbus.views.property', [ 'ui.router', 'greenbus.views.rest', 
                 break
               case 'properties':
                 $scope.properties = data
+                $scope.properties.forEach( applyIsObject)
                 $scope.properties.sort( compare)
                 break
               default:

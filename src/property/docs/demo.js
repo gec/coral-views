@@ -25,7 +25,7 @@ angular.module('greenbus.views.demo').controller('PropertiesTableDemoCtrl', func
       'properties',
       [
         { key: 'key1', value: 'value1'},
-        { key: 'key2', value: 'value2'},
+        { key: 'key2', value: {a: 'a', b: 'b', c: [1, 2, 3]}},
         { key: 'key3', value: 'value3'}
       ]
     )

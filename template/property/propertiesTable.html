@@ -7,9 +7,10 @@
         </tr>
         </thead>
         <tbody>
-        <tr class="gb-property" ng-repeat="property in properties">
+        <tr class="gb-property" ng-repeat="property in properties" ng-switch on="property.isObject">
             <td>{{property.key}}</td>
-            <td>{{property.value}}</td>
+            <td ng-switch-when="true"><pre>{{property.value | json}}</pre></td>
+            <td ng-switch-default>{{property.value}}</td>
         </tr>
         </tbody>
     </table>
