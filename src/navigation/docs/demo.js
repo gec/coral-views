@@ -1,5 +1,6 @@
 angular.module('greenbus.views.demo').controller('NavigationDemoCtrl', function ($scope, rest) {
-  var eventId = 0
+  var eventId = 0,
+      microgridId1 = 'microgrid-id-1'
 
   rest.whenGET( '/apps/operator/menus/left').
     respond([
@@ -22,9 +23,9 @@ angular.module('greenbus.views.demo').controller('NavigationDemoCtrl', function 
 
   rest.whenGET( '/models/1/equipment?depth=1&rootTypes=MicroGrid').
     respond([
-      {'entity': {'name': 'Eugene', 'id': 'a6be3d8e-7862-4ff8-b096-4c87f2939bd0', 'types': ['Root', 'MicroGrid', 'EquipmentGroup']}, 'children': []}
+      {'entity': {'name': 'Eugene', 'id': microgridId1, 'types': ['Root', 'MicroGrid', 'EquipmentGroup']}, 'children': []}
     ])
-  rest.whenGET( '/models/1/equipment/a6be3d8e-7862-4ff8-b096-4c87f2939bd0/descendants?depth=1').
+  rest.whenGET( '/models/1/equipment/' + microgridId1 + '/descendants?depth=1').
     respond([
       {'name': 'Eugene.ESS', 'id': '4e9a2bca-593d-491f-b8a4-1ed4ae2b6633', 'types': ['ESS', 'Imported', 'Equipment']},
       {'name': 'Eugene.PCC_Util', 'id': '52f50614-ae5d-4a92-b7c3-4c5ab979d90a', 'types': ['Equipment', 'Breaker']},
@@ -34,20 +35,20 @@ angular.module('greenbus.views.demo').controller('NavigationDemoCtrl', function 
       {'name': 'Eugene.Building', 'id': 'ec50507e-50d2-4705-a64c-328d3df48599', 'types': ['Load', 'DemandResponse', 'Equipment', 'Imported']},
       {'name': 'Eugene.Grid', 'id': 'f42b850f-ceae-4809-9b84-c8e1dd072ca8', 'types': ['Grid', 'Substation', 'Equipment', 'Imported']}
     ])
-  rest.whenGET( '/models/1/equipment/a6be3d8e-7862-4ff8-b096-4c87f2939bd0/descendants?depth=0&childTypes=PV').
+  rest.whenGET( '/models/1/equipment/' + microgridId1 + '/descendants?depth=0&childTypes=PV').
     respond([
       {'name': 'Eugene.PVUnit', 'id': 'c0a2e729-e5e8-4d54-9b89-8f9d3130d1b9', 'types': ['Imported', 'PV', 'Equipment']}
     ])
-  rest.whenGET( '/models/1/equipment/a6be3d8e-7862-4ff8-b096-4c87f2939bd0/descendants?depth=0&childTypes=ESS').
+  rest.whenGET( '/models/1/equipment/' + microgridId1 + '/descendants?depth=0&childTypes=ESS').
     respond([
       {'name': 'Eugene.ESS', 'id': '4e9a2bca-593d-491f-b8a4-1ed4ae2b6633', 'types': ['Imported', 'ESS', 'Equipment']}
     ])
-  rest.whenGET( '/models/1/equipment/a6be3d8e-7862-4ff8-b096-4c87f2939bd0/descendants?depth=0&childTypes=Generation').
+  rest.whenGET( '/models/1/equipment/' + microgridId1 + '/descendants?depth=0&childTypes=Generation').
     respond([
       {'name': 'Eugene.CHP', 'id': '60901f24-910e-422b-bc4b-04d5f8de3964', 'types': ['Imported', 'Equipment', 'Generation']},
       {'name': 'Eugene.PVUnit', 'id': 'c0a2e729-e5e8-4d54-9b89-8f9d3130d1b9', 'types': ['Equipment', 'PV', 'Generation', 'Imported']}
     ])
-  rest.whenGET( '/models/1/equipment/a6be3d8e-7862-4ff8-b096-4c87f2939bd0/descendants?depth=0&childTypes=Load').
+  rest.whenGET( '/models/1/equipment/' + microgridId1 + '/descendants?depth=0&childTypes=Load').
     respond([
       {'name': 'Eugene.Building', 'id': 'ec50507e-50d2-4705-a64c-328d3df48599', 'types': ['Imported', 'Equipment', 'DemandResponse', 'Load']}
     ])

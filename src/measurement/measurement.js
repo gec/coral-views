@@ -143,8 +143,8 @@ angular.module('greenbus.views.measurement', [ 'ui.router', 'greenbus.views.subs
     }
   }]).
 
-  controller('gbMeasurementsController', ['$scope', '$window', '$stateParams', 'rest', 'navigation', 'subscription', 'measurement', 'request', '$timeout',
-    function($scope, $window, $stateParams, rest, navigation, subscription, measurement, request, $timeout) {
+  controller('gbMeasurementsController', ['$scope', '$stateParams', 'rest', 'navigation', 'subscription', 'measurement', 'request', '$timeout',
+    function($scope, $stateParams, rest, navigation, subscription, measurement, request, $timeout) {
       var self = this
       $scope.points = []
       $scope.pointsFiltered = []
