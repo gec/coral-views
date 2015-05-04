@@ -1,7 +1,7 @@
 angular.module('greenbus.views.demo').controller('PropertiesTableDemoCtrl', function ($scope, $stateParams, subscription) {
   var microgridId1 = 'microgrid-id-1'
 
-  $stateParams.microgridId = 'abc'
+  $stateParams.microgridId = microgridId1
   $stateParams.navigationElement = {
     id: microgridId1,
     name: 'MicgroGrid1',      // full entity name
@@ -24,9 +24,9 @@ angular.module('greenbus.views.demo').controller('PropertiesTableDemoCtrl', func
       subscriptionId,
       'properties',
       [
-        { key: 'key1', value: 'value1'},
-        { key: 'key2', value: {a: 'a', b: 'b', c: [1, 2, 3]}},
-        { key: 'key3', value: 'value3'}
+        { entityId: microgridId1, key: 'key1', value: 'value1'},
+        { entityId: microgridId1, key: 'key2', value: {a: 'a', b: 'b', c: [1, 2, 3]}},
+        { entityId: microgridId1, key: 'key3', value: 'value3'}
       ]
     )
   }
