@@ -617,20 +617,12 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
             shortName: branch.label,
             equipmentChildren: branch.equipmentChildren // children that are equipment
           }
-        },
-        options = {
-          // TODO: Added this when didn't fully understand hierarchical states. May not need reload.
-          // reload controller even if the same state. All equipment under "Equipment" is state: microgrids.equipments.id.
-          // The controller needs to be reloaded with the equipment ID.
-          // Seems to have a bug. If it's NOT the same state, it reloads the current state.
-          //
-          reload: $state.current.name === branch.state
         }
 
       if( branch.sourceUrl )
         params.sourceUrl = branch.sourceUrl
 
-      $state.go(branch.state, params, options)
+      $state.go(branch.state, params)
     }
 
 

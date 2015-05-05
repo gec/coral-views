@@ -50,6 +50,7 @@ describe('gb-measurements', function () {
 
   beforeEach(module('greenbus.views.authentication'));
   beforeEach(module('greenbus.views.rest'));
+  beforeEach(module('greenbus.views.equipment'));
   beforeEach(module('greenbus.views.subscription'));
   beforeEach(module('greenbus.views.request'));
   beforeEach(module('greenbus.views.selection'));
@@ -101,15 +102,18 @@ describe('gb-measurements', function () {
   }))
 
 
-  beforeEach(inject(function ($rootScope, _$compile_) {
+  beforeEach(inject(function ($rootScope, _$compile_, $q) {
 
     parentScope = $rootScope.$new();
     $compile = _$compile_;
 
-    element = angular.element( '<gb-measurements></gb-measurements>');
+    parentScope.pointsPromise = $q.when( {data: points})
+
+    element = angular.element( '<gb-measurements points-promise="pointsPromise"></gb-measurements>');
     $compile(element)(parentScope);
-    scope = element.isolateScope() || element.scope()
     parentScope.$digest();
+    // No isolateScope() until after parentScope.$digest(). Possibly because of points-promise parameter?
+    scope = element.isolateScope() || element.scope()
   }));
 
 
@@ -135,7 +139,7 @@ describe('gb-measurements', function () {
 
   it('should create multiple sorted points', inject( function () {
     $httpBackend.flush();
-    scope.$digest();
+    parentScope.$digest();
 
     var foundPointTrs = findPointTrs()
     expect( foundPointTrs.length).toEqual(5);
@@ -155,7 +159,7 @@ describe('gb-measurements', function () {
 
   it('should select/deselect all points when selectAll is clicked', inject( function () {
     $httpBackend.flush();
-    scope.$digest();
+    parentScope.$digest();
 
     var selectAll = element.find('*[ng-click="selectAll()"]')
     expect(selectAll).toBeDefined()
@@ -179,7 +183,7 @@ describe('gb-measurements', function () {
 
   it('should display selected buttons when some points are selected', inject( function () {
     $httpBackend.flush()
-    scope.$digest()
+    parentScope.$digest()
 
     var foundPointTrs = findPointTrs(),
         selectAll = element.find('*[ng-click="selectAll()"]'),

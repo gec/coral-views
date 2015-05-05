@@ -143,8 +143,8 @@ angular.module('greenbus.views.measurement', [ 'ui.router', 'greenbus.views.subs
     }
   }]).
 
-  controller('gbMeasurementsController', ['$scope', '$stateParams', 'rest', 'navigation', 'subscription', 'measurement', 'request', '$timeout',
-    function($scope, $stateParams, rest, navigation, subscription, measurement, request, $timeout) {
+  controller('gbMeasurementsController', ['$scope', '$stateParams', 'rest', 'navigation', 'subscription', 'measurement', 'equipment', 'request', '$timeout',
+    function($scope, $stateParams, rest, navigation, subscription, measurement, equipment, request, $timeout) {
       var self = this
       $scope.points = []
       $scope.pointsFiltered = []
@@ -159,7 +159,6 @@ angular.module('greenbus.views.measurement', [ 'ui.router', 'greenbus.views.subs
 
 
       var depth, equipmentIds, equipmentIdsQueryParams,
-          //navId = $stateParams.navId,
           microgridId       = $stateParams.microgridId,
           navigationElement = $stateParams.navigationElement
 
@@ -456,31 +455,45 @@ angular.module('greenbus.views.measurement', [ 'ui.router', 'greenbus.views.subs
       }
 
       function getPointsAndSubscribeToMeasurements() {
-        var delimeter = '?'
-        var url = '/models/1/points'
 
-        if( equipmentIdsQueryParams.length > 0 ) {
-          url += delimeter + equipmentIdsQueryParams
-          delimeter = '&'
-          $scope.equipmentName = navigationElement.name
-        }
-        if( depth.length > 0 )
-          url += delimeter + depth
+        //var delimeter = '?'
+        //var url = '/models/1/points'
+        //
+        //if( equipmentIdsQueryParams.length > 0 ) {
+        //  url += delimeter + equipmentIdsQueryParams
+        //  delimeter = '&'
+        //  $scope.equipmentName = navigationElement.name
+        //}
+        //if( depth.length > 0 )
+        //  url += delimeter + depth
+        //
+        //rest.get(url, 'points', $scope, function(data) {
+        //  // data is either a array of points or a map of equipmentId -> points[]
+        //  // If it's an object, convert it to a list of points.
+        //  if( angular.isObject(data) ) {
+        //    $scope.points = []
+        //    for( var equipmentId in data ) {
+        //      $scope.points = $scope.points.concat(data[equipmentId])
+        //    }
+        //  }
 
-        rest.get(url, 'points', $scope, function(data) {
-          // data is either a array of points or a map of equipmentId -> points[]
-          // If it's an object, convert it to a list of points.
-          if( angular.isObject(data) ) {
-            $scope.points = []
-            for( var equipmentId in data ) {
-              $scope.points = $scope.points.concat(data[equipmentId])
-            }
+        var promise = $scope.pointsPromise// || equipment.getCurrentPoints( true)
+        promise.then(
+          function( response) {
+            $scope.points = response.data
+            var pointIds = processPointsAndReturnPointIds($scope.points)
+            subscribeToMeasurements(pointIds)
+            getPointsCommands(pointIds)
+            return response // for the then() chain
+          },
+          function( error) {
+            return error
           }
-
-          var pointIds = processPointsAndReturnPointIds($scope.points)
-          subscribeToMeasurements(pointIds)
-          getPointsCommands(pointIds)
-        })
+        )
+          //var pointIds = processPointsAndReturnPointIds($scope.points)
+          //subscribeToMeasurements(pointIds)
+          //getPointsCommands(pointIds)
+        //})
 
       }
 
@@ -493,8 +506,9 @@ angular.module('greenbus.views.measurement', [ 'ui.router', 'greenbus.views.subs
       restrict:    'E', // Element name
       // The template HTML will replace the directive.
       replace:     true,
-      transclude:  true,
-      scope:       true,
+      scope:       {
+        pointsPromise: '=?'
+      },
       templateUrl: 'greenbus.views.template/measurement/measurements.html',
       controller:  'gbMeasurementsController'
     }

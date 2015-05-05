@@ -23,10 +23,92 @@
 /**
  * A piece of equipment may have multiple tabs including: Measurements, Properties (aka. key/value), Schematic, etc.
  */
-angular.module('greenbus.views.equipment', [ 'ui.router']).
+angular.module('greenbus.views.equipment', [ 'ui.router', 'greenbus.views.rest']).
 
-  controller('gbEquipmentController', ['$scope', '$stateParams',
-    function($scope, $stateParams) {
+  factory('equipment', [ '$stateParams', '$q', 'rest', function( $stateParams, $q, rest) {
+
+    var pointsCache = {
+      url: undefined,
+      data: undefined
+    }
+
+    function getEquipmentIdsQueryParams( navigationElement) {
+      if( ! navigationElement)
+        return ''
+
+      var equipmentIds, equipmentIdsQueryParams
+
+      if( navigationElement.equipmentChildren.length > 0 ) {
+        equipmentIds = navigationElement.equipmentChildren.map( function( child) { return child.id })
+        equipmentIdsQueryParams = rest.queryParameterFromArrayOrString('equipmentIds', equipmentIds)
+      } else {
+        equipmentIdsQueryParams = rest.queryParameterFromArrayOrString('equipmentIds', navigationElement.id)
+      }
+      return equipmentIdsQueryParams
+    }
+
+    /**
+     *
+     * @param collapsePointsToArray If true, poinrs will always be returned as a list.
+     * @returns {Promise}
+     */
+    function getCurrentPoints( collapsePointsToArray) {
+      var navigationElement = $stateParams.navigationElement
+
+      // Initialized from URL or menu click or both
+      //
+      if( ! navigationElement)
+        return $q.when( [])
+
+      var equipmentIdsQueryParams = getEquipmentIdsQueryParams( navigationElement),
+          depth = rest.queryParameterFromArrayOrString('depth', '9999')
+
+
+      var delimeter = '?'
+      var url = '/models/1/points'
+
+      if( equipmentIdsQueryParams.length > 0 ) {
+        url += delimeter + equipmentIdsQueryParams
+        delimeter = '&'
+      }
+      if( depth.length > 0 )
+        url += delimeter + depth
+
+      return rest.get(url).then(
+        function( response) {
+          var points = [],
+              data = response.data
+
+          // data is either a array of points or a map of equipmentId -> points[]
+          // If it's an object, convert it to a list of points.
+          if( collapsePointsToArray && angular.isObject(data) ) {
+            for( var equipmentId in data ) {
+              points = points.concat(data[equipmentId])
+            }
+          } else {
+            points = data
+          }
+          return {data: points}
+        },
+        function( error) {
+          return error
+        }
+
+      )
+
+    }
+
+
+    /**
+     * Public API
+     */
+    return {
+      getCurrentPoints: getCurrentPoints
+    }
+  }]).
+
+  controller('gbEquipmentController', ['$scope', '$stateParams', 'equipment',
+    function($scope, $stateParams, equipment) {
       var self = this,
           microgridId       = $stateParams.microgridId,
           navigationElement = $stateParams.navigationElement
@@ -42,13 +124,16 @@ angular.module('greenbus.views.equipment', [ 'ui.router']).
       if( ! navigationElement)
         return
 
-      $scope.shortName = navigationElement.shortName
+      $scope.name = navigationElement.name || navigationElement.shortName
 
       var onePieceOfEquipment = navigationElement.equipmentChildren.length === 0
       $scope.tabs = {
         measurements: true,
-        properties: onePieceOfEquipment
+        properties: onePieceOfEquipment,
+        points: true
       }
+
+      $scope.pointsPromise = equipment.getCurrentPoints( true)
     }
   ]).
 
