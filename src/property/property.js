@@ -39,6 +39,8 @@ angular.module('greenbus.views.property', [ 'ui.router', 'greenbus.views.rest', 
       if( ! navigationElement)
         return
 
+      addTypesToPropertiesList()
+
       var onePieceOfEquipment = navigationElement.equipmentChildren.length === 0
       if( !onePieceOfEquipment) {
         console.error( 'gbPropertiesTableController: more than one child: navigationElement.equipmentChildren.length = ' + navigationElement.equipmentChildren.length)
@@ -46,6 +48,14 @@ angular.module('greenbus.views.property', [ 'ui.router', 'greenbus.views.rest', 
       }
 
       equipmentId = navigationElement.id
+
+      function addTypesToPropertiesList() {
+        if( navigationElement.types)
+          $scope.properties.push( {
+            key: 'types',
+            value: navigationElement.types.join( ', ')
+          })
+      }
 
       function findProperty( property) {
         var i
@@ -98,6 +108,7 @@ angular.module('greenbus.views.property', [ 'ui.router', 'greenbus.views.rest', 
                 break
               case 'properties':
                 $scope.properties = data
+                addTypesToPropertiesList()
                 $scope.properties.forEach( applyIsObject)
                 $scope.properties.sort( compare)
                 break

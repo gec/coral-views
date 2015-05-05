@@ -613,6 +613,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
           navigationElement: {
             class:     branch.class,
             id:        branch.id,
+            types:     branch.types,
             name:      branch.name,      // full entity name
             shortName: branch.label,
             equipmentChildren: branch.equipmentChildren // children that are equipment
