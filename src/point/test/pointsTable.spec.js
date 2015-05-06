@@ -74,9 +74,9 @@ describe('gb-points-table', function () {
     return point.find('td').eq(tdIndex);
   }
   
-  it('should start with 0 points', inject( function () {
+  it('should get points from points-promise', inject( function () {
     var foundPoints = findPointRows()
-    expect( foundPoints.length).toEqual(0);
+    expect( foundPoints.length).toEqual(3);
   }));
   
   //it('should create one point', inject( function () {
