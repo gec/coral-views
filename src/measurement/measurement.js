@@ -20,7 +20,17 @@
  */
 
 
-angular.module('greenbus.views.measurement', [ 'ui.router', 'greenbus.views.subscription', 'greenbus.views.navigation', 'greenbus.views.rest', 'greenbus.views.request', 'greenbus.views.selection']).
+angular.module( 'greenbus.views.measurement',
+  [
+    'ui.router',
+    'greenbus.views.subscription',
+    'greenbus.views.navigation',
+    'greenbus.views.equipment',
+    'greenbus.views.rest',
+    'greenbus.views.request',
+    'greenbus.views.selection'
+  ]).
+
   factory('pointIdToMeasurementHistoryMap', function() {
     return {};
   }).

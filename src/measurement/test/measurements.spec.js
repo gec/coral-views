@@ -32,15 +32,9 @@ describe('gb-measurements', function () {
   var authToken = 'some auth token'
   var mocks = {
     authentication: {
-      isLoggedIn:   function() {
-        return true
-      },
-      getAuthToken: function() {
-        return authToken
-      },
-      getHttpHeaders: function() {
-        return {'Authorization': authToken}
-      }
+      isLoggedIn:   function() { return true },
+      getAuthToken: function() { return authToken },
+      getHttpHeaders: function() { return {'Authorization': authToken} }
     },
     request: {
       push: jasmine.createSpy('requestPush')
