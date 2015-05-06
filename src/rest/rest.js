@@ -207,11 +207,11 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
           // 500 Internal Server Error
           //
           if( failureListener )
-            failureListener(error.json, error.status, error.headers, error.config)
+            failureListener(error.data, error.status, error.headers, error.config)
           deferred.reject( error)
 
           if( error.status === 401 || error.status === 0 )
-            httpRequestError(error.json, error.status, error.headers, error.config)
+            httpRequestError(error.data, error.status, error.headers, error.config)
         }
       )
 
