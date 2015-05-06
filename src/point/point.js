@@ -23,10 +23,10 @@
 /**
  * A table of points for the current equipment in $stateParams.
  */
-angular.module('greenbus.views.point', [ 'ui.router', 'greenbus.views.rest']).
+angular.module('greenbus.views.point', [ 'ui.router', 'greenbus.views.equipment']).
 
-  controller('gbPointsTableController', ['$scope', '$stateParams', 'rest',
-    function($scope, $stateParams, rest, subscription) {
+  controller('gbPointsTableController', ['$scope', '$stateParams', 'equipment',
+    function($scope, $stateParams, equipment) {
       var self = this,
           microgridId       = $stateParams.microgridId,
           navigationElement = $stateParams.navigationElement
@@ -37,8 +37,8 @@ angular.module('greenbus.views.point', [ 'ui.router', 'greenbus.views.rest']).
       //
       if( ! navigationElement)
         return
-
-      $scope.points = $scope.pointsPromise.then(
+      var promise = $scope.pointsPromise || equipment.getCurrentPoints( true)
+      $scope.points = promise.then(
         function( response) {
           $scope.points = response.data
           return response // for the then() chain
