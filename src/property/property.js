@@ -57,14 +57,20 @@ angular.module('greenbus.views.property', [ 'ui.router', 'greenbus.views.rest', 
           })
       }
 
-      function findProperty( property) {
+      function findPropertyIndex( key) {
         var i
         for( i = 0; i < $scope.properties.length; i++) {
           var prop = $scope.properties[i]
-          if( properties.key === prop.key)
-            return prop
+          if( key === prop.key)
+            return i
         }
-        return undefined
+        return -1
+      }
+
+      function findProperty( key) {
+
+        var i = findPropertyIndex( key)
+        return i >= 0 ? $scope.properties[i] : undefined
       }
 
       function compare(a,b) {
@@ -79,15 +85,35 @@ angular.module('greenbus.views.property', [ 'ui.router', 'greenbus.views.rest', 
         property.isObject = angular.isObject( property.value)
       }
 
-      function updateOrAddProperty( property) {
-        var currentProperty = findProperty( property.key)
-        if( currentProperty) {
-          currentProperty.value = property.value
-          applyIsObject( currentProperty)
-        }
-        else {
-          $scope.properties.push( property)
-          $scope.properties.sort( compare)
+      function addProperty( property) {
+        $scope.properties.push( property)
+        $scope.properties.sort( compare)
+      }
+
+      function notifyProperty( notificationProperty) {
+        var i,
+            property = notificationProperty.value
+
+        switch( notificationProperty.operation) {
+          case 'ADDED':
+            addProperty( property)
+            break;
+          case 'MODIFIED':
+            var currentProperty = findProperty( property.key)
+            if( currentProperty) {
+              currentProperty.value = property.value
+              applyIsObject( currentProperty)
+            } else {
+              console.error( 'gbPropertiesTableController: notify MODIFIED, but can\'t find existing property key: "' + property.key + '"')
+              addProperty( property)
+            }
+            break;
+          case 'REMOVED':
+            i = findPropertyIndex( property.key)
+            if( i >= 0)
+              $scope.properties.splice(i,1)
+            else
+              console.error( 'gbPropertiesTableController: notify REMOVED, but can\'t find existing property key: "' + property.key + '"')
         }
       }
 
@@ -103,11 +129,11 @@ angular.module('greenbus.views.property', [ 'ui.router', 'greenbus.views.rest', 
           function( subscriptionId, type, data) {
 
             switch( type) {
-              case 'property':
-                updateOrAddProperty( data)
+              case 'notification.property':
+                notifyProperty( data)
                 break
               case 'properties':
-                $scope.properties = data
+                $scope.properties = data.slice()
                 addTypesToPropertiesList()
                 $scope.properties.forEach( applyIsObject)
                 $scope.properties.sort( compare)

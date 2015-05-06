@@ -66,7 +66,7 @@ describe('gb-properties-table', function () {
           name: 'name1',      // full entity name
           shortName: 'shortName1',
           equipmentChildren: []
-        },
+        }
       });
 
     });
@@ -108,24 +108,69 @@ describe('gb-properties-table', function () {
     expect( subscribeInstance.request ).toEqual( request)
   }));
 
-  it('should create one property', inject( function () {
-    subscribeInstance.onSuccess( subscribeInstance.id, 'property', properties[0])
-    scope.$digest();
-
-    var foundProperties = findPropertyRows()
-    expect( foundProperties.length).toEqual(1);
-
-    var property = foundProperties.eq(0)
-    expect( findTd( property, 0).text()).toBe( properties[0].key);
-    expect( findTd( property, 1).text()).toBe(properties[0].value.toString());
-  }));
-
-  it('should create multiple properties', inject( function () {
+  it('should have a table row for each property', inject( function () {
     subscribeInstance.onSuccess( subscribeInstance.id, 'properties', properties)
     scope.$digest();
     var foundProperties = findPropertyRows()
     expect( foundProperties.length).toEqual(3);
 
+  }));
+
+  it('should update existing property', inject( function () {
+    var notificationProperty = {
+      operation: 'MODIFIED',
+      value: angular.extend( {}, properties[0], { value: 'updated'})
+    }
+
+    subscribeInstance.onSuccess( subscribeInstance.id, 'properties', properties)
+    subscribeInstance.onSuccess( subscribeInstance.id, 'notification.property', notificationProperty)
+    scope.$digest();
+
+    var foundProperties = findPropertyRows()
+    expect( foundProperties.length).toEqual(3);
+
+    var property = foundProperties.eq(0)
+    expect( findTd( property, 0).text()).toBe( properties[0].key);
+    expect( findTd( property, 1).text()).toBe( 'updated');
+  }));
+
+  it('should add new property', inject( function () {
+    var newProperty = {
+          key: 'newby',      // note: key 'newby' will be sorted last
+          value: 'newValue'
+        },
+        notificationProperty = {
+          operation: 'ADDED',
+          value: newProperty
+        }
+
+    subscribeInstance.onSuccess( subscribeInstance.id, 'properties', properties)
+    subscribeInstance.onSuccess( subscribeInstance.id, 'notification.property', notificationProperty)
+    scope.$digest();
+
+    var foundProperties = findPropertyRows()
+    expect( foundProperties.length).toEqual(4);
+
+    var property = foundProperties.eq(3)
+    expect( findTd( property, 0).text()).toBe( newProperty.key);
+    expect( findTd( property, 1).text()).toBe( newProperty.value);
+  }));
+
+  it('should delete existing property', inject( function () {
+    var notificationProperty = {
+      operation: 'REMOVED',
+      value: properties[2]
+    }
+
+    subscribeInstance.onSuccess( subscribeInstance.id, 'properties', properties)
+    subscribeInstance.onSuccess( subscribeInstance.id, 'notification.property', notificationProperty)
+    scope.$digest();
+
+    var foundProperties = findPropertyRows()
+    expect( foundProperties.length).toEqual(2);
+
+    expect( findTd( foundProperties.eq(0), 0).text()).toBe( properties[0].key);
+    expect( findTd( foundProperties.eq(1), 0).text()).toBe( properties[1].key);
   }));
 
 });
