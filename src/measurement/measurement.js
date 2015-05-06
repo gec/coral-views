@@ -456,28 +456,7 @@ angular.module('greenbus.views.measurement', [ 'ui.router', 'greenbus.views.subs
 
       function getPointsAndSubscribeToMeasurements() {
 
-        //var delimeter = '?'
-        //var url = '/models/1/points'
-        //
-        //if( equipmentIdsQueryParams.length > 0 ) {
-        //  url += delimeter + equipmentIdsQueryParams
-        //  delimeter = '&'
-        //  $scope.equipmentName = navigationElement.name
-        //}
-        //if( depth.length > 0 )
-        //  url += delimeter + depth
-        //
-        //rest.get(url, 'points', $scope, function(data) {
-        //  // data is either a array of points or a map of equipmentId -> points[]
-        //  // If it's an object, convert it to a list of points.
-        //  if( angular.isObject(data) ) {
-        //    $scope.points = []
-        //    for( var equipmentId in data ) {
-        //      $scope.points = $scope.points.concat(data[equipmentId])
-        //    }
-        //  }
-
-        var promise = $scope.pointsPromise// || equipment.getCurrentPoints( true)
+        var promise = $scope.pointsPromise || equipment.getCurrentPoints( true)
         promise.then(
           function( response) {
             $scope.points = response.data
@@ -490,11 +469,6 @@ angular.module('greenbus.views.measurement', [ 'ui.router', 'greenbus.views.subs
             return error
           }
         )
-          //var pointIds = processPointsAndReturnPointIds($scope.points)
-          //subscribeToMeasurements(pointIds)
-          //getPointsCommands(pointIds)
-        //})
-
       }
 
       getPointsAndSubscribeToMeasurements()
