@@ -413,8 +413,21 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
 
     }
 
+    function compareEntityByName( a, b) { return a.name.localeCompare(b.name)}
+    function compareEntityWithChildrenByName( a, b) { return a.entity.name.localeCompare( b.entity.name)}
+
+    function sortEntityWithChildrenByName( entityWithChildrenList) {
+      if( entityWithChildrenList.length === 0)
+        return
+      if( entityWithChildrenList[0].hasOwnProperty( 'name'))
+        entityWithChildrenList.sort( compareEntityByName)
+      else
+        entityWithChildrenList.sort( compareEntityWithChildrenByName)
+    }
+
     function getTreeNodes(sourceUrl, scope, parent, successListener) {
       rest.get(sourceUrl, null, scope, function(entityWithChildrenList) {
+        sortEntityWithChildrenByName( entityWithChildrenList)
         var treeNodes = entityChildrenListToTreeNodes(entityWithChildrenList, parent)
         successListener(treeNodes)
       })

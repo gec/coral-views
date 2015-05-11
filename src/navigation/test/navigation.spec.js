@@ -187,6 +187,9 @@ describe('navigation', function () {
     expect( scope.menuSelect).toHaveBeenCalledWith( microgrid1)
     expect( scope.menuSelect.calls.count()).toBe( 1)
 
+    // Expect sorted
+    expect( equipments.equipmentChildren[0].name).toBe( microgrids[0].name + '.Building')
+
   }));
 
 });
