@@ -77,12 +77,9 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
 
 
     //var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket
-    var webSocket = null
-    var webSocketPendingTasks = []
-
-    var subscription = {
-      listeners: {}   // { subscriptionId: { message: listener, error: listener}, ...}
-    };
+    var webSocket = null,
+        webSocketPendingTasks = [],
+        subscriptionIdMap = {} // { subscriptionId: { message: listener, error: listener}, ...}
 
     /* Assign these WebSocket handlers to a newly created WebSocket */
     var wsHanders = {
@@ -137,7 +134,7 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
 
     function getListenerForMessage( message) {
       if( message.subscriptionId)
-        return subscription.listeners[ message.subscriptionId]
+        return subscriptionIdMap[ message.subscriptionId]
       else
         return null
     }
@@ -167,26 +164,27 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
 
     }
 
-    function saveSubscriptionOnScope( $scope, subscriptionId) {
-      if( ! $scope.__subscriptionIds)
-        $scope.__subscriptionIds = []
-      $scope.__subscriptionIds.push( subscriptionId)
+    function saveSubscriptionOnScope( scope, subscriptionId) {
+      if( ! scope.__subscriptionIds)
+        scope.__subscriptionIds = []
+      scope.__subscriptionIds.push( subscriptionId)
     }
 
-    function registerSubscriptionOnScope( $scope, subscriptionId) {
+    function registerSubscriptionOnScope( scope, subscriptionId) {
 
-      saveSubscriptionOnScope( $scope, subscriptionId);
+      saveSubscriptionOnScope( scope, subscriptionId);
 
       // Register for controller.$destroy event and kill any retry tasks.
-      // TODO save return value as unregister function. Could have multiples on one $scope.
-      $scope.$on( '$destroy', function( event) {
-        if( $scope.__subscriptionIds) {
-          console.log( 'subscription $destroy ' + $scope.__subscriptionIds.length);
-          $scope.__subscriptionIds.forEach( function( subscriptionId) {
+      // TODO save return value as unregister function. Could have multiples on one scope.
+      scope.$on( '$destroy', function( event) {
+        if( scope.__subscriptionIds) {
+          console.log( 'subscription $destroy ' + scope.__subscriptionIds.length);
+          scope.__subscriptionIds.forEach( function( subscriptionId) {
             unsubscribe( subscriptionId)
-            delete subscription.listeners[ subscriptionId]
+            if( subscriptionIdMap.hasOwnProperty( subscriptionId))
+              delete subscriptionIdMap[ subscriptionId];
           })
-          $scope.__subscriptionIds = []
+          scope.__subscriptionIds = []
         }
       });
 
@@ -195,8 +193,8 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
     function removeAllSubscriptions( error) {
       // save in temp in case a listener.error() tries to resubscribe
       var subscriptionId, listener,
-        temp = subscription.listeners
-      subscription.listeners = {}
+          temp = subscriptionIdMap
+      subscriptionIdMap = {}
       webSocketPendingTasks = []
       for( subscriptionId in temp) {
         listener = temp[subscriptionId]
@@ -242,16 +240,16 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
       return ws
     }
 
-    function pushPendingSubscription( subscriptionId, $scope, request, messageListener, errorListener) {
+    function pushPendingSubscription( subscriptionId, scope, request, messageListener, errorListener) {
       // We're good, so save request to wait for WebSocket.onopen().
       console.log( 'subscribe: send pending ( ' + request + ')')
       webSocketPendingTasks.push( request)
-      registerSubscriptionOnScope( $scope, subscriptionId);
-      subscription.listeners[ subscriptionId] = { 'message': messageListener, 'error': errorListener}
+      registerSubscriptionOnScope( scope, subscriptionId);
+      subscriptionIdMap[ subscriptionId] = { 'message': messageListener, 'error': errorListener}
     }
 
 
-    function subscribe( json, $scope, messageListener, errorListener) {
+    function subscribe( json, scope, messageListener, errorListener) {
 
       var subscriptionId = addSubscriptionIdToMessage( json)
       var request = JSON.stringify( json)
@@ -264,8 +262,8 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
 
           // We're good, so save request for WebSocket.onmessage()
           console.log( 'subscribe: send( ' + request + ')')
-          registerSubscriptionOnScope( $scope, subscriptionId);
-          subscription.listeners[ subscriptionId] = { 'message': messageListener, 'error': errorListener}
+          registerSubscriptionOnScope( scope, subscriptionId);
+          subscriptionIdMap[ subscriptionId] = { 'message': messageListener, 'error': errorListener}
         } catch( ex) {
           if( errorListener)
             errorListener( 'Could not send subscribe request to server. Exception: ' + ex)
@@ -284,7 +282,7 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
             if( ! webSocket)
               throw 'WebSocket create failed.'
 
-            pushPendingSubscription( subscriptionId, $scope, request, messageListener, errorListener)
+            pushPendingSubscription( subscriptionId, scope, request, messageListener, errorListener)
 
           } catch( ex) {
             var description = 'Unable to open WebSocket connection to server. Exception: ' + ex
@@ -298,7 +296,7 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
 
         } else {
           // Already opening WebSocket, STATUS.OPENING. Just push pending.
-          pushPendingSubscription( subscriptionId, $scope, request, messageListener, errorListener)
+          pushPendingSubscription( subscriptionId, scope, request, messageListener, errorListener)
         }
 
       }
@@ -311,8 +309,8 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
         webSocket.send(JSON.stringify(
           { unsubscribe: subscriptionId}
         ))
-      if( subscription.hasOwnProperty( subscriptionId))
-        delete subscription[ subscriptionId]
+      if( subscriptionIdMap.hasOwnProperty( subscriptionId))
+        delete subscriptionIdMap[ subscriptionId]
     }
 
 
