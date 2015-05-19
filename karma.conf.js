@@ -69,9 +69,11 @@ module.exports = function(config) {
     ],
 
     coverageReporter: {
-      //type : 'text-summary',
-      type : 'html',
-      dir : 'coverage/'
+      reporters:[
+        {type: 'html', dir:'coverage/'},
+        {type: 'teamcity'},
+        {type: 'text'}
+      ]
     },
 
     // test results reporter to use
