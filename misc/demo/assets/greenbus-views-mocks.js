@@ -216,6 +216,37 @@ function makeRest($injector) {
         i = -1,
       headers = {};
 
+    function makeThen( response, digest) {
+      return {
+        then: function( s2, e2) {
+          setTimeout( function() {
+            var responseData = copy(response)
+
+            if( digest ) {
+              if( $scope ) {
+                // name and loading already assigned below.
+
+                $scope.$apply(function() {
+                  if( s2 )
+                    s2({data: responseData})
+                })
+              } else {
+                if( s2 ) {
+                  var rootScope = $injector.get('$rootScope')
+                  rootScope.$apply(function() {
+                    s2({data: responseData})
+                  })
+                }
+              }
+            } else {
+              s2({data: responseData})
+            }
+          })
+          return makeThen(response, false)
+        }
+      }
+    }
+
     while ((definition = definitions[++i])) {
       if (definition.match(method, url, data, headers || {})) {
         if (definition.response) {
@@ -243,12 +274,39 @@ function makeRest($injector) {
             }
           })
 
+          return makeThen( definition.response()[1], true) // t: do digest
+          //return {
+          //  then: function( success, error) {
+          //    setTimeout( function() {
+          //      var responseData = copy( definition.response()[1])
+          //
+          //      if( $scope) {
+          //        // name and loading already assigned above.
+          //
+          //        $scope.$apply( function() {
+          //          if( success)
+          //            success( {data: responseData})
+          //        })
+          //      } else {
+          //        if( success) {
+          //          var rootScope = $injector.get('$rootScope')
+          //          rootScope.$apply( function() {
+          //            success( {data: responseData})
+          //          })
+          //        }
+          //      }
+          //    })
+          //
+          //  }
+          //}
+
         } else
-          throw new Error('No response defined !');
+          throw new Error('gbMock.rest: No response defined for ' + method + ' ' + url);
 
         return;
       }
     }
+    throw new Error('gbMock.rest: No matching request found for ' + method + ' ' + url);
   }
 
   Rest.get = function(url, name, $scope, successListener) {
