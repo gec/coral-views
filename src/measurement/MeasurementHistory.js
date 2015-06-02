@@ -73,11 +73,10 @@ MeasurementHistory.prototype.subscribe = function(scope, constraints, subscriber
   var self = this,
       now = Date.now(),
       json = {
-        subscribeToMeasurementHistory: {
-          'pointId':  this.point.id,
-          'timeFrom': now - constraints.time,
-          'limit':    constraints.size
-        }
+        name: 'SubscribeToMeasurementHistory',
+        'pointId':  this.point.id,
+        'timeFrom': now - constraints.time,
+        'limit':    constraints.size
       }
 
 

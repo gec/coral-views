@@ -114,7 +114,7 @@ angular.module('greenbus.views.endpoint', ['greenbus.views.rest', 'greenbus.view
         endpoint.commStatus = getCommStatus( endpoint.commStatus)
       })
       subscription.subscribe(
-        {subscribeToEndpoints: {'endpointIds': endpointIds}},
+        { name: 'SubscribeToEndpoints', 'endpointIds': endpointIds},
         $scope,
         function( subscriptionId, messageType, endpointNotification){
           switch( messageType) {

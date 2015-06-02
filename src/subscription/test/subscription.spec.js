@@ -73,13 +73,13 @@ describe('subscription', function () {
       spyOn(mock.authentication, 'isLoggedIn').and.returnValue(true)
       spyOn(mock, 'on').and.callThrough()
 
-      json = {subscribeToSomething: {}}
+      json = { name: 'SubscribeToSomething'}
       scope = { $on: mock.on}
     })
 
     it('should go through full scope lifecycle of subscribe, messageListener, and scope $destroy', inject(function(subscription) {
       var subscriptionId = subscription.subscribe(json, scope, mock.messageListener, mock.errorListener)
-      expect(subscriptionId).toStartWith('subscription.subscribeToSomething.')
+      expect(subscriptionId).toStartWith('subscription.SubscribeToSomething.')
       expect(mock.authentication.isLoggedIn).toHaveBeenCalled();
       expect(mock.websocketFactory).toHaveBeenCalledWith('ws://localhost:9000/websocket?authToken=' + authToken);
       expect(mock.on).toHaveBeenCalledWith('$destroy', jasmine.any(Function));
@@ -138,8 +138,8 @@ describe('subscription', function () {
     it('should process multiple pending subscribes after WebSocket is open', inject(function(subscription) {
       var subscriptionId = subscription.subscribe(json, scope, mock.messageListener, mock.errorListener)
       var subscriptionId2 = subscription.subscribe(json, scope, mock.messageListener, mock.errorListener)
-      expect(subscriptionId).toStartWith('subscription.subscribeToSomething.')
-      expect(subscriptionId2).toStartWith('subscription.subscribeToSomething.')
+      expect(subscriptionId).toStartWith('subscription.SubscribeToSomething.')
+      expect(subscriptionId2).toStartWith('subscription.SubscribeToSomething.')
       expect(subscriptionId === subscriptionId2).toBeFalse()
       expect(mock.websocketFactory.calls.count()).toBe(1);
       expect(mock.on.calls.count()).toBe(2);
@@ -279,7 +279,7 @@ describe('subscription', function () {
     })
 
     it('should open websocket and send subscription request', inject(function(subscription) {
-      var json = {subscribeToSomething: {}}
+      var json = { name: 'SubscribeToSomething'}
       var scope = { $on: mock.on}
       subscription.subscribe(json, scope, mock.messageListener, mock.errorListener)
       expect(mock.authentication.isLoggedIn).toHaveBeenCalled();
@@ -304,7 +304,7 @@ describe('subscription', function () {
       spyOn(mock.authentication, 'isLoggedIn').and.returnValue(true)
       spyOn(mock, 'on').and.callThrough()
 
-      json = {subscribeToSomething: {}}
+      var json = { name: 'SubscribeToSomething'}
       scope = { $on: mock.on}
 
       function webSocketNull( url) {
@@ -319,6 +319,7 @@ describe('subscription', function () {
     })
 
     it('should handle WebSocket create failure', inject(function(subscription) {
+      var json = { name: 'SubscribeToSomething'}
       var subscriptionId = subscription.subscribe(json, scope, mock.messageListener, mock.errorListener)
       expect(subscriptionId).toBeNull()
       expect(mock.authentication.isLoggedIn).toHaveBeenCalled();

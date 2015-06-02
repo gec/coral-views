@@ -214,21 +214,22 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
     }
 
     function makeSubscriptionId( json) {
-      var messageKey = Object.keys( json)[0]
+      //var messageKey = Object.keys( json)[0]
       // add the messageKey just for easier debugging.
-      return 'subscription.' + messageKey + '.' + generateUUID();
+      return 'subscription.' + json.name + '.' + generateUUID();
     }
 
     function addSubscriptionIdToMessage( json) {
       var subscriptionId = makeSubscriptionId( json)
-      var messageKey = Object.keys( json)[0]
-      json[messageKey].subscriptionId = subscriptionId
+      json.subscriptionId = subscriptionId
+      json.authToken = authentication.getAuthToken()
       return subscriptionId
     }
 
     function makeWebSocket() {
       var wsUri = $location.protocol() === 'https' ? 'wss' : 'ws'
       wsUri += '://' + $location.host() + ':' + $location.port()
+      // Note: The WebSocket API doesn't have a way to add headers like 'Authorization', so we put in on the URL
       wsUri += '/websocket?authToken=' + authentication.getAuthToken()
       var ws = websocketFactory( wsUri)
       if( ws) {

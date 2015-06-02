@@ -386,9 +386,8 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     }
 
     var subscribeToAlarms = {
-      subscribeToAlarms: {
-        limit: $scope.limit
-      }
+      name: 'SubscribeToAlarms',
+      limit: $scope.limit
     }
 
     // Id is accessed by demo script to push alarms.
@@ -446,10 +445,9 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     }
 
     var subscribeToEvents = {
-      subscribeToEvents: {
-        //eventTypes: [],
-        limit: $scope.limit
-      }
+      name: 'SubscribeToEvents',
+      //eventTypes: [],
+      limit: $scope.limit
     }
     // Id is accessed by demo script to push events.
     $scope._subscribeToEventsId = subscription.subscribe( subscribeToEvents, $scope, $scope.onEvent, $scope.onError)
@@ -538,19 +536,17 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     }
 
     var subscribeToAlarms = {
-      subscribeToAlarms: {
-        //eventTypes: [],
-        limit: $scope.limit
-      }
+      name: 'SubscribeToAlarms',
+      //eventTypes: [],
+      limit: $scope.limit
     }
     // Id is accessed by demo script to push alarms.
     $scope._subscribeToAlarmsId = subscription.subscribe( subscribeToAlarms, $scope, onAlarm, onAlarmError)
 
     var subscribeToEvents = {
-      subscribeToEvents: {
-        //eventTypes: [],
-        limit: $scope.limit
-      }
+      name: 'SubscribeToEvents',
+      //eventTypes: [],
+      limit: $scope.limit
     }
     // Id is accessed by demo script to push events.
     $scope._subscribeToEventsId = subscription.subscribe( subscribeToEvents, $scope, onEvent, onEventError)

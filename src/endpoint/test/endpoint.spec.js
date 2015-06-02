@@ -120,9 +120,8 @@ describe('endpoint', function () {
 
   it('should subscribe to endpoints', inject( function () {
     var request = {
-      subscribeToEndpoints: {
-        endpointIds: ['id0', 'id1']
-      }
+      name: 'SubscribeToEndpoints',
+      endpointIds: ['id0', 'id1']
     }
     initCoralEndpointsElement();
     $httpBackend.flush();

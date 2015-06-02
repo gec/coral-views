@@ -38,11 +38,10 @@ describe('subscription', function() {
       name: 'point1'
     }
     json = {
-      subscribeToMeasurementHistory: {
-        'pointId':  point.id,
-        'timeFrom': timeNow - constraints.time,
-        'limit':    constraints.size
-      }
+      name: 'SubscribeToMeasurementHistory',
+      'pointId':  point.id,
+      'timeFrom': timeNow - constraints.time,
+      'limit':    constraints.size
     }
     resetAllMockSpies()
     spyOn(subscriptionMock, 'subscribe').and.callThrough()

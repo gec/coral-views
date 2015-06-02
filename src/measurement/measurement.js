@@ -121,7 +121,8 @@ angular.module( 'greenbus.views.measurement',
       //console.log('measurement.subscribe')
       return subscription.subscribe(
         {
-          subscribeToMeasurements: {'pointIds': pointIds}
+          name: 'SubscribeToMeasurements',
+          pointIds: pointIds,
         },
         scope,
         function(subscriptionId, type, measurements) {

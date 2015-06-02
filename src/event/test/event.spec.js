@@ -100,10 +100,9 @@ describe('gb-events', function () {
 
   it('should subscribe to events', inject( function () {
     var request = {
-      subscribeToEvents: {
-        //eventTypes: [],
-        limit: 40
-      }
+      name: 'SubscribeToEvents',
+      //eventTypes: [],
+      limit: 40
     }
     initGbEventsElement();
     expect( subscribeInstance.onSuccess ).toBeDefined()

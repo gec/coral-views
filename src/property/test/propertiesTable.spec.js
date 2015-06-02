@@ -99,9 +99,8 @@ describe('gb-properties-table', function () {
 
   it('should subscribe to properties', inject( function () {
     var request = {
-      subscribeToProperties: {
-        entityId: entityId
-      }
+      name: 'SubscribeToProperties',
+      entityId: entityId
     }
     expect( subscribeInstance.onSuccess ).toBeDefined()
     expect( subscribeInstance.onError ).toBeDefined()
