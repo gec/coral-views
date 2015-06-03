@@ -308,7 +308,11 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
     function unsubscribe( subscriptionId) {
       if( webSocket)
         webSocket.send(JSON.stringify(
-          { unsubscribe: subscriptionId}
+          {
+            name: 'Unsubscribe',
+            authToken: authentication.getAuthToken(),
+            subscriptionId: subscriptionId
+          }
         ))
       if( subscriptionIdMap.hasOwnProperty( subscriptionId))
         delete subscriptionIdMap[ subscriptionId]

@@ -109,10 +109,11 @@ describe('subscription', function () {
       mock.websocket.onmessage(event)
       expect(mock.messageListener).toHaveBeenCalledWith(subscriptionId, message.type, message.data)
 
+      var unsubscribe = {name:'Unsubscribe', authToken: authToken, subscriptionId: subscriptionId}
       // on $destroy, unsubscribe and remove subscriptionId
       mock.onEvents['$destroy']('some event')
       expect(scope.__subscriptionIds.length).toBe(0)
-      expect(mock.websocket.send).toHaveBeenCalledWith(JSON.stringify({unsubscribe: subscriptionId}));
+      expect(mock.websocket.send).toHaveBeenCalledWith(JSON.stringify(unsubscribe));
 
       // next message should be for unknown subscriptionId, so it doesn't know the messageListener any more
       mock.websocket.onmessage(event)
@@ -178,11 +179,11 @@ describe('subscription', function () {
       mock.websocket.onmessage(event2)
       expect(mock.messageListener).toHaveBeenCalledWith(subscriptionId2, message2.type, message2.data)
 
-
+      var unsubscribe = {name:'Unsubscribe', authToken: authToken, subscriptionId: subscriptionId}
       // on $destroy, unsubscribe and remove subscriptionId
       mock.onEvents['$destroy']('some event')
       expect(scope.__subscriptionIds.length).toBe(0)
-      expect(mock.websocket.send).toHaveBeenCalledWith(JSON.stringify({unsubscribe: subscriptionId}));
+      expect(mock.websocket.send).toHaveBeenCalledWith(JSON.stringify(unsubscribe));
 
       // next message should be for unknown subscriptionId, so it doesn't know the messageListener any more
       mock.websocket.onmessage(event)
