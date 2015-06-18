@@ -87,17 +87,24 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
       onmessage: function (event) {
         var message = JSON.parse(event.data)
 
-        if( message.type === 'ConnectionStatus') {
-          console.debug( 'onMessage.ConnectionStatus ' + message.data)
-          handleGreenBusConnectionStatus( message.data)
-          return
+        switch( message.type) {
+          case 'ConnectionStatus':
+            console.debug( 'onMessage.ConnectionStatus ' + message.data)
+            handleGreenBusConnectionStatus( message.data)
+            break;
+          case 'ExceptionMessage':
+            console.error( 'ExceptionMessage: ' + JSON.stringify( message.data))
+            break;
+          case 'SubscriptionExceptionMessage':
+            console.error( 'SubscriptionExceptionMessage: ' + JSON.stringify( message.data))
+            break;
+
+          default:
+            // console.debug( 'onMessage message.subscriptionId=' + message.subscriptionId + ', message.type=' + message.type)
+            var listener = getListenerForMessage( message)
+            if( listener)
+              handleMessageWithListener( message, listener)
         }
-
-        // console.debug( 'onMessage message.subscriptionId=' + message.subscriptionId + ', message.type=' + message.type)
-
-        var listener = getListenerForMessage( message)
-        if( listener)
-          handleMessageWithListener( message, listener)
       },
       onopen: function(event) {
         console.log( 'webSocket.onopen event: ' + event)
