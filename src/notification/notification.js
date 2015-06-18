@@ -45,7 +45,7 @@ angular.module('greenbus.views.notification', ['greenbus.views.rest', 'greenbus.
       var restStatus = rest.getStatus(),
           subscriptionStatus = subscription.getStatus(),
           greenbusStatus = {
-            status: 'UP', // let's assume UP until we hear otherwise.
+            status: 'AMQP_UP', // let's assume AMQP_UP until we hear otherwise.
             reinitializing: false,
             description: ''
           }
@@ -58,7 +58,7 @@ angular.module('greenbus.views.notification', ['greenbus.views.rest', 'greenbus.
           $scope.notifications.push( restStatus.description)
         if( subscriptionStatus.status !== subscription.STATUS.UP && subscriptionStatus.status !== subscription.STATUS.UNOPENED)
           $scope.notifications.push( subscriptionStatus.description)
-        if( greenbusStatus.status !== 'UP')
+        if( greenbusStatus.status !== 'AMQP_UP')
           $scope.notifications.push( greenbusStatus.description)
       }
 
