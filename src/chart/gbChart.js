@@ -24,10 +24,11 @@
  * @param _points  Array of points
  * @param _brushChart Boolean True if brush chart should be created
  */
-function GBChart( _points, _brushChart) {
+function GBChart( _points, trend, _brushChart) {
 
   var self = this
   self.points = copyPoints( _points)
+  self.trend = angular.copy( trend) // deep copy
   self.unitMap = getChartUnits( self.points )
   self.name = makeNameFromPoints( self.points )
   self.traits = makeChartTraits( self.unitMap )
@@ -98,13 +99,7 @@ function GBChart( _points, _brushChart) {
     var intervalCount = self.brushChart ? 4 : 2
     return {
       axis: 'x1',
-      trend: {
-        track:  'current-time',
-        domain: {
-          interval: d3.time.hour,
-          count: intervalCount
-        }
-      }
+      trend: self.trend
     }
   }
 

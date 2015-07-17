@@ -36,6 +36,13 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
             time: 1000 * 60 * 60 * 2, // 2 hours
             size: 60 * 60 * 2 * 10, // 2 hours of 10 measurements per second data
             throttling: 5000
+          },
+          trend = {
+            track:  'current-time',
+            domain: {
+              interval: d3.time.hour,
+              count: 2
+            }
           }
 
       $scope.charts = []
@@ -126,7 +133,7 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
       $scope.$on( REQUEST_ADD_CHART, function() {
         var points = request.pop( REQUEST_ADD_CHART);
         while( points) {
-          var chart = new GBChart( points),
+          var chart = new GBChart( points, trend),
               i = chart.points.length
           $scope.charts.push( chart )
           while( --i >= 0) {
@@ -157,6 +164,13 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
           time: 1000 * 60 * 60 * 4, // 4 hours
           size: 60 * 60 * 4 * 10, // 4 hours of 10 measurements per second data
           throttling: 5000
+        },
+        trend = {
+          track:  'current-time',
+          domain: {
+            interval: d3.time.hour,
+            count: 4
+          }
         }
 
 
@@ -164,7 +178,7 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
     $window.document.body.scroll = 'no'; // ie only
 
     $scope.loading = true
-    $scope.chart = new GBChart( [], true)  // t: zoomSlider
+    $scope.chart = new GBChart( [], trend, true)  // t: zoomSlider
     console.log( 'gbChartController query params: ' + pointIds)
 
     if( pointIds.length > 0) {
