@@ -116,7 +116,7 @@ function makeSubscription() {
   }
 
   Subscription.subscribe = function( json, $scope, messageListener, errorListener) {
-    var subscriptionId = 'subscription.' + Object.keys( json)[0] + '.' + generateUUID()
+    var subscriptionId = 'subscription.' + json.name + '.' + generateUUID()
     listeners[ subscriptionId] = { 'message': messageListener, 'error': errorListener}
     this.saveSubscriptionOnScope( $scope, subscriptionId)
     return subscriptionId
@@ -213,38 +213,31 @@ function makeRest($injector) {
   Rest.request = function(method, url, data, name, $scope, successListener) {
 
     var definition,
+        $q = $injector.get('$q'),
         i = -1,
-      headers = {};
+        headers = {};
 
     function makeThen( response, digest) {
-      return {
-        then: function( s2, e2) {
-          setTimeout( function() {
-            var responseData = copy(response)
+      var deferred = $q.defer()
 
-            if( digest ) {
-              if( $scope ) {
-                // name and loading already assigned below.
+      setTimeout( function() {
+        var resolveArg = {data: copy( response)}
 
-                $scope.$apply(function() {
-                  if( s2 )
-                    s2({data: responseData})
-                })
-              } else {
-                if( s2 ) {
-                  var rootScope = $injector.get('$rootScope')
-                  rootScope.$apply(function() {
-                    s2({data: responseData})
-                  })
-                }
-              }
-            } else {
-              s2({data: responseData})
-            }
-          })
-          return makeThen(response, false)
+        if( digest ) {
+          if( $scope ) {
+            deferred.resolve( resolveArg)
+          } else {
+            var rootScope = $injector.get('$rootScope')
+            rootScope.$apply(function() {
+              deferred.resolve( resolveArg)
+            })
+          }
+        } else {
+          deferred.resolve( resolveArg)
         }
-      }
+      })
+
+      return deferred.promise
     }
 
     while ((definition = definitions[++i])) {
