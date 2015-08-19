@@ -123,8 +123,7 @@ function GBChart( _points, trend, _brushChart) {
 
       if( unit === 'raw' || unit === 'status' || unit === '') {
         interpolate = 'step-after'
-        scaleConfig.domainMin = 0
-        scaleConfig.domainMax = 5
+        scaleConfig.domain = [0, 5]
       } else {
         scaleConfig.domainPadding = 0.05
       }
