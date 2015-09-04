@@ -44,6 +44,15 @@ angular.module('greenbus.views.assert', []).
       }
     }
 
+    exports.equals = function( a, b, message) {
+      if( a !== b) {
+        message =  message === undefined ? 'Value ' : message + ' '
+        var messageFull = message + JSON.stringify( a) + ' is not equal to ' + JSON.stringify( a)
+        console.error( messageFull)
+        throw messageFull
+      }
+    }
+
     /**
      * Public API
      */
