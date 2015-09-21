@@ -96,11 +96,9 @@ function GBChart( _points, trend, _brushChart) {
   }
 
   function makeChartConfigScaleX1() {
-    var intervalCount = self.brushChart ? 4 : 2
-    return {
-      axis: 'x1',
-      trend: self.trend
-    }
+    // If we have a brush chart, then we'll be manually controlled by brush.
+    return self.brushChart ? { axis: 'x1', domain: 'manual' }
+      : { axis: 'x1', trend: self.trend }
   }
 
   function makeChartTraits( unitMap, size ) {
@@ -164,7 +162,7 @@ function GBChart( _points, trend, _brushChart) {
 
 
     brushTraits = d3.trait( d3.trait.chart.base, config )
-      .trait( d3.trait.scale.time, makeChartConfigScaleX1())
+      .trait( d3.trait.scale.time, { axis: 'x1', trend: self.trend})
       .trait( d3.trait.scale.linear, { axis: 'y1' })
       .trait( d3.trait.chart.line, { interpolate: 'step-after' })
       .trait( d3.trait.control.brush, { axis: 'x1', target: self.traits, targetAxis: 'x1'})

@@ -1,4 +1,4 @@
-/*! d3-traits - v0.0.1 - 2015-08-19
+/*! d3-traits - v0.0.1 - 2015-09-21
 * https://github.com/gec/d3-traits
 * Copyright (c) 2015 d3-traits; Licensed ,  */
 (function(d3) {
@@ -7872,7 +7872,8 @@ trait.chart.line = _chartLine
     MIN: 1,
     MAX: 2,
     DOMAIN: 3,
-    TREND: 4
+    TREND: 4,
+    MANUAL: 5
   }
   var DOMAIN_CONFIG_NAMES = []
   DOMAIN_CONFIG_NAMES[DOMAIN_CONFIG.DATA] = 'DATA'
@@ -7880,6 +7881,7 @@ trait.chart.line = _chartLine
   DOMAIN_CONFIG_NAMES[DOMAIN_CONFIG.MAX] = 'MAX'
   DOMAIN_CONFIG_NAMES[DOMAIN_CONFIG.DOMAIN] = 'DOMAIN'
   DOMAIN_CONFIG_NAMES[DOMAIN_CONFIG.TREND] = 'TREND'
+  DOMAIN_CONFIG_NAMES[DOMAIN_CONFIG.MANUAL] = 'MANUAL'
 
   var timeIntervals = [
     d3.time.second,
@@ -7944,6 +7946,8 @@ trait.chart.line = _chartLine
           dc.type = DOMAIN_CONFIG.DATA
           console.error( 'makeDomainConfig: Unrecognized domain specification: ' + JSON.stringify( config.domain))
         }
+      } else if( config.domain === 'manual' || config.domain === 'MANUAL') {
+        dc.type = DOMAIN_CONFIG.MANUAL
       } else
         dc.type = DOMAIN_CONFIG.DATA
       // TODO: Could also specify domain config as a function
@@ -8104,7 +8108,9 @@ trait.chart.line = _chartLine
     scale.range(range)
 
     // if domainConfig.domain is specified, it trumps other configs
-    if( domainConfig.type === DOMAIN_CONFIG.DOMAIN ) {
+    if( domainConfig.type === DOMAIN_CONFIG.MANUAL )
+      return
+    else if( domainConfig.type === DOMAIN_CONFIG.DOMAIN ) {
       scale.domain(domainConfig.domain)
       return
     }
@@ -8268,7 +8274,7 @@ trait.chart.line = _chartLine
         range = d3.trait.utils.getScaleRange(self, scaleName)
         scale.range( range)
 
-        if( domainConfig.type !== DOMAIN_CONFIG.DOMAIN ) {
+        if( domainConfig.type !== DOMAIN_CONFIG.DOMAIN && domainConfig.type !== DOMAIN_CONFIG.MANUAL) {
           var domain, extendedDomain,
               oldDomain = scale.domain()
 
@@ -8301,7 +8307,9 @@ trait.chart.line = _chartLine
       return scale;
     }
     scaleTime[scaleName + 'Domain'] = function(newDomain) {
-      domainConfig.domain = newDomain
+      if( !arguments.length ) return scale.domain()
+      if( domainConfig.type !== DOMAIN_CONFIG.MANUAL)
+        domainConfig.domain = newDomain
       scale.domain(newDomain)
       // TODO: domain updated event?
     }
@@ -8444,7 +8452,7 @@ trait.chart.line = _chartLine
         range = d3.trait.utils.getScaleRange(self, scaleName)
         scale.range(range)
 
-        if( domainConfig.type !== DOMAIN_CONFIG.DOMAIN ) {
+        if( domainConfig.type !== DOMAIN_CONFIG.DOMAIN && domainConfig.type !== DOMAIN_CONFIG.MANUAL ) {
           var domain, extendedDomain, unionDomain,
               oldDomain = scale.domain()
 
@@ -8487,7 +8495,10 @@ trait.chart.line = _chartLine
       return scale;
     };
     scaleLinear[scaleName + 'Domain'] = function(newDomain) {
-      domainConfig.domain = newDomain
+      if( !arguments.length ) return scale.domain()
+
+      if( domainConfig.type !== DOMAIN_CONFIG.MANUAL)
+        domainConfig.domain = newDomain
       scale.domain(newDomain)
       // TODO: domain updated event?
     }
