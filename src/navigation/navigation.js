@@ -622,15 +622,16 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
       // the target state's URL params or non-URL params. Ex: params: {navigationElement: null}
       //
       var params = {
-          microgridId:       branch.microgridId,
-          navigationElement: {
-            class:     branch.class,
-            id:        branch.id,
-            types:     branch.types,
-            name:      branch.name,      // full entity name
-            shortName: branch.label,
-            equipmentChildren: branch.equipmentChildren // children that are equipment
-          }
+        microgridId:       branch.microgridId,
+        id: branch.id,
+        navigationElement: {
+          class:     branch.class,
+          id:        branch.id,
+          types:     branch.types,
+          name:      branch.name,      // full entity name
+          shortName: branch.label,
+          equipmentChildren: branch.equipmentChildren // children that are equipment
+        }
         }
 
       if( branch.sourceUrl )
