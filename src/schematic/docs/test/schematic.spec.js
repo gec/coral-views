@@ -52,6 +52,7 @@ describe('schematic', function () {
 
   beforeEach(module('greenbus.views.assert'));
   beforeEach(module('greenbus.views.schematic'));
+  beforeEach(module('greenbus.views.measurement'));
 
 
   beforeEach(function () {
@@ -72,9 +73,9 @@ describe('schematic', function () {
 
     _websocketFactory = {}
     module( function ($provide) {
+      $provide.value('authentication', mocks.authentication);
       $provide.value('subscription', _subscription);
       $provide.value('navigation', {});
-      $provide.value('measurement', {});
       //$provide.value('$routeParams', {}); // no $routeParams.navId, depth, or equipmentIds
       $provide.value('$stateParams', {
         microgridId: 'abc',
@@ -89,6 +90,14 @@ describe('schematic', function () {
     });
 
   });
+
+  beforeEach( inject(function( $injector) {
+    $httpBackend = $injector.get('$httpBackend')
+    $httpBackend.whenGET( '/models/1/points?pnames=' + points[0].name).respond( [
+      {'name': 'MG1.Device2.kW_tot', 'id': 'Device2.kW_tot', 'pointType': 'ANALOG', 'types': ['Imported', 'DemandPower', 'Point'], 'unit': 'kW', 'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6' }
+    ])
+  }))
+
 
   beforeEach(inject(function ($rootScope, _$compile_, $q) {
 
@@ -160,7 +169,7 @@ describe('schematic', function () {
   }));
 
   it('should transform measurements', inject( function ( schematic) {
-    var measElems, measElem, measValue,
+    var measElems, measElem, measValue, measurements,
         onSchematic = jasmine.createSpy('onSchematic'),
         svgContent = svgOneMeasurement
 
@@ -176,13 +185,13 @@ describe('schematic', function () {
     measValue = getMeasurementValue( measElems, 0)
     expect( measValue).toEqual( ' ')
 
-    scope.pointMap = {}
-    scope.pointMap[ points[0].name] = {
+    scope.pointNameMap = {}
+    scope.pointNameMap[ points[0].name] = {
       name: points[0].name,
       unit: 'someUnit',
       currentMeasurement: {
         value: 'someValue',
-          validity: 'GOOD'
+        validity: 'GOOD'
       }
     }
     scope.$digest()
@@ -191,16 +200,99 @@ describe('schematic', function () {
     expect( measValue).toEqual( 'someValue someUnit')
 
 
+    // Flush getPoints.
+    $httpBackend.flush()
+
+    measurements = [
+      {
+        'point': {'id': points[0].id},
+        'measurement': {
+          'value': '248.000000',
+          'type': 'DOUBLE',
+          'unit': 'kW',
+          'time': 1442261552564,
+          'validity': 'GOOD',
+          'shortQuality': '',
+          'longQuality': 'Good'
+        }
+      }
+    ]
+    subscribeInstance.onSuccess( subscribeInstance.id, 'measurements', measurements)
+    measValue = getMeasurementValue( measElems, 0)
+    expect( measValue).toEqual( '248 kW')
+
   }));
 
 
 });
 
 describe( 'schematic tests', function() {
-  it('should show setPoint icon')
-  it('should setPoint controls when setPoint icon is clicked')
-  it('should open setPoint with unselected')
-  it('should select setPoint successfully')
-  it('should select setPoint forbidden')
-  it('should select setPoint already selected')
+  it('should ...')
 })
+
+
+var m1 = {
+  'subscriptionId': 'subscription.SubscribeToMeasurements.ff2ba100-5ad4-4549-c098-44f38b221256',
+  'type': 'measurements',
+  'data': [{
+    'point': {'id': '499c6ab3-c276-49ec-96a4-9c76dd661ae2'},
+    'measurement': {
+      'value': 'CLOSED',
+      'type': 'STRING',
+      'unit': 'Status',
+      'time': 1442261552564,
+      'validity': 'GOOD',
+      'shortQuality': '',
+      'longQuality': 'Good'
+    }
+  }, {
+    'point': {'id': '03682a17-c417-43e9-aec6-330123aa223f'},
+    'measurement': {
+      'value': '248.000000',
+      'type': 'DOUBLE',
+      'unit': 'kW',
+      'time': 1443638700180,
+      'validity': 'GOOD',
+      'shortQuality': '',
+      'longQuality': 'Good'
+    }
+  }, {
+    'point': {'id': '89e66319-cef4-4e40-b689-c52620bd741d'},
+    'measurement': {
+      'value': '3.290600',
+      'type': 'DOUBLE',
+      'unit': 'kvar',
+      'time': 1443646164305,
+      'validity': 'GOOD',
+      'shortQuality': '',
+      'longQuality': 'Good'
+    }
+  }, {
+    'point': {'id': '67c07eb1-c7cc-4c71-8491-f858673dd0a7'},
+    'measurement': {
+      'value': '144.943221',
+      'type': 'DOUBLE',
+      'unit': 'kW',
+      'time': 1443646164305,
+      'validity': 'GOOD',
+      'shortQuality': '',
+      'longQuality': 'Good'
+    }
+  }]
+}
+var m2 = {
+  'subscriptionId': 'subscription.SubscribeToMeasurements.ff2ba100-5ad4-4549-c098-44f38b221256',
+  'type': 'measurements',
+  'data': [{
+    'point': {'id': 'aec0bc82-9ce0-4260-92a2-919ba8d964dd', 'name': 'Zone1.RoofPV_S1.kW_tot'},
+    'measurement': {
+      'value': '144.928120',
+      'type': 'DOUBLE',
+      'unit': 'kW',
+      'time': 1443646166318,
+      'validity': 'GOOD',
+      'shortQuality': '',
+      'longQuality': 'Good'
+    }
+  }]
+}

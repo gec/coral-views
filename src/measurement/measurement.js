@@ -303,7 +303,7 @@ angular.module( 'greenbus.views.measurement',
             //pm.measurement.value = formatMeasurementValue( pm.measurement.value )
             point.currentMeasurement = pm.measurement
           } else {
-            console.error('MeasurementsController.onPointMeasurement could not find point.id = ' + pm.point.id)
+            console.error('MeasurementsController.onMeasurements could not find point.id = ' + pm.point.id)
           }
         })
         $scope.$digest()

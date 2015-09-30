@@ -33,7 +33,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
    *     $compile
    *   controller: watch points list and subscribe to points
    */
-  factory('schematic', [ 'subscription', 'measurement', 'assert', function( subscription, measurement, assert) {
+  factory('schematic', [ 'rest', 'subscription', 'assert', '$q', function( rest, subscription, assert, $q) {
 
     // public API
     var exports = {
@@ -88,10 +88,17 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
     }
 
 
-    //function toJQuery( elem) { return $(elem)}
-    //function jQueryToArrayOfJqueryElements( jqElem) {
-    //  return jqElem.get().map( toJQuery)
-    //}
+    exports.getPointsByName = function( pointNames) {
+      if( ! pointNames || pointNames.length === 0)
+        return $q.when( [])
+
+      var pnamesQueryParams = rest.queryParameterFromArrayOrString('pnames', pointNames),
+          url = '/models/1/points?' + pnamesQueryParams
+
+      return rest.get(url)
+
+    }
+
 
     /**
      *
@@ -151,8 +158,8 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
           useQuality = element.find( 'use'),
           text = element.find( 'text')
 
-      text.html( '{{ pointMap[\'' + pointName + '\'].currentMeasurement.value }} {{ pointMap[\'' + pointName + '\'].unit }}')
-      useQuality.attr( 'xlink:href', '{{ pointMap[\'' + pointName + '\'].currentMeasurement.validity | schematicValidityDef }} ')
+      text.html( '{{ pointNameMap[\'' + pointName + '\'].currentMeasurement.value }} {{ pointNameMap[\'' + pointName + '\'].unit }}')
+      useQuality.attr( 'xlink:href', '{{ pointNameMap[\'' + pointName + '\'].currentMeasurement.validity | schematicValidityDef }} ')
 
       return pointName
     }
@@ -186,21 +193,25 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
   }]).
 
 
+
+
   /**
    * Controller for a single schematic (like inside the pop-out window).
    */
   controller( 'gbSchematicController', ['$scope', '$window', '$stateParams', 'measurement', 'rest', 'schematic', function( $scope, $window, $stateParams, measurement, rest, schematic) {
 
-    var  microgridId       = $stateParams.microgridId,
+    var  self = this,
+         microgridId       = $stateParams.microgridId,
          equipmentId       = $stateParams.id,// id string if equipment navigation element, else undefined
-         navigationElement = $stateParams.navigationElement  // {id:, name:, shortName:, types:, equipmentChildren:, class:}
-
+         navigationElement = $stateParams.navigationElement,  // {id:, name:, shortName:, types:, equipmentChildren:, class:}
+         pointIdMap = {} // points by point id. {id, name:, currentMeasurement:}
 
     $scope.loading = true
     $scope.svgSource = undefined
     $scope.symbols = undefined
     $scope.pointNames = []
-    $scope.pointMap = {}
+    $scope.pointNameMap = {} // points by point name. {id, name:, currentMeasurement:}
+
 
     //if( pointIds.length > 0) {
     //  var url = '/models/1/points?' + rest.queryParameterFromArrayOrString( 'pids', pointIds)
@@ -225,31 +236,86 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
     $window.addEventListener( 'unload', function( event) {
     })
 
-    function onSchematic( subscriptionId, content, eventType) {
-      $scope.svgSource = content
-      $scope.$digest()
-    }
-
-    function subscribe() {
-      if( !equipmentId)
-        return
-      
-      return schematic.subscribe( equipmentId, $scope, onSchematic)
-    }
-
-    subscribe()
-
     $scope.$watch('symbols', function(newValue) {
       if( newValue !== undefined) {
         console.log( 'gbSchematicController: got symbols pointNames.length: ' + $scope.symbols.pointNames.length)
       }
     })
 
+    // Directive sets pointNames after getting SVG content.
+    //
     $scope.$watch('pointNames', function(newValue) {
       if( newValue !== undefined) {
         console.log( 'gbSchematicController: got pointNames.length: ' + $scope.pointNames.length)
+        // TODO: unsubscribe from previous schematic's points. Could optimize for large overlaps in points when schematic changes.
+        if( $scope.pointNames.length > 0)
+          schematic.getPointsByName( $scope.pointNames).then(
+            function( response) {
+              $scope.points = response.data
+              pointIdMap = processPointsAndReturnPointIdMap($scope.points)
+              // TODO: what about the old names in the map?
+              $scope.points.forEach( function( p) { $scope.pointNameMap[p.name] = p})
+
+              measurement.subscribe( $scope, Object.keys(pointIdMap), {}, self, onMeasurements)
+              //subscribeToMeasurements(pointIds)
+              return response // for the then() chain
+            },
+            function( error) {
+              return error
+            }
+          )
       }
     })
+
+    function onMeasurements(measurements) {
+      measurements.forEach(function(pm) {
+        var point = pointIdMap[pm.point.id]
+        if( point ) {
+          //pm.measurement.value = formatMeasurementValue( pm.measurement.value )
+          point.currentMeasurement = pm.measurement
+        } else {
+          console.error('gbSchematicController.onMeasurements could not find point.id = ' + pm.point.id)
+        }
+      })
+      $scope.$digest()
+    }
+
+    function processPointsAndReturnPointIdMap(points) {
+      var idMap           = [],
+          currentMeasurement = {
+            value:        '-',
+            time:         null,
+            shortQuality: '',
+            longQuality:  '',
+            validity:     'NOTLOADED',
+            expandRow:    false,
+            commandSet:   undefined
+          }
+      points.forEach(function(point) {
+        point.currentMeasurement = angular.extend({}, currentMeasurement)
+        idMap[point.id] = point
+        if( typeof point.pointType !== 'string' )
+          console.error('------------- point: ' + point.name + ' point.pointType "' + point.pointType + '" is empty or null.')
+        if( typeof point.unit !== 'string' )
+          point.unit = ''
+
+      })
+      return idMap
+    }
+
+
+    function subscribe() {
+      if( !equipmentId)
+        return
+
+      return schematic.subscribe( equipmentId, $scope, onSchematic)
+    }
+    function onSchematic( subscriptionId, content, eventType) {
+      $scope.svgSource = content  // directive is watching this and will parse SVG and set $scope.pointNames.
+      $scope.$digest()
+    }
+
+    subscribe()
 
 
   }]).
