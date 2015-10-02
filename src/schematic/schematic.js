@@ -102,12 +102,12 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
 
     /**
      *
-     *  <g schematic-type="point" name="LV.Line.kW_tot" point-name="LV.Line.kW_tot" id="LV.Line.kW_tot">
+     *  <g schematic-type="point" name="LV.Line.kW_tot" tgs:point-name="LV.Line.kW_tot" id="LV.Line.kW_tot">
      *    <use class="quality-display" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#quality_invalid" y="78" x="257" id="svg_550"></use>
      *    <text class="data-label" x="277" y="92" id="svg_551">48 kW</text>
      *  </g>
      *
-     *  <svg schematic-type="equipment-symbol"  symbol-type=“circuitbreaker" point-name="LV.CB_Main.Status"  class="symbol"  preserveAspectRatio=“xMaxYMax" id="svg_462" x="364" y="104">
+     *  <svg schematic-type="equipment-symbol"  symbol-type=“circuitbreaker" tgs:point-name="LV.CB_Main.Status"  class="symbol"  preserveAspectRatio=“xMaxYMax" id="svg_462" x="364" y="104">
      *    <g state="open" display="none" id="svg_465">
      *      <rect x="2" y="2" width="30" height="30" fill="#00FF00" id="svg_466"></rect>
      *    </g>
@@ -122,12 +122,12 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
      */
     exports.parseElements = function( rootElement) {
       var symbols = {},
-          elements = rootElement.find( '[schematic-type]')
+          elements = rootElement.find( '[tgs\\:schematic-type]')
 
-      symbols.measurements = elements.filter( '[schematic-type=point]')
-      symbols.equipment = elements.filter( '[schematic-type=equipment-symbol]')
-      symbols.navigationAreas = elements.filter( '[schematic-type=navigation-area]')
-      symbols.navigationLabels = elements.filter( '[schematic-type=navigation-label]')
+      symbols.measurements = elements.filter( '[tgs\\:schematic-type=point]')
+      symbols.equipment = elements.filter( '[tgs\\:schematic-type=equipment-symbol]')
+      symbols.navigationAreas = elements.filter( '[tgs\\:schematic-type=navigation-area]')
+      symbols.navigationLabels = elements.filter( '[tgs\\:schematic-type=navigation-label]')
 
       return symbols
     }
@@ -145,7 +145,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
 
     /**
      *
-     *  <g schematic-type="point" name="LV.Line.kW_tot" point-name="LV.Line.kW_tot" id="LV.Line.kW_tot">
+     *  <g tgs\\:schematic-type="point" name="LV.Line.kW_tot" tgs:point-name="LV.Line.kW_tot" id="LV.Line.kW_tot">
      *    <use class="quality-display" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#quality_invalid" y="78" x="257" id="svg_550"></use>
      *    <text class="data-label" x="277" y="92" id="svg_551">48 kW</text>
      *  </g>
@@ -154,7 +154,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
      */
     exports.transformMeasurementAndReturnPointName = function( ) {
       var element = $(this),
-          pointName = element.attr( 'point-name'),
+          pointName = element.attr( 'tgs:point-name'),
           useQuality = element.find( 'use'),
           text = element.find( 'text')
 
@@ -166,7 +166,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
 
     /**
      *
-     *  <svg schematic-type="equipment-symbol"  symbol-type=“circuitbreaker" point-name="LV.CB_Main.Status"  class="symbol"  preserveAspectRatio=“xMaxYMax" id="svg_462" x="364" y="104">
+     *  <svg tgs\\:schematic-type="equipment-symbol"  symbol-type=“circuitbreaker" tgs:point-name="LV.CB_Main.Status"  class="symbol"  preserveAspectRatio=“xMaxYMax" id="svg_462" x="364" y="104">
      *    <g state="open" display="none" id="svg_465">
      *      <rect x="2" y="2" width="30" height="30" fill="#00FF00" id="svg_466"></rect>
      *    </g>
@@ -182,11 +182,11 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
 
 
     function filterPoints( elem) {
-      return elem.attr('schematic-type') === 'point'
+      return elem.attr('tgs\\:schematic-type') === 'point'
     }
-    function filterEquipment( elem) { return elem.attr('schematic-type') === 'equipment-symbol'}
-    function filterNavigationAreas( elem) { return elem.attr('schematic-type') === 'navigation-area'}
-    function filterNavigationLabels( elem) { return elem.attr('schematic-type') === 'navigation-label'}
+    function filterEquipment( elem) { return elem.attr('tgs\\:schematic-type') === 'equipment-symbol'}
+    function filterNavigationAreas( elem) { return elem.attr('tgs\\:schematic-type') === 'navigation-area'}
+    function filterNavigationLabels( elem) { return elem.attr('tgs\\:schematic-type') === 'navigation-label'}
 
     return exports
 
@@ -198,13 +198,16 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
   /**
    * Controller for a single schematic (like inside the pop-out window).
    */
-  controller( 'gbSchematicController', ['$scope', '$window', '$stateParams', 'measurement', 'rest', 'schematic', function( $scope, $window, $stateParams, measurement, rest, schematic) {
+  controller( 'gbSchematicController', ['$scope', '$window', '$state', '$stateParams', 'measurement', 'rest', 'schematic', function( $scope, $window, $state, $stateParams, measurement, rest, schematic) {
 
     var  self = this,
          microgridId       = $stateParams.microgridId,
          equipmentId       = $stateParams.id,// id string if equipment navigation element, else undefined
          navigationElement = $stateParams.navigationElement,  // {id:, name:, shortName:, types:, equipmentChildren:, class:}
          pointIdMap = {} // points by point id. {id, name:, currentMeasurement:}
+
+    if( !equipmentId && $state.is( 'microgrids.dashboard') )
+      equipmentId = microgridId
 
     $scope.loading = true
     $scope.svgSource = undefined

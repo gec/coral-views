@@ -25,7 +25,7 @@ describe('schematic', function () {
 
   svgOneMeasurement  =
       '<svg id="svgContent">' +
-        '<g schematic-type="point" name="' + points[0].name + '" point-name="' + points[0].name + '" id="' + points[0].name + '">' +
+        '<g tgs:schematic-type="point" name="' + points[0].name + '" tgs:point-name="' + points[0].name + '" id="' + points[0].name + '">' +
           '<use class="quality-display" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#quality_invalid" y="78" x="257" id="svg_550"></use>' +
           '<text class="data-label" x="277" y="92" id="svg_551">48 kW</text>' +
         '</g>' +
@@ -115,7 +115,7 @@ describe('schematic', function () {
 
 
   function findMeasurementGs() {
-    return element.find('g[schematic-type="point"]');
+    return element.find('g[tgs\\:schematic-type="point"]');
   }
 
   function findMeasurementUse( measurementG) {

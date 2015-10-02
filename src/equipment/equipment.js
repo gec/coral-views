@@ -128,6 +128,7 @@ angular.module('greenbus.views.equipment', [ 'ui.router', 'greenbus.views.rest']
 
       var onePieceOfEquipment = navigationElement.equipmentChildren.length === 0
       $scope.tabs = {
+        overview: true,
         measurements: true,
         properties: onePieceOfEquipment,
         points: true

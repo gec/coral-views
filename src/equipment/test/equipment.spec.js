@@ -75,7 +75,7 @@ describe('gb-measurements', function () {
     scope.$digest();
 
     var tabs = findTabs()
-    expect( tabs.length).toEqual(3);
+    expect( tabs.length).toEqual(4);
 
   }));
 
@@ -85,7 +85,7 @@ describe('gb-measurements', function () {
     scope.$digest();
 
     var tabs = findTabs()
-    expect( tabs.length).toEqual(2);
+    expect( tabs.length).toEqual(3);
 
     expect(element.find('*[heading="Measurements"]').length).toBe(1)
     expect(element.find('*[heading="Properties"]').length).toBe(0)

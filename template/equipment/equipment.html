@@ -1,6 +1,9 @@
 <div class="gb-equipment">
     <h3>{{ name }}</h3>
     <tabset>
+        <tab heading="Overview" ng-if="tabs.overview">
+            <gb-equipment-schematic></gb-equipment-schematic>
+        </tab>
         <tab heading="Measurements" ng-if="tabs.measurements">
             <gb-measurements points-promise="pointsPromise"></gb-measurements>
         </tab>
