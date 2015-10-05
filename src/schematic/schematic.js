@@ -71,8 +71,12 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
               notify( subscriptionId, data.value.value, data.operation)
               break
             case 'properties':
-              assert.equals( data[0].key, exports.KEY_SCHEMATIC, 'schematic.subscribe properties: ')
-              notify( subscriptionId, data[0].value, 'CURRENT')
+              if( data.length > 0) {
+                assert.equals( data[0].key, exports.KEY_SCHEMATIC, 'schematic.subscribe properties: ')
+                notify( subscriptionId, data[0].value, 'CURRENT')
+              } else {
+                console.log( 'schematic.subscribe to schematic - no schematic property')
+              }
               break
             default:
               console.error( 'schematic.subscribe: unknown type "' + type + '" from subscription notification')
@@ -136,7 +140,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       var measurementPointNames, equipmentPointNames, pointNames, t
       // Convert jQuery object to array of strings.
       measurementPointNames  = symbols.measurements.map( exports.transformMeasurementAndReturnPointName).get()
-      equipmentPointNames  = symbols.equipment.map( exports.transformEquipmentAndReturnName).get()
+      equipmentPointNames  = symbols.equipment.map( exports.transformEquipmentAndReturnPointName).get()
 
       pointNames = measurementPointNames.concat( equipmentPointNames).unique()
 
@@ -145,7 +149,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
 
     /**
      *
-     *  <g tgs\\:schematic-type="point" name="LV.Line.kW_tot" tgs:point-name="LV.Line.kW_tot" id="LV.Line.kW_tot">
+     *  <g tgs:schematic-type="point" name="LV.Line.kW_tot" tgs:point-name="LV.Line.kW_tot" id="LV.Line.kW_tot">
      *    <use class="quality-display" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#quality_invalid" y="78" x="257" id="svg_550"></use>
      *    <text class="data-label" x="277" y="92" id="svg_551">48 kW</text>
      *  </g>
@@ -166,18 +170,31 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
 
     /**
      *
-     *  <svg tgs\\:schematic-type="equipment-symbol"  symbol-type=“circuitbreaker" tgs:point-name="LV.CB_Main.Status"  class="symbol"  preserveAspectRatio=“xMaxYMax" id="svg_462" x="364" y="104">
-     *    <g state="open" display="none" id="svg_465">
-     *      <rect x="2" y="2" width="30" height="30" fill="#00FF00" id="svg_466"></rect>
+     *  <svg preserveAspectRatio="xMaxYMax" class="symbol" tgs:schematic-type="equipment-symbol" id="svg_619" x="484" y="404" tgs:point-name="Zone1.PCC_cbr_cust.Status" tgs:symbol-type="circuitbreaker">
+     *    <g tgs:state="open" display="none" id="svg_622">
+     *      <rect x="2" y="2" width="30" height="30" fill="#00FF00" id="svg_623"/>
      *    </g>
-     *    <g state="closed" id="svg_463" style="display:inherit;">
-     *      <rect x="2" y="2" width="30" height="30" fill="#A40000" id="svg_464"></rect>
+     *    <g tgs:state="closed" id="svg_620">
+     *     <rect x="2" y="2" width="30" height="30" fill="#A40000" id="svg_621"/>
      *    </g>
      *  </svg>
      *
      *  @param rootElement
      */
-    exports.transformEquipmentAndReturnName = function( element) {
+    exports.transformEquipmentAndReturnPointName = function( ) {
+      var element = $(this),
+          states = element.find( '[tgs\\:state]'),
+          pointName = element.attr( 'tgs:point-name')
+
+      states.map( function() {
+        var stateElement = $(this),
+            stateName = stateElement.attr( 'tgs:state')
+        stateElement.attr( 'ng-show', 'pointNameMap[\'' + pointName + '\'].currentMeasurement.value === \'' + stateName + '\'')
+        stateElement.removeAttr( 'display')
+        return stateName
+      })
+
+      return pointName
     }
 
 

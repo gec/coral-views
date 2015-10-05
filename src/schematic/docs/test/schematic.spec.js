@@ -1,7 +1,7 @@
 describe('schematic', function () {
   var parentScope, scope, $compile, _subscription, $httpBackend,
       subscribeInstance = {};
-  var element, svgOneMeasurement,
+  var element, svgOneMeasurement, svgOneEquipmentSymbol,
       measurements = [];
 
   var equipmentId = 'equipmentId',
@@ -24,12 +24,29 @@ describe('schematic', function () {
       }
 
   svgOneMeasurement  =
-      '<svg id="svgContent">' +
+    '<?xml version="1.0"?>' +
+    '<svg  xmlns="http://www.w3.org/2000/svg" xmlns:tgs="http://www.totalgrid.org" xmlns:xlink="http://www.w3.org/1999/xlink" style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
+      '<g id="svgContent">' +
         '<g tgs:schematic-type="point" name="' + points[0].name + '" tgs:point-name="' + points[0].name + '" id="' + points[0].name + '">' +
           '<use class="quality-display" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#quality_invalid" y="78" x="257" id="svg_550"></use>' +
           '<text class="data-label" x="277" y="92" id="svg_551">48 kW</text>' +
         '</g>' +
-      '</svg>'
+      '</g>' +
+    '</svg>'
+  svgOneEquipmentSymbol =
+    '<?xml version="1.0"?>' +
+    '<svg  xmlns="http://www.w3.org/2000/svg" xmlns:tgs="http://www.totalgrid.org" xmlns:xlink="http://www.w3.org/1999/xlink" style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
+      '<g id="svgContent">' +
+        '<svg preserveAspectRatio="xMaxYMax" class="symbol" tgs:schematic-type="equipment-symbol" id="svg_619" x="484" y="404" tgs:point-name="' + points[1].name + '" tgs:symbol-type="circuitbreaker">' +
+          '<g tgs:state="OPEN" display="none" id="svg_622">' +
+          ' <rect x="2" y="2" width="30" height="30" fill="#00FF00" id="svg_623"/>' +
+          '</g>' +
+          '<g tgs:state="CLOSED" id="svg_620">' +
+            '<rect x="2" y="2" width="30" height="30" fill="#A40000" id="svg_621"/>' +
+          '</g>' +
+        '</svg>' +
+      '</g>' +
+    '</svg>'
 
 
   function makeSubscriptionId( request, idCounter) {
@@ -94,7 +111,11 @@ describe('schematic', function () {
   beforeEach( inject(function( $injector) {
     $httpBackend = $injector.get('$httpBackend')
     $httpBackend.whenGET( '/models/1/points?pnames=' + points[0].name).respond( [
-      {'name': 'MG1.Device2.kW_tot', 'id': 'Device2.kW_tot', 'pointType': 'ANALOG', 'types': ['Imported', 'DemandPower', 'Point'], 'unit': 'kW', 'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6' }
+      angular.extend( {} , points[0])
+      //{'name': 'MG1.Device2.kW_tot', 'id': 'Device2.kW_tot', 'pointType': 'ANALOG', 'types': ['Imported', 'DemandPower', 'Point'], 'unit': 'kW', 'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6' }
+    ])
+    $httpBackend.whenGET( '/models/1/points?pnames=' + points[1].name).respond( [
+      angular.extend( {} , points[1])
     ])
   }))
 
@@ -118,13 +139,18 @@ describe('schematic', function () {
     return element.find('g[tgs\\:schematic-type="point"]');
   }
 
+  function findEquipmentSymbolGs() {
+    return element.find('[tgs\\:schematic-type="equipment-symbol"]');  // Usually <svg></svg> instead of <g></g>, but could be either.
+  }
+
+  function findEquipmentSymbolStates( equipmentElement) {
+    return equipmentElement.find('[tgs\\:state]');
+  }
+
   function findMeasurementUse( measurementG) {
     return measurementG.find('use').eq(0);
   }
 
-  function findMeasurementText( measurementG) {
-    return measurementG.find('text').eq(0).textContent;
-  }
   function getMeasurementValue( measurementGs, index) {
     return measurementGs.eq(index).find('text').eq(0).text();
   }
@@ -132,13 +158,6 @@ describe('schematic', function () {
   function findCheckboxDivForOneTr( pointTr) {
     var td = pointTr.find('td').eq(0)
     return td.find('div').eq(0);
-  }
-
-  function findCheckboxDivsForAllPointTrs( pointTrs) {
-    var checkboxDivs = []
-    for( var i = 0; i < points.length; i++)
-      checkboxDivs[i] = findCheckboxDivForOneTr( pointTrs.eq(i))
-    return checkboxDivs
   }
 
   it('should subscribe to schematic and call notify', inject( function ( schematic) {
@@ -223,76 +242,81 @@ describe('schematic', function () {
 
   }));
 
+  it('should transform equipment symbols and update visible state', inject( function ( schematic) {
+    var equipmentElems, stateElements, measValue, measurements,
+        onSchematic = jasmine.createSpy('onSchematic'),
+        svgContent = svgOneEquipmentSymbol
+
+    var properties = [
+      {key: 'schematic', value: svgContent}
+    ]
+
+    subscribeInstance.onSuccess( subscribeInstance.id, 'properties', properties)
+    expect( subscribeInstance.onSuccess ).toBeDefined()
+
+    equipmentElems = findEquipmentSymbolGs()
+    expect( equipmentElems.length).toBe(1)
+    stateElements = findEquipmentSymbolStates( equipmentElems.eq(0))
+    expect( stateElements.length).toBe( 2)
+
+    scope.pointNameMap = {}
+    scope.pointNameMap[ points[1].name] = {
+      name: points[1].name,
+      unit: 'someUnit',
+      currentMeasurement: {
+        value: 'someValue',
+        validity: 'GOOD'
+      }
+    }
+    scope.$digest()
+
+    expect( stateElements.eq(0).attr( 'ng-show')).toEqual( 'pointNameMap[\'' + points[1].name + '\'].currentMeasurement.value === \'OPEN\'')
+    expect( stateElements.eq(1).attr( 'ng-show')).toEqual( 'pointNameMap[\'' + points[1].name + '\'].currentMeasurement.value === \'CLOSED\'')
+
+    // Flush getPoints.
+    $httpBackend.flush()
+
+    measurements = [
+      {
+        'point': {'id': points[1].id},
+        'measurement': {
+          'value': 'CLOSED',
+          'type': 'STRING',
+          'unit': 'Status',
+          'time': 1442261552564,
+          'validity': 'GOOD',
+          'shortQuality': '',
+          'longQuality': 'Good'
+        }
+      }
+    ]
+    subscribeInstance.onSuccess( subscribeInstance.id, 'measurements', measurements)
+    expect( stateElements.eq(0).attr( 'class')).toEqual( 'ng-hide')
+    expect( stateElements.eq(1).attr( 'class')).toEqual( '')
+
+    measurements = [
+      {
+        'point': {'id': points[1].id},
+        'measurement': {
+          'value': 'OPEN',
+          'type': 'STRING',
+          'unit': 'Status',
+          'time': 1442261552564,
+          'validity': 'GOOD',
+          'shortQuality': '',
+          'longQuality': 'Good'
+        }
+      }
+    ]
+    subscribeInstance.onSuccess( subscribeInstance.id, 'measurements', measurements)
+    expect( stateElements.eq(0).attr( 'class')).toEqual( '')
+    expect( stateElements.eq(1).attr( 'class')).toEqual( 'ng-hide')
+
+  }));
+
 
 });
 
 describe( 'schematic tests', function() {
   it('should ...')
 })
-
-
-var m1 = {
-  'subscriptionId': 'subscription.SubscribeToMeasurements.ff2ba100-5ad4-4549-c098-44f38b221256',
-  'type': 'measurements',
-  'data': [{
-    'point': {'id': '499c6ab3-c276-49ec-96a4-9c76dd661ae2'},
-    'measurement': {
-      'value': 'CLOSED',
-      'type': 'STRING',
-      'unit': 'Status',
-      'time': 1442261552564,
-      'validity': 'GOOD',
-      'shortQuality': '',
-      'longQuality': 'Good'
-    }
-  }, {
-    'point': {'id': '03682a17-c417-43e9-aec6-330123aa223f'},
-    'measurement': {
-      'value': '248.000000',
-      'type': 'DOUBLE',
-      'unit': 'kW',
-      'time': 1443638700180,
-      'validity': 'GOOD',
-      'shortQuality': '',
-      'longQuality': 'Good'
-    }
-  }, {
-    'point': {'id': '89e66319-cef4-4e40-b689-c52620bd741d'},
-    'measurement': {
-      'value': '3.290600',
-      'type': 'DOUBLE',
-      'unit': 'kvar',
-      'time': 1443646164305,
-      'validity': 'GOOD',
-      'shortQuality': '',
-      'longQuality': 'Good'
-    }
-  }, {
-    'point': {'id': '67c07eb1-c7cc-4c71-8491-f858673dd0a7'},
-    'measurement': {
-      'value': '144.943221',
-      'type': 'DOUBLE',
-      'unit': 'kW',
-      'time': 1443646164305,
-      'validity': 'GOOD',
-      'shortQuality': '',
-      'longQuality': 'Good'
-    }
-  }]
-}
-var m2 = {
-  'subscriptionId': 'subscription.SubscribeToMeasurements.ff2ba100-5ad4-4549-c098-44f38b221256',
-  'type': 'measurements',
-  'data': [{
-    'point': {'id': 'aec0bc82-9ce0-4260-92a2-919ba8d964dd', 'name': 'Zone1.RoofPV_S1.kW_tot'},
-    'measurement': {
-      'value': '144.928120',
-      'type': 'DOUBLE',
-      'unit': 'kW',
-      'time': 1443646166318,
-      'validity': 'GOOD',
-      'shortQuality': '',
-      'longQuality': 'Good'
-    }
-  }]
-}
