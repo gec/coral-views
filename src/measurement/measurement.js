@@ -46,8 +46,24 @@ angular.module( 'greenbus.views.measurement',
  * @param pointIdToMeasurementHistoryMap - Map of point.id to MeasurementHistory
  * @constructor
  */
-  factory('measurement', ['subscription', 'pointIdToMeasurementHistoryMap', '$filter', function(subscription, pointIdToMeasurementHistoryMap, $filter) {
+  factory('measurement', [ 'rest', 'subscription', 'pointIdToMeasurementHistoryMap', '$filter', function( rest, subscription, pointIdToMeasurementHistoryMap, $filter) {
     var number = $filter('number')
+
+    var commandRest = {
+      select:   function(accessMode, commandIds, success, failure) {
+        var arg = {
+          accessMode: accessMode,
+          commandIds: commandIds
+        }
+        return rest.post('/models/1/commandlock', arg, null, null, success, failure)
+      },
+      deselect: function(lockId, success, failure) {
+        return rest.delete('/models/1/commandlock/' + lockId, null, null, success, failure)
+      },
+      execute:  function(commandId, args, success, failure) {
+        return rest.post('/models/1/commands/' + commandId, args, null, null, success, failure)
+      }
+    }
 
     function formatMeasurementValue(value) {
       if( typeof value === 'boolean' || isNaN(value) || !isFinite(value) ) {
@@ -142,6 +158,14 @@ angular.module( 'greenbus.views.measurement',
       subscription.unsubscribe(subscriptionId)
     }
 
+    function getCommandsForPoints(pointIds) {
+      return rest.post('/models/1/points/commands', pointIds)
+    }
+
+    function getCommandRest() {
+      return commandRest
+    }
+
 
     /**
      * Public API
@@ -150,7 +174,9 @@ angular.module( 'greenbus.views.measurement',
       subscribeWithHistory:   subscribeWithHistory,
       unsubscribeWithHistory: unsubscribeWithHistory,
       subscribe:              subscribe,
-      unsubscribe:            unsubscribe
+      unsubscribe:            unsubscribe,
+      getCommandsForPoints:   getCommandsForPoints,
+      getCommandRest:         getCommandRest
     }
   }]).
 
@@ -427,41 +453,27 @@ angular.module( 'greenbus.views.measurement',
         }
       ]
 
-      var CommandRest = {
-        select:   function(accessMode, commandIds, success, failure) {
-          var arg = {
-            accessMode: accessMode,
-            commandIds: commandIds
-          }
-          rest.post('/models/1/commandlock', arg, null, $scope, success, failure)
-        },
-        deselect: function(lockId, success, failure) {
-          rest.delete('/models/1/commandlock/' + lockId, null, $scope, success, failure)
-        },
-        execute:  function(commandId, args, success, failure) {
-          rest.post('/models/1/commands/' + commandId, args, null, $scope, success, failure)
-        }
-      }
-
       /**
        * UUIDs are 36 characters long. The URL max is 2048
        * @param pointIds
        */
-      function getPointsCommands(pointIds) {
-        var url = '/models/1/points/commands'
-
-        rest.post(url, pointIds, null, $scope, function(data) {
-          var point
-          // data is map of pointId -> commands[]
-          for( var pointId in data ) {
-            point = findPoint(pointId)
-            if( point ) {
-              point.commandSet = new CommandSet(point, data[pointId], CommandRest, $timeout)
-              point.commandTypes = point.commandSet.getCommandTypes().toLowerCase()
-              console.log('commandTypes: ' + point.commandTypes)
+      function getCommandsForPoints(pointIds) {
+        measurement.getCommandsForPoints( pointIds).then(
+          function( response) {
+            var point,
+                data = response.data
+            // data is map of pointId -> commands[]
+            for( var pointId in data ) {
+              point = findPoint(pointId)
+              if( point ) {
+                point.commandSet = new CommandSet(point, data[pointId], measurement.getCommandRest(), $timeout)
+                point.commandTypes = point.commandSet.getCommandTypes().toLowerCase()
+                console.log('commandTypes: ' + point.commandTypes)
+              }
             }
+
           }
-        })
+        )
 
       }
 
@@ -473,7 +485,7 @@ angular.module( 'greenbus.views.measurement',
             $scope.points = response.data
             var pointIds = processPointsAndReturnPointIds($scope.points)
             subscribeToMeasurements(pointIds)
-            getPointsCommands(pointIds)
+            getCommandsForPoints(pointIds)
             return response // for the then() chain
           },
           function( error) {

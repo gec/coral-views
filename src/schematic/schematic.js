@@ -275,9 +275,11 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
               pointIdMap = processPointsAndReturnPointIdMap($scope.points)
               // TODO: what about the old names in the map?
               $scope.points.forEach( function( p) { $scope.pointNameMap[p.name] = p})
+              var pointIds = Object.keys(pointIdMap)
 
-              measurement.subscribe( $scope, Object.keys(pointIdMap), {}, self, onMeasurements)
-              //subscribeToMeasurements(pointIds)
+              measurement.subscribe( $scope, pointIds, {}, self, onMeasurements)
+              getCommandsForPoints( pointIds)
+
               return response // for the then() chain
             },
             function( error) {
@@ -321,6 +323,24 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
 
       })
       return idMap
+    }
+
+    function getCommandsForPoints(pointIds) {
+      measurement.getCommandsForPoints( pointIds).then(
+        function( response) {
+          var point,
+              data = response.data
+          // data is map of pointId -> commands[]
+          for( var pointId in data ) {
+            point = pointIdMap[pointId]
+            if( point )
+              point.commandSet = new CommandSet(point, data[pointId], measurement.getCommandRest(), $timeout)
+            else
+              console.error( 'Unknown point ID ' + pointId)
+          }
+
+        }
+      )
     }
 
 

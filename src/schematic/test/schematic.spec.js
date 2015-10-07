@@ -117,6 +117,12 @@ describe('schematic', function () {
     $httpBackend.whenGET( '/models/1/points?pnames=' + points[1].name).respond( [
       angular.extend( {} , points[1])
     ])
+    $httpBackend.whenPOST( '/models/1/points/commands', [points[0].id]).respond( [
+      // TODO: some commands to return.
+    ])
+    $httpBackend.whenPOST( '/models/1/points/commands', [points[1].id]).respond( [
+      // TODO: some commands to return.
+    ])
   }))
 
 
