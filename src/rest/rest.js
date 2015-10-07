@@ -127,6 +127,10 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
     }
 
     function get(url, name, $scope, successListener, failureListener) {
+      return getDo(url, name, $scope, successListener, failureListener, $q.defer())
+    }
+    function getDo(url, name, $scope, successListener, failureListener, deferred) {
+
       if( $scope)
         $scope.loading = true;
       //console.log( 'rest.get ' + url + ' retries:' + retries.get);
@@ -137,7 +141,8 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
         redirectLocation = $location.url() // save the current url so we can redirect the user back
         console.log('CoralRest.get: saving redirectLocation: ' + redirectLocation)
         authentication.redirectToLoginPage(redirectLocation)
-        return
+        deferred.reject( {data: undefined, status: 'Not logged in. Redirecting to login'})
+        return deferred.promise
       }
 
       // Register for controller.$destroy event and kill any retry tasks.
@@ -157,12 +162,15 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
         retries.get++;
         var delay = retries.get < 5 ? 1000 : 10000
 
-        if( $scope)
+        if( $scope) {
           $scope.task = $timeout(function() {
-            self.get(url, name, $scope, successListener, failureListener);
+            self.getDo(url, name, $scope, successListener, failureListener, deferred);
           }, delay);
+          deferred.notify( 'Status is ' + status.status + '. Retrying in ' + (delay / 1000) + ' seconds')
+        } else
+          deferred.reject( {data: undefined, status: status.status})
 
-        return;
+        return deferred.promise;
       }
 
       retries.get = 0;
@@ -170,7 +178,6 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
       httpConfig.headers = authentication.getHttpHeaders()
 
 
-      var deferred = $q.defer()
       // encodeURI because objects like point names can have percents in them.
       $http.get(encodeURI(url), httpConfig).then(
         function( response) {
@@ -208,69 +215,37 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
           //
           if( failureListener )
             failureListener(error.data, error.status, error.headers, error.config)
-          deferred.reject( error)
 
           if( error.status === 401 || error.status === 0 )
             httpRequestError(error.data, error.status, error.headers, error.config)
+
+          deferred.reject( error)
         }
       )
 
       return deferred.promise
 
-
-      // encodeURI because objects like point names can have percents in them.
-      //$http.get(encodeURI(url), httpConfig).
-      //  success(function(json) {
-      //    if( $scope) {
-      //      if( name)
-      //        $scope[name] = json;
-      //      $scope.loading = false;
-      //    }
-      //    console.log('rest.get success json.length: ' + json.length + ', url: ' + url);
-      //
-      //    if( successListener )
-      //      successListener(json)
-      //
-      //    // If the get worked, the service must be up.
-      //    if( status.status != STATUS.UP ) {
-      //      setStatus({
-      //        status:         STATUS.UP,
-      //        reinitializing: false,
-      //        description:    ''
-      //      });
-      //    }
-      //  }).
-      //  error(function(json, statusCode, headers, config) {
-      //    //   0 Server down
-      //    // 400 Bad Request - request is malformed or missing required fields.
-      //    // 401 Unauthorized
-      //    // 403 Forbidden - Logged in, but don't have permissions to complete request, resource already locked, etc.
-      //    // 404 Not Found - Server has not found anything matching the Request-URI
-      //    // 408 Request Timeout
-      //    // 500 Internal Server Error
-      //    //
-      //    if( failureListener )
-      //      failureListener(json, statusCode, headers, config)
-      //    if( statusCode === 401 || statusCode === 0 )
-      //      httpRequestError(json, statusCode, headers, config)
-      //  });
     }
 
     function post(url, data, name, $scope, successListener, failureListener) {
+      var deferred = $q.defer()
 
       httpConfig.headers = authentication.getHttpHeaders()
 
       // encodeURI because objects like point names can have percents in them.
-      $http.post(url, data, httpConfig).
-        success(function(json) {
+      $http.post(url, data, httpConfig).then(
+        function( response) {
+          var json = response.data
           if( name && $scope)
             $scope[name] = json;
           console.log('rest.post success json.length: ' + json.length + ', url: ' + url);
 
           if( successListener )
             successListener(json)
-        }).
-        error(function(json, statusCode, headers, config) {
+          deferred.resolve( {data: json})
+        },
+        function( error) {
+          // error.status
           //   0 Server down
           // 400 Bad Request - request is malformed or missing required fields.
           // 401 Unauthorized
@@ -280,36 +255,56 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
           // 500 Internal Server Error
           //
           if( failureListener )
-            failureListener(json, statusCode, headers, config)
-          if( statusCode === 401 || statusCode === 0 )
-            httpRequestError(json, statusCode, headers, config)
-        });
+            failureListener(error.data, error.status, error.headers, error.config)
 
+          if( error.status === 401 || error.status === 0 )
+            httpRequestError(error.data, error.status, error.headers, error.config)
+
+          deferred.reject( error)
+        }
+      )
+
+      return deferred.promise
     }
 
     function _delete(url, name, $scope, successListener, failureListener) {
+      var deferred = $q.defer()
 
       httpConfig.headers = authentication.getHttpHeaders()
 
       // encodeURI because objects like point names can have percents in them.
-      $http.delete(url, httpConfig).
-        success(function(json) {
+      $http.delete(url, httpConfig).then(
+        function( response) {
+          var json = response.data
           if( name && $scope)
             $scope[name] = json;
           console.log('rest.delete success json.length: ' + json.length + ', url: ' + url);
 
           if( successListener )
             successListener(json)
-        }).
-        error(function(json, statusCode, headers, config) {
-          // 400: Bad Request - request is malformed or missing required fields.
-          // 403: Forbidden - Logged in, but don't have permissions to complete request, resource already locked, etc.
+          deferred.resolve( {data: json})
+        },
+        function(error) {
+          // error.status
+          //   0 Server down
+          // 400 Bad Request - request is malformed or missing required fields.
+          // 401 Unauthorized
+          // 403 Forbidden - Logged in, but don't have permissions to complete request, resource already locked, etc.
+          // 404 Not Found - Server has not found anything matching the Request-URI
+          // 408 Request Timeout
+          // 500 Internal Server Error
+          //
           if( statusCode === 400 || statusCode === 403 )
-            failureListener(json, statusCode, headers, config)
+            failureListener(error.data, error.status, error.headers, error.config)
           else
             httpRequestError(json, statusCode, headers, config)
-        });
 
+          deferred.reject( error)
+        }
+
+      )
+
+      return deferred.promise
     }
 
 
