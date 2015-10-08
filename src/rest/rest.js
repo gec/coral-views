@@ -294,7 +294,7 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
           // 408 Request Timeout
           // 500 Internal Server Error
           //
-          if( statusCode === 400 || statusCode === 403 )
+          if( error.status === 400 || error.status === 403 )
             failureListener(error.data, error.status, error.headers, error.config)
           else
             httpRequestError(json, statusCode, headers, config)

@@ -46,7 +46,7 @@ angular.module( 'greenbus.views.measurement',
  * @param pointIdToMeasurementHistoryMap - Map of point.id to MeasurementHistory
  * @constructor
  */
-  factory('measurement', [ 'rest', 'subscription', 'pointIdToMeasurementHistoryMap', '$filter', function( rest, subscription, pointIdToMeasurementHistoryMap, $filter) {
+  factory('measurement', [ 'rest', 'subscription', 'pointIdToMeasurementHistoryMap', '$filter', '$timeout', function( rest, subscription, pointIdToMeasurementHistoryMap, $filter, $timeout) {
     var number = $filter('number')
 
     var commandRest = {
@@ -166,6 +166,10 @@ angular.module( 'greenbus.views.measurement',
       return commandRest
     }
 
+    function getCommandSet( point, commands) {
+      return new CommandSet(point, commands, commandRest, $timeout)
+    }
+
 
     /**
      * Public API
@@ -176,7 +180,8 @@ angular.module( 'greenbus.views.measurement',
       subscribe:              subscribe,
       unsubscribe:            unsubscribe,
       getCommandsForPoints:   getCommandsForPoints,
-      getCommandRest:         getCommandRest
+      getCommandRest:         getCommandRest,
+      getCommandSet:          getCommandSet
     }
   }]).
 
@@ -466,7 +471,7 @@ angular.module( 'greenbus.views.measurement',
             for( var pointId in data ) {
               point = findPoint(pointId)
               if( point ) {
-                point.commandSet = new CommandSet(point, data[pointId], measurement.getCommandRest(), $timeout)
+                point.commandSet = measurement.getCommandSet(point, data[pointId])
                 point.commandTypes = point.commandSet.getCommandTypes().toLowerCase()
                 console.log('commandTypes: ' + point.commandTypes)
               }

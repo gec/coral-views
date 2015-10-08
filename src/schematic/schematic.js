@@ -303,7 +303,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
     }
 
     function processPointsAndReturnPointIdMap(points) {
-      var idMap           = [],
+      var idMap           = {},
           currentMeasurement = {
             value:        '-',
             time:         null,
@@ -334,7 +334,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
           for( var pointId in data ) {
             point = pointIdMap[pointId]
             if( point )
-              point.commandSet = new CommandSet(point, data[pointId], measurement.getCommandRest(), $timeout)
+              point.commandSet =  measurement.getCommandSet(point, data[pointId])
             else
               console.error( 'Unknown point ID ' + pointId)
           }
