@@ -188,13 +188,15 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
           states = element.find( '[tgs\\:state]'),
           pointName = element.attr( 'tgs:point-name')
 
-      states.map( function() {
-        var stateElement = $(this),
-            stateName = stateElement.attr( 'tgs:state')
-        stateElement.attr( 'ng-show', 'pointNameMap[\'' + pointName + '\'].currentMeasurement.value === \'' + stateName + '\'')
-        stateElement.removeAttr( 'display')
-        return stateName
-      })
+      if( pointName && pointName.length > 0) {
+        states.map( function() {
+          var stateElement = $(this),
+              stateName = stateElement.attr( 'tgs:state')
+          stateElement.attr( 'ng-show', 'pointNameMap[\'' + pointName + '\'].currentMeasurement.value === \'' + stateName + '\'')
+          stateElement.removeAttr( 'display')
+          return stateName
+        })
+      }
 
       return pointName
     }
