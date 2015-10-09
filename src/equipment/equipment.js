@@ -107,8 +107,8 @@ angular.module('greenbus.views.equipment', [ 'ui.router', 'greenbus.views.rest']
     }
   }]).
 
-  controller('gbEquipmentController', ['$scope', '$stateParams', 'equipment',
-    function($scope, $stateParams, equipment) {
+  controller('gbEquipmentController', ['$scope', '$state', '$stateParams', 'equipment',
+    function($scope, $state, $stateParams, equipment) {
       var self = this,
           microgridId       = $stateParams.microgridId,
           navigationElement = $stateParams.navigationElement
@@ -128,7 +128,7 @@ angular.module('greenbus.views.equipment', [ 'ui.router', 'greenbus.views.rest']
 
       var onePieceOfEquipment = navigationElement.equipmentChildren.length === 0
       $scope.tabs = {
-        overview: true,
+        overview: $state.is( 'microgrids.dashboard'),
         measurements: true,
         properties: onePieceOfEquipment,
         points: true

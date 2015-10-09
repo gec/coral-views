@@ -165,6 +165,8 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       text.html( '{{ pointNameMap[\'' + pointName + '\'].currentMeasurement.value }} {{ pointNameMap[\'' + pointName + '\'].unit }}')
       useQuality.attr( 'xlink:href', '{{ pointNameMap[\'' + pointName + '\'].currentMeasurement.validity | schematicValidityDef }} ')
 
+      element.attr( 'ng-click', 'equipmentClicked( pointNameMap[\'' + pointName + '\'])')
+
       return pointName
     }
 
@@ -243,6 +245,10 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
     //    $scope.invalidateWindow()
     //  })
     //}
+
+    $scope.equipmentClicked = function( point) {
+
+    }
 
     /**
      * One of our points was dragged away from us.
