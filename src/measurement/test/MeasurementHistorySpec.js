@@ -1,36 +1,56 @@
-/*global describe beforeEach it expect */
-
-var point, json,
-    subscriptionMock = {
-      id:            'subscriptionId1',
-      notifySuccess: null,
-      notifyError:   null,
-      subscribe:     function(json, scope, success, error) {
-        this.notifySuccess = success
-        this.notifyError = error
-        return this.id
-      },
-      unsubscribe:   jasmine.createSpy('unsubscribe')
-    },
-    subscriber1 = 'subscriber1',
-    notify1 = jasmine.createSpy('notify1'),
-    scope1 = {name: 'scope1'},
-    constraints ={
-      time: 10000,
-      size: 10000,
-      throttling: 0
-    },
-    timeNow = 10,
-    limit = 10
-
-
-
-function resetAllMockSpies() {
-  notify1.calls.reset()
-  subscriptionMock.unsubscribe.calls.reset()
-}
+/**
+ * Copyright 2014 Green Energy Corp.
+ *
+ * Licensed to Green Energy Corp (www.greenenergycorp.com) under one or more
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. Green Energy
+ * Corp licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ * Author: Flint O'Brien
+ */
 
 describe('subscription', function() {
+
+  var point, json,
+      subscriptionMock = {
+        id:            'subscriptionId1',
+        notifySuccess: null,
+        notifyError:   null,
+        subscribe:     function(json, scope, success, error) {
+          this.notifySuccess = success
+          this.notifyError = error
+          return this.id
+        },
+        unsubscribe:   jasmine.createSpy('unsubscribe')
+      },
+      subscriber1 = 'subscriber1',
+      notify1 = jasmine.createSpy('notify1'),
+      scope1 = {name: 'scope1'},
+      constraints ={
+        time: 10000,
+        size: 10000,
+        throttling: 0
+      },
+      timeNow = 10,
+      limit = 10
+
+
+
+  function resetAllMockSpies() {
+    notify1.calls.reset()
+    subscriptionMock.unsubscribe.calls.reset()
+  }
+
 
   beforeEach(function() {
     point = {
