@@ -19,7 +19,7 @@
  * Author: Flint O'Brien
  */
 
-describe('subscription', function() {
+describe('MeasurementHistory', function() {
 
   var point, json,
       subscriptionMock = {
