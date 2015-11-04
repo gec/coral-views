@@ -63,22 +63,21 @@
                                     <form class="form-horizontal" role="form" name="form">
                                         <div class="form-group" ng-repeat="command in point.commandSet.commands">
                                             <label class="col-sm-5 control-label">
-                                                {{ command.displayName }}
+                                                {{ command.command.displayName }}
                                             </label>
                                             <div class="col-sm-7">
                                                 <div class="btn-toolbar" role="toolbar">
                                                     <div class="btn-group">
-                                                        <!--<button type="button" class="btn btn-default"><i ng-class="command.blockClasses"></i> Block</button>-->
-                                                        <button type="button" class="btn btn-default" ng-click="point.commandSet.selectToggle( command)">Select <i ng-class="command.selectClasses"></i></button>
+                                                        <button type="button" class="btn btn-default" ng-click="command.selectToggle()">Select <i ng-class="command.selectClasses"></i></button>
                                                     </div>
 
-                                                    <button ng-if="!command.isSetpoint" type="button" class="btn btn-primary" ng-click="point.commandSet.execute( command, $index)" style="opacity: {{point.commandSet.selectedCommand === command ? 1 : 0}};">
+                                                    <button ng-if="!command.isSetpointType" type="button" class="btn btn-primary" ng-click="command.execute()" style="opacity: {{point.commandSet.selectedCommand === command ? 1 : 0}};">
                                                         Execute <span style="padding-right: 0.5em;"> </span><i ng-class="command.executeClasses"></i>
                                                     </button>
 
-                                                    <div ng-if="command.isSetpoint" class="input-group input-group-sm-  {{form.setpoint_value.$error.pattern ? 'has-error' : ''}}" style="opacity: {{point.commandSet.selectedCommand === command ? 1 : 0}};">
+                                                    <div ng-if="command.isSetpointType" class="input-group input-group-sm-  {{form.setpoint_value.$error.pattern ? 'has-error' : ''}}" style="opacity: {{point.commandSet.selectedCommand === command ? 1 : 0}};">
                                                         <input type="text" class="form-control" ng-model="command.setpointValue" name="setpoint_value" ng-pattern="command.pattern" style="width:6em;" placeholder="{{ command.placeHolder}}">
-                                                        <button type="button" class="btn btn-primary" ng-click="point.commandSet.execute( command, $index)" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                                        <button type="button" class="btn btn-primary" ng-click="command.execute()" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
                                                             Set
                                                             <span style="padding-right: 0.5em;"> </span><i ng-class="command.executeClasses"></i>
                                                         </button>
