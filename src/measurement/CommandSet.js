@@ -26,10 +26,14 @@
  * @param _commands
  * @constructor
  */
-function CommandSet( scope, point, commands, commandRest, $timeout) {
+function CommandSet( point, commands, commandRest, $timeout) {
   // Control & Setpoint States
 
-  this.commands = commands.map( function( c) { return new GbCommand( scope, c, commandRest, $timeout)})
+  this.commands = commands.map( function( c) { return new GbCommand( c, commandRest, $timeout)})
+  //if( typeof commands.map === 'function')
+  //  this.commands = commands.map( function( c) { return new GbCommand( c, commandRest, $timeout)})
+  //else
+  //  console.error( 'CommandSet error commands.map is not a function: ' + JSON.stringify( commands))
 }
 
 
