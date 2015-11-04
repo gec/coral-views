@@ -83,6 +83,7 @@ angular.module('greenbus.views.command', []).
     // $scope.model holds the command as returned from the server.
     $scope.replyError = undefined
     $scope.state = States.NotSelected
+    $scope.isSelected = false
 
     $scope.selectClasses = CommandIcons[ States.NotSelected]
     $scope.executeClasses = ExecuteIcons[ States.NotSelected]
@@ -125,6 +126,7 @@ angular.module('greenbus.views.command', []).
     function setState( state) {
       console.log( 'setState from ' + $scope.state + ' to ' + state)
       $scope.state = state
+      $scope.isSelected = state === States.Selected || state === States.Deselecting || state === States.Executing
       $scope.selectClasses = CommandIcons[$scope.state]
       $scope.executeClasses = ExecuteIcons[$scope.state]
       console.log( 'gbCommandController.setState ' + $scope.model.name + ' ' + $scope.state + ', selectClasses ' + $scope.selectClasses + ', executeClasses ' + $scope.executeClasses)
@@ -144,7 +146,7 @@ angular.module('greenbus.views.command', []).
         return
       }
 
-      $scope.setState( States.Selecting)
+      setState( States.Selecting)
 
       gbCommandRest.select( 'ALLOWED', [$scope.model.id],
         function( data) {
@@ -187,7 +189,7 @@ angular.module('greenbus.views.command', []).
         return
       }
 
-      $scope.setState( States.Deselecting)
+      setState( States.Deselecting)
 
       gbCommandRest.deselect( lock.id,
         function( data) {
