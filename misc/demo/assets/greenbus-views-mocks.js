@@ -210,7 +210,7 @@ function makeRest($injector) {
 
   }
 
-  Rest.request = function(method, url, data, name, $scope, successListener) {
+  Rest.request = function(method, url, data, name, $scope, successListener, failureListener) {
 
     var definition,
         $q = $injector.get('$q'),
@@ -221,15 +221,25 @@ function makeRest($injector) {
       var deferred = $q.defer()
 
       setTimeout( function() {
-        var resolveArg = {data: copy( response)}
+        var responseData = copy( response[1])
+        var resolveArg = {
+          data: responseData,
+          status: response[0]
+        }
 
         if( digest ) {
           if( $scope ) {
-            deferred.resolve( resolveArg)
+            if( response[0] === 200)
+              deferred.resolve( resolveArg)
+            else
+              deferred.reject( resolveArg)
           } else {
             var rootScope = $injector.get('$rootScope')
             rootScope.$apply(function() {
-              deferred.resolve( resolveArg)
+              if( response[0] === 200)
+                deferred.resolve( resolveArg)
+              else
+                deferred.reject( resolveArg)
             })
           }
         } else {
@@ -243,8 +253,9 @@ function makeRest($injector) {
     while ((definition = definitions[++i])) {
       if (definition.match(method, url, data, headers || {})) {
         if (definition.response) {
+          var response = definition.response(method, url, data, headers)
           setTimeout( function() {
-            var responseData = copy( definition.response(method, url, data, headers)[1])
+            var responseData = copy( response[1])
 
             if( $scope) {
               $scope.$apply( function() {
@@ -254,20 +265,31 @@ function makeRest($injector) {
 
                 $scope.loading = false
 
-                if( successListener)
-                  successListener( responseData)
+                if( response[0] === 200) {
+                  if( successListener)
+                    successListener( responseData)
+                } else {
+                  if( failureListener)
+                    failureListener( responseData, response[0])
+                }
               })
             } else {
               if( successListener) {
                 var rootScope = $injector.get('$rootScope')
                 rootScope.$apply( function() {
-                  successListener( responseData)
+                  if( response[0] === 200) {
+                    if( successListener)
+                      successListener( responseData)
+                  } else {
+                    if( failureListener)
+                      failureListener( responseData, response[0])
+                  }
                 })
               }
             }
           })
 
-          return makeThen( definition.response(method, url, data, headers)[1], true) // t: do digest
+          return makeThen( response, true) // t: do digest
           //return {
           //  then: function( success, error) {
           //    setTimeout( function() {
@@ -302,14 +324,14 @@ function makeRest($injector) {
     throw new Error('gbMock.rest: No matching request found for ' + method + ' ' + url);
   }
 
-  Rest.get = function(url, name, $scope, successListener) {
-    return Rest.request( 'GET', url, {}, name, $scope, successListener)
+  Rest.get = function(url, name, $scope, successListener, failureListener) {
+    return Rest.request( 'GET', url, {}, name, $scope, successListener, failureListener)
   }
   Rest.post = function(url, data, name, $scope, successListener, failureListener) {
-    return Rest.request( 'POST', url, data, name, $scope, successListener)
+    return Rest.request( 'POST', url, data, name, $scope, successListener, failureListener)
   }
   Rest['delete'] = function(url, name, $scope, successListener, failureListener) {
-    return Rest.request( 'DELETE', url, {}, name, $scope, successListener)
+    return Rest.request( 'DELETE', url, {}, name, $scope, successListener, failureListener)
   }
 
   Rest.STATUS =  {

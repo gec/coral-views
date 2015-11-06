@@ -1,12 +1,24 @@
 <div ng-controller="CommandDemoCtrl">
-    <p>Note: select timeout set to 6 seconds for this demo. Default is 30s (or whatever the server returns)</p>
 
     <form class="form-horizontal" role="form" name="form">
+        <h5 class="col-sm-7 col-sm-offset-5">Demo options:</h5>
+        <div class="checkbox">
+            <div class="col-sm-7 col-sm-offset-5">
+                <label>
+                    <input type="checkbox" ng-model="selectReturnsError">
+                    Select returns error
+                </label>
+            </div>
+        </div>
+        <div class="checkbox">
+            <div class="col-sm-7 col-sm-offset-5" style="margin-bottom: 1em;">
+                <label>
+                    <input type="checkbox" ng-model="executeReturnsError">
+                    Execute returns error
+                </label>
+            </div>
+        </div>
         <gb-command ng-repeat="command in commands" model="command"></gb-command>
     </form>
-    <!--<div class="row" ng-repeat="command in commands">-->
-        <!--<div class="col-md-12">-->
-            <!--<gb-command model="command"></gb-command>-->
-        <!--</div>-->
-    <!--</div>-->
+    <p>Note: select timeout set to 6 seconds for this demo. Default is 30s (or whatever the server returns)</p>
 </div>
