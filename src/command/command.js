@@ -285,7 +285,7 @@ angular.module('greenbus.views.command', []).
     function alertException( ex) {
       console.error( 'gbCommandController.alertException ' + JSON.stringify( ex))
       var message = ex.message
-      if( message === undefined || message === "")
+      if( message === undefined || message === '')
         message = ex.exception
       $scope.replyError = message
     }

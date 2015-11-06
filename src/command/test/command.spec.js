@@ -106,19 +106,15 @@ describe('gb-command', function () {
       // https://github.com/angular-ui/bootstrap/blob/master/src/typeahead/test/typeahead.spec.js
       changeSetpointValueTo = function(element, value) {
         var inputEl = element // element.find('input');
-        //inputEl.triggerHandler("focus")
+        //inputEl.triggerHandler('focus')
         inputEl.val(value);
         inputEl.trigger($sniffer.hasEvent('input') ? 'input' : 'change');
         scope.$digest();
         // TODO: I give up! The model is not being updated during tests.
         if( scope.setpointValue !== value)
           scope.setpointValue = value
-        //inputEl.triggerHandler("blur")
+        //inputEl.triggerHandler('blur')
       }
-      //changeInputValue = function(elm, value) {
-      //  elm.val(value);
-      //  browserTrigger(elm, $sniffer.hasEvent('input') ? 'input' : 'change');
-      //};
     }));
 
 
@@ -231,10 +227,10 @@ describe('gb-command', function () {
             'commandIds': [command.id]
           },
           deselectReply = {
-            "id": "93",
-            "accessMode": "ALLOWED",
-            "expireTime": 1446769516043,
-            "commandIds": ["4fc433a4-3ab5-4d9c-8eb8-3f0757d771bf"]
+            'id': '93',
+            'accessMode': 'ALLOWED',
+            'expireTime': 1446769516043,
+            'commandIds': ['4fc433a4-3ab5-4d9c-8eb8-3f0757d771bf']
           }
 
 
@@ -285,8 +281,8 @@ describe('gb-command', function () {
             'commandIds': [command.id]
           },
           executeReply = {
-            "exception": "org.totalgrid.reef.client.exception.ReefServiceException",
-            "message": "Command execute request unknown failure. Response timeout from front end connection."
+            'exception': 'org.totalgrid.reef.client.exception.ReefServiceException',
+            'message': 'Command execute request unknown failure. Response timeout from front end connection.'
           }
 
       select = findSelectElements( buttonToolbar)
@@ -325,8 +321,8 @@ describe('gb-command', function () {
           setpoint = findSetpointElements( buttonToolbar),
           errorIcon = findErrorIcon( buttonToolbar),
           selectReply = {
-            "exception": "LockedException",
-            "message": "Commands already locked"
+            'exception': 'LockedException',
+            'message': 'Commands already locked'
           }
 
       select = findSelectElements( buttonToolbar)
@@ -360,8 +356,8 @@ describe('gb-command', function () {
 
       // select, setpoint div (hidden), replyError icon (hidden)
       expect( buttonToolbar[0].children.length).toBe( 3)
-      setpoint = findSetpointElements( buttonToolbar),
-        expect( setpoint.div).toHaveClass('ng-hide')  // setpoint is hidden
+      setpoint = findSetpointElements( buttonToolbar)
+      expect( setpoint.div).toHaveClass('ng-hide')  // setpoint is hidden
 
     }))
   })
@@ -394,24 +390,6 @@ describe('gb-command', function () {
       // Controller has run and all scope variables are available.
       scope = element.isolateScope() || element.scope()
 
-      // See:
-      // http://www.scimedsolutions.com/articles/45-testing-an-angularjs-app-using-karma-and-jasmine
-      // https://github.com/angular-ui/bootstrap/blob/master/src/typeahead/test/typeahead.spec.js
-      changeSetpointValueTo = function(element, value) {
-        var inputEl = element // element.find('input');
-        //inputEl.triggerHandler("focus")
-        inputEl.val(value);
-        inputEl.trigger($sniffer.hasEvent('input') ? 'input' : 'change');
-        scope.$digest();
-        // TODO: I give up! The model is not being updated during tests.
-        if( scope.setpointValue !== value)
-          scope.setpointValue = value
-        //inputEl.triggerHandler("blur")
-      }
-      //changeInputValue = function(elm, value) {
-      //  elm.val(value);
-      //  browserTrigger(elm, $sniffer.hasEvent('input') ? 'input' : 'change');
-      //};
     }));
 
 
@@ -523,10 +501,10 @@ describe('gb-command', function () {
             'commandIds': [command.id]
           },
           deselectReply = {
-            "id": "93",
-            "accessMode": "ALLOWED",
-            "expireTime": 1446769516043,
-            "commandIds": ["4fc433a4-3ab5-4d9c-8eb8-3f0757d771bf"]
+            'id': '93',
+            'accessMode': 'ALLOWED',
+            'expireTime': 1446769516043,
+            'commandIds': ['4fc433a4-3ab5-4d9c-8eb8-3f0757d771bf']
           }
 
 
@@ -577,8 +555,8 @@ describe('gb-command', function () {
             'commandIds': [command.id]
           },
           executeReply = {
-            "exception": "org.totalgrid.reef.client.exception.ReefServiceException",
-            "message": "Command execute request unknown failure. Response timeout from front end connection."
+            'exception': 'org.totalgrid.reef.client.exception.ReefServiceException',
+            'message': 'Command execute request unknown failure. Response timeout from front end connection.'
           }
 
       select = findSelectElements( buttonToolbar)
@@ -614,8 +592,8 @@ describe('gb-command', function () {
           control = findControlElements( buttonToolbar),
           errorIcon = findErrorIcon( buttonToolbar),
           selectReply = {
-            "exception": "LockedException",
-            "message": "Commands already locked"
+            'exception': 'LockedException',
+            'message': 'Commands already locked'
           }
 
       select = findSelectElements( buttonToolbar)
@@ -649,8 +627,8 @@ describe('gb-command', function () {
 
       // select, control div (hidden), replyError icon (hidden)
       expect( buttonToolbar[0].children.length).toBe( 3)
-      control = findControlElements( buttonToolbar),
-        expect( control.button).toHaveClass('ng-hide')  // control is hidden
+      control = findControlElements( buttonToolbar)
+      expect( control.button).toHaveClass('ng-hide')  // control is hidden
 
     }))
   })
