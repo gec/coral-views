@@ -36,6 +36,7 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     files: [
       'bower_components/jquery/dist/jquery.min.js',
+      'bower_components/jasmine-jquery/lib/jasmine-jquery.js',
       'bower_components/angular/angular.js',
       'bower_components/angular-cookies/angular-cookies.js',
       'bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js',
@@ -43,7 +44,6 @@ module.exports = function(config) {
       'bower_components/angular-ui-router/release/angular-ui-router.min.js',
       'bower_components/angular-mocks/angular-mocks.js',
       'bower_components/d3/d3.js',
-      'misc/test-lib/helpers.js',
       'misc/test-lib/d3-traits.js',
 
       // Use the actual source files for testing.
