@@ -6,19 +6,19 @@
                 <button type="button" class="btn btn-default" ng-click="selectToggle()">Select <i ng-class="selectClasses"></i></button>
             </div>
 
-            <button ng-if="!isSetpointType" type="button" class="btn btn-primary" ng-click="execute()" style="opacity: {{isSelected ? 1 : 0}};">
+            <button ng-if="!isSetpointType" type="button" class="btn btn-primary" ng-click="execute()" ng-show="isSelected">
                 Execute <span style="padding-right: 0.5em;"> </span><i ng-class="executeClasses"></i>
             </button>
 
-            <div ng-if="isSetpointType" class="input-group input-group-sm-  {{form.setpoint_value.$error.pattern ? 'has-error' : ''}}" style="opacity: {{isSelected ? 1 : 0}};">
-                <input type="text" class="form-control" ng-model="setpointValue" name="setpoint_value" ng-pattern="pattern" style="width:6em;" placeholder="{{ placeHolder}}">
+            <div ng-if="isSetpointType" class="input-group input-group-sm-  {{form.setpoint_value.$error.pattern ? 'has-error' : ''}}" ng-show="isSelected">
+                <input type="text" class="form-control" ng-model="setpointValue" name="setpoint_value" ng-pattern-="pattern" style="width:6em;" placeholder="{{ placeHolder}}">
                 <button type="button" class="btn btn-primary" ng-click="execute()" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
                     Set
                     <span style="padding-right: 0.5em;"> </span><i ng-class="executeClasses"></i>
                 </button>
             </div>
 
-            <i class="fa fa-exclamation-circle" ng-show="replyError" popover="{{replyError}}" popover-trigger="mouseenter" popover-placement="bottom"></i>
+            <i class="fa fa-exclamation-circle" ng-show="replyError" popover="{{replyError}}" popover-trigger="mouseenter" popover-placement="top"></i>
 
         </div>
     </div>

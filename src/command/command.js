@@ -57,28 +57,27 @@ angular.module('greenbus.views.command', []).
       },
       CommandIcons: {
         NotSelected: 'fa fa-chevron-right text-primary',
-        Selecting: 'fa fa-chevron-right fa-spin text-primary',
-        Selected: 'fa fa-chevron-left text-primary',
-        Deselecting: 'fa fa-chevron-left fa-spin text-primary',
-        Executing: 'fa fa-chevron-left text-primary'
+        Selecting:   'fa fa-chevron-right text-primary fa-spin',
+        Selected:    'fa fa-chevron-left text-primary',
+        Deselecting: 'fa fa-chevron-left text-primary fa-spin',
+        Executing:   'fa fa-chevron-left text-primary'
       },
       ExecuteIcons: {
         NotSelected: '',
-        Selecting: '',
-        Selected: 'fa fa-sign-in',
+        Selecting:   '',
+        Selected:    'fa fa-sign-in',
         Deselecting: 'fa fa-sign-in',
-        Executing: 'fa fa-refresh fa-spin'
+        Executing:   'fa fa-refresh fa-spin'
       }
 
     }
   }).
 
   controller( 'gbCommandController', ['$scope', 'gbCommandRest', 'gbCommandEnums', '$timeout', function( $scope, gbCommandRest, gbCommandEnums, $timeout) {
-    var States = gbCommandEnums.States,
+    var selectTimer, lock,
+        States = gbCommandEnums.States,
         CommandIcons = gbCommandEnums.CommandIcons,
         ExecuteIcons = gbCommandEnums.ExecuteIcons
-        //selectTimer = undefined,
-        //lock = undefined
 
     // $scope.model holds the command as returned from the server.
     $scope.replyError = undefined
@@ -89,7 +88,7 @@ angular.module('greenbus.views.command', []).
     $scope.executeClasses = ExecuteIcons[ States.NotSelected]
     $scope.isSetpointType = $scope.model.commandType.indexOf('SETPOINT') === 0
     if( $scope.isSetpointType) {
-      //$scope.setpointValue = undefined
+      $scope.setpointValue = ''
 
       switch( $scope.model.commandType) {
         case 'SETPOINT_INT':
@@ -117,7 +116,7 @@ angular.module('greenbus.views.command', []).
     $scope.selectToggle = function( ) {
       switch( $scope.state) {
         case States.NotSelected: $scope.select(); break;
-      case States.Selecting:   break;
+        case States.Selecting:   break;
         case States.Selected:    $scope.deselect(); break;
         case States.Executing:   break;
       }
@@ -171,7 +170,7 @@ angular.module('greenbus.views.command', []).
           }
         },
         function( ex, statusCode, headers, config) {
-          console.log( 'gbCommandController.select ' + ex)
+          console.log( 'gbCommandController.select ' + JSON.stringify( ex))
           alertException( ex)
           deselected()
         })
@@ -199,7 +198,7 @@ angular.module('greenbus.views.command', []).
             setState( States.NotSelected)
         },
         function( ex, statusCode, headers, config) {
-          console.log( 'gbCommandController.deselect ' + ex)
+          console.log( 'gbCommandController.deselect ' + JSON.stringify( ex))
           if( $scope.state === States.Deselecting)
             setState( States.Selected)
           alertException( ex)
@@ -207,18 +206,26 @@ angular.module('greenbus.views.command', []).
     }
 
     $scope.execute = function() {
+      console.error( 'gbCommandController.execute state: ' + $scope.state)
 
       if( $scope.state !== States.Selected) {
         console.error( 'gbCommandController.execute invalid state: ' + $scope.state)
         return
       }
+      console.error( 'gbCommandController.execute state: ' + $scope.state)
 
       var args = {
         commandLockId: lock.id
       }
 
       if( $scope.isSetpointType) {
+        if( $scope.setpointValue === undefined) {
+          console.error( 'gbCommandController.execute ERROR: setpoint value is undefined')
+          return
+        }
+
         if( $scope.pattern && !$scope.pattern.test( $scope.setpointValue)) {
+          console.error( 'gbCommandController.execute ERROR: setpoint value is invalid "' + $scope.setpointValue + '"')
           switch( $scope.model.commandType) {
             case 'SETPOINT_INT': alertDanger( 'Setpoint needs to be an integer value.'); return;
             case 'SETPOINT_DOUBLE': alertDanger( 'Setpoint needs to be a floating point value.'); return;
@@ -242,19 +249,22 @@ angular.module('greenbus.views.command', []).
             break
         }
       }
+      console.error( 'gbCommandController.execute state: ' + $scope.state)
 
       setState( States.Executing)
+      console.error( 'gbCommandController.execute state2: ' + $scope.state)
+      console.error( 'gbCommandController.execute state2: ' + $scope.state)
+      console.error( 'gbCommandController.execute state2: ' + $scope.state)
 
 
       gbCommandRest.execute( $scope.model.id, args,
         function( commandResult) {
           cancelSelectTimer()
           alertCommandResult( commandResult)
-          cancelSelectTimer()
           deselected()
         },
         function( ex, statusCode, headers, config) {
-          console.log( 'gbCommandController.execute ' + ex)
+          console.log( 'gbCommandController.execute ' + JSON.stringify( ex))
           cancelSelectTimer()
           deselected()
           alertException( ex)
@@ -262,19 +272,26 @@ angular.module('greenbus.views.command', []).
     }
 
     function alertCommandResult( result) {
+      console.log( 'alertCommandResult: result.status "' + result.status + '"')
       if( result.status !== 'SUCCESS') {
-        var message = 'ERROR: ' + result.status
+        console.log( 'alertCommandResult: result.error "' + result.error + '"')
+        var message = result.status
         if( result.error)
-          message += ',  ' + result.error
+          message += ':  ' + result.error
         $scope.replyError = message
       }
     }
 
     function alertException( ex) {
-      $scope.replyError = ex.exception + ': ' + ex.message
+      console.error( 'gbCommandController.alertException ' + JSON.stringify( ex))
+      var message = ex.message
+      if( message === undefined || message === "")
+        message = ex.exception
+      $scope.replyError = message
     }
 
     function alertDanger( message) {
+      console.error( 'alertDanger message: ' + JSON.stringify( message))
       $scope.replyError = message
     }
 
