@@ -49,22 +49,6 @@ angular.module( 'greenbus.views.measurement',
   factory('measurement', [ 'rest', 'subscription', 'pointIdToMeasurementHistoryMap', '$filter', '$timeout', function( rest, subscription, pointIdToMeasurementHistoryMap, $filter, $timeout) {
     var number = $filter('number')
 
-    var commandRest = {
-      select:   function(accessMode, commandIds, success, failure) {
-        var arg = {
-          accessMode: accessMode,
-          commandIds: commandIds
-        }
-        return rest.post('/models/1/commandlock', arg, null, null, success, failure)
-      },
-      deselect: function(lockId, success, failure) {
-        return rest.delete('/models/1/commandlock/' + lockId, null, null, success, failure)
-      },
-      execute:  function(commandId, args, success, failure) {
-        return rest.post('/models/1/commands/' + commandId, args, null, null, success, failure)
-      }
-    }
-
     function formatMeasurementValue(value) {
       if( typeof value === 'boolean' || isNaN(value) || !isFinite(value) ) {
         return value
@@ -162,14 +146,6 @@ angular.module( 'greenbus.views.measurement',
       return rest.post('/models/1/points/commands', pointIds)
     }
 
-    function getCommandRest() {
-      return commandRest
-    }
-
-    function getCommandSet( point, commands) {
-      return new CommandSet(point, commands, commandRest, $timeout)
-    }
-
 
     /**
      * Public API
@@ -179,9 +155,7 @@ angular.module( 'greenbus.views.measurement',
       unsubscribeWithHistory: unsubscribeWithHistory,
       subscribe:              subscribe,
       unsubscribe:            unsubscribe,
-      getCommandsForPoints:   getCommandsForPoints,
-      getCommandRest:         getCommandRest,
-      getCommandSet:          getCommandSet
+      getCommandsForPoints:   getCommandsForPoints
     }
   }]).
 
@@ -275,7 +249,7 @@ angular.module( 'greenbus.views.measurement',
       $scope.rowClasses = function(point) {
         return point.rowDetail ? 'gb-row-selected-detail animate-repeat'
           : point.rowSelected ? 'gb-point gb-row-selected animate-repeat'
-          : point.commandSet ? 'gb-point gb-row-selectable animate-repeat'
+          : point.commands ? 'gb-point gb-row-selectable animate-repeat'
           : 'gb-point animate-repeat'
       }
       $scope.togglePointRowById = function(id) {
@@ -288,7 +262,7 @@ angular.module( 'greenbus.views.measurement',
           return
 
         point = $scope.points[index]
-        if( !point.commandSet )
+        if( !point.commands )
           return
 
         if( point.rowSelected ) {
@@ -300,7 +274,7 @@ angular.module( 'greenbus.views.measurement',
             point:      point,
             name:       point.name + ' ',
             rowDetail:  true,
-            commandSet: point.commandSet
+            commands: point.commands
           }
           $scope.points.splice(index + 1, 0, pointDetails)
           point.rowSelected = true
@@ -400,7 +374,7 @@ angular.module( 'greenbus.views.measurement',
               longQuality:  '',
               validity:     'NOTLOADED',
               expandRow:    false,
-              commandSet:   undefined
+              commands:   undefined
             }
         points.forEach(function(point) {
           point.currentMeasurement = angular.extend({}, currentMeasurement)
@@ -471,8 +445,8 @@ angular.module( 'greenbus.views.measurement',
             for( var pointId in data ) {
               point = findPoint(pointId)
               if( point ) {
-                point.commandSet = measurement.getCommandSet(point, data[pointId])
-                point.commandTypes = point.commandSet.getCommandTypes().toLowerCase()
+                point.commands = data[pointId]
+                point.commandTypes = getCommandTypes( point.commands).toLowerCase()
                 console.log('commandTypes: ' + point.commandTypes)
               }
             }
@@ -480,6 +454,23 @@ angular.module( 'greenbus.views.measurement',
           }
         )
 
+      }
+
+      function getCommandTypes( commands) {
+        var control = '',
+            setpoint = ''
+
+        commands.forEach( function( c) {
+          if( c.commandType.indexOf('SETPOINT') === 0) {
+            if (setpoint.length === 0)
+              setpoint = 'setpoint'
+          } else {
+            if( control.length === 0)
+              control = 'control'
+          }
+        })
+
+        return control && setpoint ? control + ',' + setpoint : control + setpoint
       }
 
       function getPointsAndSubscribeToMeasurements() {

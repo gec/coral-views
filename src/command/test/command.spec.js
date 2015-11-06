@@ -104,16 +104,10 @@ describe('gb-command', function () {
       // See:
       // http://www.scimedsolutions.com/articles/45-testing-an-angularjs-app-using-karma-and-jasmine
       // https://github.com/angular-ui/bootstrap/blob/master/src/typeahead/test/typeahead.spec.js
-      changeSetpointValueTo = function(element, value) {
-        var inputEl = element // element.find('input');
-        //inputEl.triggerHandler('focus')
-        inputEl.val(value);
-        inputEl.trigger($sniffer.hasEvent('input') ? 'input' : 'change');
+      changeSetpointValueTo = function(inputElement, value) {
+        inputElement.val(value);
+        inputElement.trigger($sniffer.hasEvent('input') ? 'input' : 'change');
         scope.$digest();
-        //// TODO: I give up! The model is not being updated during tests.
-        //if( scope.setpoint.value !== value)
-        //  scope.setpoint.value = value
-        //inputEl.triggerHandler('blur')
       }
     }));
 
@@ -269,7 +263,37 @@ describe('gb-command', function () {
 
     }))
 
-    it('should select setpoint and fail execute', inject( function (gbCommandEnums) {
+    it('should select, then timeout select', inject( function ($timeout) {
+      var select, successCallback, failureCallback,
+          buttonToolbar = findButtonToolbar(),
+          setpoint = findSetpointElements( buttonToolbar),
+          errorIcon = findErrorIcon( buttonToolbar),
+          selectReply = {
+            'id': '85',
+            'accessMode': accessMode,
+            'expireTime': Date.now() + 30 * 1000,
+            'commandIds': [command.id]
+          }
+
+
+      select = findSelectElements( buttonToolbar)
+      // click issues select request to server
+      select.button.trigger( 'click')
+      successCallback = gbCommandRest.select.calls.mostRecent().args[2]
+      failureCallback = gbCommandRest.select.calls.mostRecent().args[3]
+      successCallback( selectReply)
+
+      $timeout.flush()
+      expect( select.icon).toHaveClass( 'fa')
+      expect( select.icon).toHaveClass( 'fa-chevron-right')
+      expect( select.icon).toHaveClass( 'text-primary')
+      expect( select.icon).not.toHaveClass( 'fa-spin')
+      expect( setpoint.div).toHaveClass('ng-hide')
+      expect( errorIcon).toHaveClass('ng-hide')
+
+    }))
+
+    it('should select setpoint and fail execute, then select again clears error icon', inject( function (gbCommandEnums) {
       var select, successCallback, failureCallback,
           buttonToolbar = findButtonToolbar(),
           setpoint = findSetpointElements( buttonToolbar),
@@ -312,7 +336,105 @@ describe('gb-command', function () {
       expect( setpoint.div).toHaveClass('ng-hide')
 
       expect( errorIcon).not.toHaveClass('ng-hide')
+      expect( errorIcon.attr( 'popover')).toEqual( executeReply.message)
       expect( scope.replyError).toEqual( executeReply.message)
+
+      // select again to test clearing of error
+      select.button.trigger( 'click')
+      expect( select.icon).toHaveClass( 'fa')
+      expect( select.icon).toHaveClass( 'fa-chevron-right')
+      expect( select.icon).toHaveClass( 'text-primary')
+      expect( select.icon).toHaveClass( 'fa-spin')       // spinning
+      // setpoint is still hidden waiting on select response from server
+      expect( setpoint.div).toHaveClass('ng-hide')
+      // Now make sure replyError si cleared
+      expect( errorIcon).toHaveClass('ng-hide')
+      expect( errorIcon.attr( 'popover')).toEqual( '')
+      expect( scope.replyError).toBeUndefined()
+
+    }))
+
+    it('should select setpoint and fail execute for invalid input, then select again clears error icon', inject( function (gbCommandEnums) {
+      var select, successCallback, failureCallback,
+          buttonToolbar = findButtonToolbar(),
+          setpoint = findSetpointElements( buttonToolbar),
+          errorIcon = findErrorIcon( buttonToolbar),
+          selectReply = {
+            'id': '85',
+            'accessMode': accessMode,
+            'expireTime': Date.now() + 30 * 1000,
+            'commandIds': [command.id]
+          },
+          executeReply = {
+            'exception': 'org.totalgrid.reef.client.exception.ReefServiceException',
+            'message': 'Command execute request unknown failure. Response timeout from front end connection.'
+          }
+
+      select = findSelectElements( buttonToolbar)
+      // click issues select request to server
+      select.button.trigger( 'click')
+      successCallback = gbCommandRest.select.calls.mostRecent().args[2]
+      failureCallback = gbCommandRest.select.calls.mostRecent().args[3]
+
+      successCallback( selectReply)
+      scope.$digest()
+
+      changeSetpointValueTo( setpoint.input, 'qq')
+      expect( scope.setpoint.value).toBeUndefined()
+
+      setpoint.button.trigger( 'click')
+      expect( gbCommandRest.execute).not.toHaveBeenCalled()
+
+      expect( setpoint.div).not.toHaveClass('ng-hide')
+      expect( errorIcon).not.toHaveClass('ng-hide')
+      expect( errorIcon.attr( 'popover')).toEqual( 'Setpoint needs to be a decimal value.')
+      expect( scope.replyError).toEqual( 'Setpoint needs to be a decimal value.')
+
+      changeSetpointValueTo( setpoint.input, '')
+      expect( scope.setpoint.value).toEqual('')
+
+      setpoint.button.trigger( 'click')
+      expect( gbCommandRest.execute).not.toHaveBeenCalled()
+
+      expect( setpoint.div).not.toHaveClass('ng-hide')
+      expect( errorIcon).not.toHaveClass('ng-hide')
+      expect( errorIcon.attr( 'popover')).toEqual( 'Setpoint needs to be a decimal value.')
+      expect( scope.replyError).toEqual( 'Setpoint needs to be a decimal value.')
+
+      changeSetpointValueTo( setpoint.input, '2.0')
+      expect( scope.setpoint.value).toEqual('2.0')
+
+      setpoint.button.trigger( 'click')
+      expect( gbCommandRest.execute).toHaveBeenCalled()
+
+      expect( setpoint.div).not.toHaveClass('ng-hide')
+      expect( errorIcon).toHaveClass('ng-hide')
+
+
+      //// Go back to not selected
+      //expect( select.icon).toHaveClass( 'fa')
+      //expect( select.icon).toHaveClass( 'fa-chevron-right')
+      //expect( select.icon).toHaveClass( 'text-primary')
+      //expect( select.icon).not.toHaveClass( 'fa-spin')
+      //expect( setpoint.div).toHaveClass('ng-hide')
+      //
+      //expect( errorIcon).not.toHaveClass('ng-hide')
+      //expect( errorIcon.attr( 'popover')).toEqual( executeReply.message)
+      //expect( scope.replyError).toEqual( executeReply.message)
+      //
+      //// select again to test clearing of error
+      //select.button.trigger( 'click')
+      //expect( select.icon).toHaveClass( 'fa')
+      //expect( select.icon).toHaveClass( 'fa-chevron-right')
+      //expect( select.icon).toHaveClass( 'text-primary')
+      //expect( select.icon).toHaveClass( 'fa-spin')       // spinning
+      //// setpoint is still hidden waiting on select response from server
+      //expect( setpoint.div).toHaveClass('ng-hide')
+      //// Now make sure replyError si cleared
+      //expect( errorIcon).toHaveClass('ng-hide')
+      //expect( errorIcon.attr( 'popover')).toEqual( '')
+      //expect( scope.replyError).toBeUndefined()
+
     }))
 
     it('should fail to select setpoint', inject( function (gbCommandEnums) {

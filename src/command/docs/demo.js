@@ -14,14 +14,33 @@ angular.module('greenbus.views.demo').controller('CommandDemoCtrl', function ($s
 
   command = $scope.commands[0]
   commandLockId = command.id + '-lock-id'
+  //rest.whenPOST( '/models/1/commandlock', { accessMode: accessMode, commandIds: [command.id]}).
+  //  respond( {
+  //    'id': commandLockId,
+  //    'accessMode': accessMode,
+  //    'expireTime': Date.now() + 30 * 1000 * 60,
+  //    'commandIds': [command.id]
+  //  })
   rest.whenPOST( '/models/1/commandlock', { accessMode: accessMode, commandIds: [command.id]}).
-    respond( {
-      'id': commandLockId,
-      'accessMode': accessMode,
-      'expireTime': Date.now() + 30 * 1000 * 60,
-      'commandIds': [command.id]
+    respond( function(method, url, data) {
+      return [
+        200,
+        {
+          'id': data.commandIds[0] + 'lock-id',
+          'accessMode': data.accessMode,
+          'expireTime': Date.now() + 6 * 1000,
+          'commandIds': data.commands
+        }
+      ]
     })
-  rest.whenPOST( '/models/1/commands/' + command.id, { commandLockId: commandLockId, setpoint: { doubleValue: Number( 1.0)}}).
+  //rest.whenPOST( '/models/1/commands/' + command.id, { commandLockId: commandLockId, setpoint: { doubleValue: Number( 1.0)}}).
+  //  respond( {
+  //    'status':'SUCCESS',
+  //    'error':''
+  //  })
+
+  // Don't include the argument so we match any input value.
+  rest.whenPOST( '/models/1/commands/' + command.id /*, { commandLockId: commandLockId, setpoint: { doubleValue: Number( 1.0)}}*/).
     respond( {
       'status':'SUCCESS',
       'error':''

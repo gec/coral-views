@@ -114,6 +114,7 @@ angular.module('greenbus.views.command', []).
      * @param command
      */
     $scope.selectToggle = function( ) {
+      $scope.replyError = undefined
       switch( $scope.state) {
         case States.NotSelected: $scope.select(); break;
         case States.Selecting:   break;
@@ -129,6 +130,12 @@ angular.module('greenbus.views.command', []).
       $scope.selectClasses = CommandIcons[$scope.state]
       $scope.executeClasses = ExecuteIcons[$scope.state]
       console.log( 'gbCommandController.setState ' + $scope.model.name + ' ' + $scope.state + ', selectClasses ' + $scope.selectClasses + ', executeClasses ' + $scope.executeClasses)
+
+      if( state === States.NotSelected && $scope.isSetpointType && $scope.pattern && !$scope.pattern.test( $scope.setpoint.value)) {
+        // If the setpoint value is not visible, but is invalid, there will be a red box around the whole form
+        // and the operator won't see anything wrong. Clear the setpoint value to prevent this.
+        $scope.setpoint.value = ''
+      }
     }
     
     function cancelSelectTimer() {
@@ -207,6 +214,7 @@ angular.module('greenbus.views.command', []).
 
     $scope.execute = function() {
       console.log( 'gbCommandController.execute state: ' + $scope.state)
+      $scope.replyError = undefined
 
       if( $scope.state !== States.Selected) {
         console.error( 'gbCommandController.execute invalid state: ' + $scope.state)
@@ -218,50 +226,55 @@ angular.module('greenbus.views.command', []).
       }
 
       if( $scope.isSetpointType) {
-        if( $scope.setpoint.value === undefined) {
-          console.error( 'gbCommandController.execute ERROR: setpoint value is undefined')
-          return
-        }
 
-        if( $scope.pattern && !$scope.pattern.test( $scope.setpoint.value)) {
-          console.error( 'gbCommandController.execute ERROR: setpoint value is invalid "' + $scope.setpoint.value + '"')
-          switch( $scope.model.commandType) {
-            case 'SETPOINT_INT': alertDanger( 'Setpoint needs to be an integer value.'); return;
-            case 'SETPOINT_DOUBLE': alertDanger( 'Setpoint needs to be a floating point value.'); return;
+        if ($scope.setpoint.value === undefined || ($scope.pattern && !$scope.pattern.test($scope.setpoint.value))) {
+          console.log('gbCommandController.execute ERROR: setpoint value is invalid "' + $scope.setpoint.value + '"')
+          switch ($scope.model.commandType) {
+            case 'SETPOINT_INT':
+              alertDanger('Setpoint needs to be an integer value.');
+              return;
+            case 'SETPOINT_DOUBLE':
+              alertDanger('Setpoint needs to be a decimal value.');
+              return;
+            case 'SETPOINT_STRING':
+              alertDanger('Setpoint needs to have a text value.');
+              return;
             default:
-              console.error( 'Setpoint has unknown error, "' + $scope.setpoint.value + '" for command type ' + $scope.model.commandType);
+              alertDanger('Setpoint value "' + $scope.setpoint.value + '" is invalid. Unknown setpoint command type: "' + $scope.model.commandType + '".')
+              console.error('Setpoint has unknown error, "' + $scope.setpoint.value + '" for command type ' + $scope.model.commandType)
+              return
           }
         }
 
-        switch( $scope.model.commandType) {
+        switch ($scope.model.commandType) {
           case 'SETPOINT_INT':
-            args.setpoint = { intValue: Number( $scope.setpoint.value)}
+            args.setpoint = {intValue: Number($scope.setpoint.value)}
             break
           case 'SETPOINT_DOUBLE':
-            args.setpoint = { doubleValue: Number( $scope.setpoint.value)}
+            args.setpoint = {doubleValue: Number($scope.setpoint.value)}
             break
           case 'SETPOINT_STRING':
-            args.setpoint = { stringValue: $scope.setpoint.value}
+            args.setpoint = {stringValue: $scope.setpoint.value}
             break
           default:
-            console.error( 'Setpoint has unknown type, "' + $scope.setpoint.value + '" for command type ' + $scope.model.commandType);
+            console.error('Setpoint has unknown type, "' + $scope.setpoint.value + '" for command type ' + $scope.model.commandType);
             break
         }
       }
 
-      setState( States.Executing)
+      setState(States.Executing)
 
-      gbCommandRest.execute( $scope.model.id, args,
-        function( commandResult) {
+      gbCommandRest.execute($scope.model.id, args,
+        function (commandResult) {
           cancelSelectTimer()
-          alertCommandResult( commandResult)
+          alertCommandResult(commandResult)
           deselected()
         },
-        function( ex, statusCode, headers, config) {
-          console.log( 'gbCommandController.execute ' + JSON.stringify( ex))
+        function (ex, statusCode, headers, config) {
+          console.log('gbCommandController.execute ' + JSON.stringify(ex))
           cancelSelectTimer()
           deselected()
-          alertException( ex)
+          alertException(ex)
         })
     }
 
@@ -277,7 +290,7 @@ angular.module('greenbus.views.command', []).
     }
 
     function alertException( ex) {
-      console.error( 'gbCommandController.alertException ' + JSON.stringify( ex))
+      console.log( 'gbCommandController.alertException ' + JSON.stringify( ex))
       var message = ex.message
       if( message === undefined || message === '')
         message = ex.exception
@@ -285,7 +298,7 @@ angular.module('greenbus.views.command', []).
     }
 
     function alertDanger( message) {
-      console.error( 'alertDanger message: ' + JSON.stringify( message))
+      console.log( 'alertDanger message: ' + JSON.stringify( message))
       $scope.replyError = message
     }
 

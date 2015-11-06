@@ -42,7 +42,7 @@
                             <a href="" ng-click="chartAddPointById(point.id)"><span class="glyphicon glyphicon-stats text-muted" title="Graph measurements"></span></a>
                         </td>
                         <td  ng-if="!point.rowDetail" class="gb-value" ng-click="togglePointRowById(point.id)">
-                            <span class="glyphicon glyphicon-edit pull-left text-muted" style="padding-right: 10px; opacity: {{ point.commandSet ? 1 : 0 }}" title="Control or Setpoint"></span>
+                            <span class="glyphicon glyphicon-edit pull-left text-muted" ng-show="point.commands" style="padding-right: 10px;" title="Control or Setpoint"></span>
                             <gb-measurement-value model="point"></gb-measurement-value>
                         </td>
                         <td ng-if="!point.rowDetail" ng-click="togglePointRowById(point.id)">{{point.unit}}</td>
@@ -51,57 +51,14 @@
                         <td ng-if="!point.rowDetail" ng-click="togglePointRowById(point.id)">{{ point.pointType }}</td>
 
 
-
                         <td ng-if="point.rowDetail" colspan="8">
-
                             <div class="row">
-                                <div class="col-md-1">
-
-                                </div>
-                                <div class="col-md-10">
-
+                                <div class="col-md-10 col-md-offset-1">
                                     <form class="form-horizontal" role="form" name="form">
-                                        <div class="form-group" ng-repeat="command in point.commandSet.commands">
-                                            <label class="col-sm-5 control-label">
-                                                {{ command.command.displayName }}
-                                            </label>
-                                            <div class="col-sm-7">
-                                                <div class="btn-toolbar" role="toolbar">
-                                                    <div class="btn-group">
-                                                        <button type="button" class="btn btn-default" ng-click="command.selectToggle()">Select <i ng-class="command.selectClasses"></i></button>
-                                                    </div>
-
-                                                    <button ng-if="!command.isSetpointType" type="button" class="btn btn-primary" ng-click="command.execute()" style="opacity: {{point.commandSet.selectedCommand === command ? 1 : 0}};">
-                                                        Execute <span style="padding-right: 0.5em;"> </span><i ng-class="command.executeClasses"></i>
-                                                    </button>
-
-                                                    <div ng-if="command.isSetpointType" class="input-group input-group-sm-  {{form.setpoint_value.$error.pattern ? 'has-error' : ''}}" style="opacity: {{point.commandSet.selectedCommand === command ? 1 : 0}};">
-                                                        <input type="text" class="form-control" ng-model="command.setpointValue" name="setpoint_value" ng-pattern="command.pattern" style="width:6em;" placeholder="{{ command.placeHolder}}">
-                                                        <button type="button" class="btn btn-primary" ng-click="command.execute()" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
-                                                            Set
-                                                            <span style="padding-right: 0.5em;"> </span><i ng-class="command.executeClasses"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <gb-command ng-repeat="command in point.commands" model="command"></gb-command>
                                     </form>
-
-                                </div>
-                                <div class="col-md-1">
                                 </div>
                             </div>
-
-                            <div class="row">
-                                <div class="col-md-1">
-                                </div>
-                                <div class="col-md-10">
-                                    <alert ng-repeat="alert in point.commandSet.alerts" type="{{alert.type}}" close="point.commandSet.closeAlert($index)" style="text-align: left; white-space: normal;">{{alert.message}}</alert>
-                                </div>
-                                <div class="col-md-1">
-                                </div>
-                            </div>
-
                         </td>
                     </tr>
                     </tbody>

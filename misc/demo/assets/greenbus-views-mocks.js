@@ -244,7 +244,7 @@ function makeRest($injector) {
       if (definition.match(method, url, data, headers || {})) {
         if (definition.response) {
           setTimeout( function() {
-            var responseData = copy( definition.response()[1])
+            var responseData = copy( definition.response(method, url, data, headers)[1])
 
             if( $scope) {
               $scope.$apply( function() {
@@ -267,7 +267,7 @@ function makeRest($injector) {
             }
           })
 
-          return makeThen( definition.response()[1], true) // t: do digest
+          return makeThen( definition.response(method, url, data, headers)[1], true) // t: do digest
           //return {
           //  then: function( success, error) {
           //    setTimeout( function() {

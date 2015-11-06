@@ -144,11 +144,11 @@ describe('gb-measurements', function () {
     expect( scope.pointsFiltered[3].name).toBe( points[3].name)
     expect( scope.pointsFiltered[4].name).toBe( points[4].name)
 
-    expect( scope.pointsFiltered[0].commandSet).toBeDefined()
-    expect( scope.pointsFiltered[1].commandSet).toBeDefined()
-    expect( scope.pointsFiltered[2].commandSet).not.toBeDefined()
-    expect( scope.pointsFiltered[3].commandSet).not.toBeDefined()
-    expect( scope.pointsFiltered[4].commandSet).not.toBeDefined()
+    expect( scope.pointsFiltered[0].commands).toBeDefined()
+    expect( scope.pointsFiltered[1].commands).toBeDefined()
+    expect( scope.pointsFiltered[2].commands).not.toBeDefined()
+    expect( scope.pointsFiltered[3].commands).not.toBeDefined()
+    expect( scope.pointsFiltered[4].commands).not.toBeDefined()
   }));
 
   it('should select/deselect all points when selectAll is clicked', inject( function () {

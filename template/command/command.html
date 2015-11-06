@@ -11,7 +11,7 @@
             </button>
 
             <div ng-if="isSetpointType" class="input-group input-group-sm-  {{form.setpoint_value.$error.pattern ? 'has-error' : ''}}" ng-show="isSelected">
-                <input type="text" class="form-control" ng-model="setpoint.value" name="setpoint_value-{{ model.id }}" ng-pattern-="pattern" style="width:6em;" placeholder="{{ placeHolder}}">
+                <input type="text" class="form-control" ng-model="setpoint.value" name="setpoint_value-{{ model.id }}" ng-pattern="pattern" style="width:6em;" placeholder="{{ placeHolder}}">
                 <button type="button" class="btn btn-primary" ng-click="execute()" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
                     Set
                     <span style="padding-right: 0.5em;"> </span><i ng-class="executeClasses"></i>

@@ -10,6 +10,10 @@
 [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
   display: none !important;
 }
+.ng-invalid {
+  border: 1px solid red !important;
+}
+
 
 td.gb-alarm-btn-xs {
   text-align: center;
