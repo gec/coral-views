@@ -110,9 +110,9 @@ describe('gb-command', function () {
         inputEl.val(value);
         inputEl.trigger($sniffer.hasEvent('input') ? 'input' : 'change');
         scope.$digest();
-        // TODO: I give up! The model is not being updated during tests.
-        if( scope.setpointValue !== value)
-          scope.setpointValue = value
+        //// TODO: I give up! The model is not being updated during tests.
+        //if( scope.setpoint.value !== value)
+        //  scope.setpoint.value = value
         //inputEl.triggerHandler('blur')
       }
     }));
@@ -182,7 +182,7 @@ describe('gb-command', function () {
       expect( setpoint.buttonIcon).not.toHaveClass( 'fa-spin')
 
       changeSetpointValueTo( setpoint.input, '1.0')
-      expect( scope.setpointValue).toEqual( '1.0')
+      expect( scope.setpoint.value).toEqual( '1.0')
 
       setpoint.button.trigger( 'click')
       expect( setpoint.buttonIcon).toHaveClass( 'fa')
@@ -295,7 +295,7 @@ describe('gb-command', function () {
       scope.$digest()
 
       changeSetpointValueTo( setpoint.input, '1.0')
-      expect( scope.setpointValue).toEqual( '1.0')
+      expect( scope.setpoint.value).toEqual( '1.0')
 
       setpoint.button.trigger( 'click')
       successCallback = gbCommandRest.execute.calls.mostRecent().args[2]

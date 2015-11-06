@@ -412,6 +412,12 @@ table.gb-row-radius {
   margin-top: 10px;
   margin-bottom: 10px;
 }
+i.gb-command-error {
+  font-size: 2.5em;
+  vertical-align: middle;
+  padding: 0px 12px;
+  color: #b22222;
+}
 .gb-command{
   position:relative;
   padding-right: 34px;

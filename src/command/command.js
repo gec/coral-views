@@ -88,7 +88,7 @@ angular.module('greenbus.views.command', []).
     $scope.executeClasses = ExecuteIcons[ States.NotSelected]
     $scope.isSetpointType = $scope.model.commandType.indexOf('SETPOINT') === 0
     if( $scope.isSetpointType) {
-      $scope.setpointValue = ''
+      $scope.setpoint = { value: ''} // MUST be an object for input text for 2-way binding with <input/>!!!
 
       switch( $scope.model.commandType) {
         case 'SETPOINT_INT':
@@ -206,56 +206,50 @@ angular.module('greenbus.views.command', []).
     }
 
     $scope.execute = function() {
-      console.error( 'gbCommandController.execute state: ' + $scope.state)
+      console.log( 'gbCommandController.execute state: ' + $scope.state)
 
       if( $scope.state !== States.Selected) {
         console.error( 'gbCommandController.execute invalid state: ' + $scope.state)
         return
       }
-      console.error( 'gbCommandController.execute state: ' + $scope.state)
 
       var args = {
         commandLockId: lock.id
       }
 
       if( $scope.isSetpointType) {
-        if( $scope.setpointValue === undefined) {
+        if( $scope.setpoint.value === undefined) {
           console.error( 'gbCommandController.execute ERROR: setpoint value is undefined')
           return
         }
 
-        if( $scope.pattern && !$scope.pattern.test( $scope.setpointValue)) {
-          console.error( 'gbCommandController.execute ERROR: setpoint value is invalid "' + $scope.setpointValue + '"')
+        if( $scope.pattern && !$scope.pattern.test( $scope.setpoint.value)) {
+          console.error( 'gbCommandController.execute ERROR: setpoint value is invalid "' + $scope.setpoint.value + '"')
           switch( $scope.model.commandType) {
             case 'SETPOINT_INT': alertDanger( 'Setpoint needs to be an integer value.'); return;
             case 'SETPOINT_DOUBLE': alertDanger( 'Setpoint needs to be a floating point value.'); return;
             default:
-              console.error( 'Setpoint has unknown error, "' + $scope.setpointValue + '" for command type ' + $scope.model.commandType);
+              console.error( 'Setpoint has unknown error, "' + $scope.setpoint.value + '" for command type ' + $scope.model.commandType);
           }
         }
 
         switch( $scope.model.commandType) {
           case 'SETPOINT_INT':
-            args.setpoint = { intValue: Number( $scope.setpointValue)}
+            args.setpoint = { intValue: Number( $scope.setpoint.value)}
             break
           case 'SETPOINT_DOUBLE':
-            args.setpoint = { doubleValue: Number( $scope.setpointValue)}
+            args.setpoint = { doubleValue: Number( $scope.setpoint.value)}
             break
           case 'SETPOINT_STRING':
-            args.setpoint = { stringValue: $scope.setpointValue}
+            args.setpoint = { stringValue: $scope.setpoint.value}
             break
           default:
-            console.error( 'Setpoint has unknown type, "' + $scope.setpointValue + '" for command type ' + $scope.model.commandType);
+            console.error( 'Setpoint has unknown type, "' + $scope.setpoint.value + '" for command type ' + $scope.model.commandType);
             break
         }
       }
-      console.error( 'gbCommandController.execute state: ' + $scope.state)
 
       setState( States.Executing)
-      console.error( 'gbCommandController.execute state2: ' + $scope.state)
-      console.error( 'gbCommandController.execute state2: ' + $scope.state)
-      console.error( 'gbCommandController.execute state2: ' + $scope.state)
-
 
       gbCommandRest.execute( $scope.model.id, args,
         function( commandResult) {
