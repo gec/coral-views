@@ -307,7 +307,6 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
           console.error('gbSchematicController.onMeasurements could not find point.id = ' + pm.point.id)
         }
       })
-      $scope.$digest()
     }
 
     function processPointsAndReturnPointIdMap(points) {

@@ -248,7 +248,7 @@ describe('schematic', function () {
 
   }));
 
-  it('should transform equipment symbols and update visible state', inject( function ( schematic) {
+  it('should transform equipment symbols and update visible state', inject( function ( schematic, $timeout) {
     var equipmentElems, stateElements, measValue, measurements,
         onSchematic = jasmine.createSpy('onSchematic'),
         svgContent = svgOneEquipmentSymbol
@@ -315,6 +315,7 @@ describe('schematic', function () {
       }
     ]
     subscribeInstance.onSuccess( subscribeInstance.id, 'measurements', measurements)
+    $timeout.flush()
     expect( stateElements.eq(0).attr( 'class')).toEqual( '')
     expect( stateElements.eq(1).attr( 'class')).toEqual( 'ng-hide')
 

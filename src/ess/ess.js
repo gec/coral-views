@@ -204,7 +204,6 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
 
     function onMeasurements( measurements ) {
       measurements.forEach( function( pm){ onMeasurement( pm) })
-      $scope.$digest()
     }
 
     function subscribeToMeasurements( pointIds) {

@@ -47,7 +47,8 @@ angular.module( 'greenbus.views.measurement',
  * @constructor
  */
   factory('measurement', [ 'rest', 'subscription', 'pointIdToMeasurementHistoryMap', '$filter', '$timeout', function( rest, subscription, pointIdToMeasurementHistoryMap, $filter, $timeout) {
-    var number = $filter('number')
+    var number = $filter('number'),
+        lastSubscribeSuccessDigestTime = 0
 
     function formatMeasurementValue(value) {
       if( typeof value === 'boolean' || isNaN(value) || !isFinite(value) ) {
@@ -118,6 +119,8 @@ angular.module( 'greenbus.views.measurement',
      * @returns A subscription ID which can be used to unsubscribe.
      */
     function subscribe(scope, pointIds, constraints, subscriber, notify) {
+      var digestTimer
+
       //console.log('measurement.subscribe')
       return subscription.subscribe(
         {
@@ -126,11 +129,30 @@ angular.module( 'greenbus.views.measurement',
         },
         scope,
         function(subscriptionId, type, measurements) {
+
           if( type === 'measurements' )
             onMeasurements(measurements, subscriber, notify)
           else
             console.error('measurement.subscribe message of unknown type: "' + type + '"')
-          scope.$digest()
+
+          var now = Date.now(),
+              delta = now - lastSubscribeSuccessDigestTime
+
+          if( delta >= 500) {
+            if( digestTimer) {
+              $timeout.cancel( digestTimer)
+              digestTimer = undefined
+            }
+            lastSubscribeSuccessDigestTime = now
+            scope.$digest()
+          } else if( digestTimer === undefined ) {
+            digestTimer = $timeout( function( ) {
+              digestTimer = undefined
+              lastSubscribeSuccessDigestTime = Date.now()
+              scope.$digest()
+            }, 500 - delta )
+          }
+
         },
         function(error, message) {
           console.error('measurement.subscribe ERROR: ' + error + ', message: ' + message)
@@ -302,6 +324,7 @@ angular.module( 'greenbus.views.measurement',
 
 
       function onMeasurements(measurements) {
+        //console.log( 'onMeasurements ' + Date.now() + ' ' + measurements.map( function(pm) { return pm.point.id}).join())
         measurements.forEach(function(pm) {
           var point = findPoint(pm.point.id)
           if( point ) {
@@ -311,7 +334,6 @@ angular.module( 'greenbus.views.measurement',
             console.error('MeasurementsController.onMeasurements could not find point.id = ' + pm.point.id)
           }
         })
-        $scope.$digest()
       }
 
       function subscribeToMeasurements(pointIds) {
