@@ -286,7 +286,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
               var pointIds = Object.keys(pointIdMap)
 
               measurement.subscribe( $scope, pointIds, {}, self, onMeasurements)
-              getCommandsForPoints( pointIds)
+              getCommandsForPoints( pointIds)  // TODO: does nothing for now.
 
               return response // for the then() chain
             },
@@ -333,21 +333,26 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
     }
 
     function getCommandsForPoints(pointIds) {
-      measurement.getCommandsForPoints( pointIds).then(
-        function( response) {
-          var point,
-              data = response.data
-          // data is map of pointId -> commands[]
-          for( var pointId in data ) {
-            point = pointIdMap[pointId]
-            if( point )
-              point.commandSet =  measurement.getCommandSet(point, data[pointId])
-            else
-              console.error( 'Unknown point ID ' + pointId)
-          }
-
-        }
-      )
+      // TODO: see measurement.getCommandsForPoints when schematic implements commands.
+      //measurement.getCommandsForPoints( pointIds).then(
+      //  function( response) {
+      //    var point,
+      //        data = response.data
+      //    // data is map of pointId -> commands[]
+      //    for( var pointId in data ) {
+      //      point = pointIdMap[pointId]
+      //      if( point ) {
+      //        // TODO: see measurement.getCommandsForPoints
+      //        point.commands = data[pointId]
+      //        //point.commandTypes = getCommandTypes( point.commands).toLowerCase()
+      //        console.log('commandTypes: ' + point.commandTypes)
+      //      }
+      //      else
+      //        console.error( 'gbSchematicController.getCommandsForPoints Unknown point ID ' + pointId)
+      //    }
+      //
+      //  }
+      //)
     }
 
 
