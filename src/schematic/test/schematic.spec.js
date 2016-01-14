@@ -33,6 +33,16 @@ describe('schematic', function () {
         '</g>' +
       '</g>' +
     '</svg>'
+  svgOneMeasurementMeasurementDecimals3  =
+    '<?xml version="1.0"?>' +
+    '<svg  xmlns="http://www.w3.org/2000/svg" xmlns:tgs="http://www.totalgrid.org" xmlns:xlink="http://www.w3.org/1999/xlink" tgs:measurement-decimals="3" style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
+      '<g id="svgContent">' +
+        '<g tgs:schematic-type="point" name="' + points[0].name + '" tgs:point-name="' + points[0].name + '" id="' + points[0].name + '">' +
+          '<use class="quality-display" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#quality_invalid" y="78" x="257" id="svg_550"></use>' +
+          '<text class="data-label" x="277" y="92" id="svg_551">48 kW</text>' +
+        '</g>' +
+      '</g>' +
+    '</svg>'
   svgOneEquipmentSymbol =
     '<?xml version="1.0"?>' +
     '<svg  xmlns="http://www.w3.org/2000/svg" xmlns:tgs="http://www.totalgrid.org" xmlns:xlink="http://www.w3.org/1999/xlink" style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
@@ -244,7 +254,62 @@ describe('schematic', function () {
     ]
     subscribeInstance.onSuccess( subscribeInstance.id, 'measurements', measurements)
     measValue = getMeasurementValue( measElems, 0)
-    expect( measValue).toEqual( '248 kW')
+    expect( measValue).toEqual( '248.0 kW')
+
+  }));
+
+  it('should transform measurements based on measurement-decimal', inject( function ( schematic) {
+    var measElems, measElem, measValue, measurements,
+        onSchematic = jasmine.createSpy('onSchematic'),
+        svgContent = svgOneMeasurementMeasurementDecimals3
+
+    var properties = [
+      {key: 'schematic', value: svgContent}
+    ]
+
+    subscribeInstance.onSuccess( subscribeInstance.id, 'properties', properties)
+    expect( subscribeInstance.onSuccess ).toBeDefined()
+
+    measElems = findMeasurementGs()
+    expect( measElems.length).toBe(1)
+    measValue = getMeasurementValue( measElems, 0)
+    expect( measValue).toEqual( ' ')
+
+    scope.pointNameMap = {}
+    scope.pointNameMap[ points[0].name] = {
+      name: points[0].name,
+      unit: 'someUnit',
+      currentMeasurement: {
+        value: 'someValue',
+        validity: 'GOOD'
+      }
+    }
+    scope.$digest()
+
+    measValue = getMeasurementValue( measElems, 0)
+    expect( measValue).toEqual( 'someValue someUnit')
+
+
+    // Flush getPoints.
+    $httpBackend.flush()
+
+    measurements = [
+      {
+        'point': {'id': points[0].id},
+        'measurement': {
+          'value': '248.000000',
+          'type': 'DOUBLE',
+          'unit': 'kW',
+          'time': 1442261552564,
+          'validity': 'GOOD',
+          'shortQuality': '',
+          'longQuality': 'Good'
+        }
+      }
+    ]
+    subscribeInstance.onSuccess( subscribeInstance.id, 'measurements', measurements)
+    measValue = getMeasurementValue( measElems, 0)
+    expect( measValue).toEqual( '248.000 kW')
 
   }));
 

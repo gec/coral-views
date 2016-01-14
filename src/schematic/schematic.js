@@ -133,6 +133,13 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       symbols.navigationAreas = elements.filter( '[tgs\\:schematic-type=navigation-area]')
       symbols.navigationLabels = elements.filter( '[tgs\\:schematic-type=navigation-label]')
 
+      var measurementDecimals = parseInt( rootElement.children('svg').attr('tgs:measurement-decimals'))
+      if( isNaN( measurementDecimals))
+        measurementDecimals = 1
+
+      symbols.options = {
+        measurementDecimals: measurementDecimals
+      }
       return symbols
     }
 
@@ -162,6 +169,22 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
           useQuality = element.find( 'use'),
           text = element.find( 'text')
 
+      // point: {
+      //    currentMeasurement: {
+      //      longQuality: "Good"
+      //      shortQuality: ""
+      //      time: 1450763927002
+      //      type: "DOUBLE"
+      //      validity: "GOOD"
+      //      value: "277.128"
+      //    }
+      //    endpoint: "cebd7d00-00fa-4e36-ad37-acf2a7508aba"
+      //    id: "c06f795c-2a7e-4a98-a395-1b410cbebfca"
+      //    name: "Zone1.Load1.Voltage"
+      //    pointType: "ANALOG"
+      //    types: Array[3]
+      //    unit: "V"
+      // }
       text.html( '{{ pointNameMap[\'' + pointName + '\'].currentMeasurement.value }} {{ pointNameMap[\'' + pointName + '\'].unit }}')
       useQuality.attr( 'xlink:href', '{{ pointNameMap[\'' + pointName + '\'].currentMeasurement.validity | schematicValidityDef }} ')
 
@@ -225,7 +248,8 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
          microgridId       = $stateParams.microgridId,
          equipmentId       = $stateParams.id,// id string if equipment navigation element, else undefined
          navigationElement = $stateParams.navigationElement,  // {id:, name:, shortName:, types:, equipmentChildren:, class:}
-         pointIdMap = {} // points by point id. {id, name:, currentMeasurement:}
+         pointIdMap = {}, // points by point id. {id, name:, currentMeasurement:}
+         measurementDecimals = 1 // number of significant decimals for DOUBLE measurements.
 
     if( !equipmentId && $state.is( 'microgrids.dashboard') )
       equipmentId = microgridId
@@ -266,7 +290,8 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
 
     $scope.$watch('symbols', function(newValue) {
       if( newValue !== undefined) {
-        console.log( 'gbSchematicController: got symbols pointNames.length: ' + $scope.symbols.pointNames.length)
+        console.log( 'gbSchematicController: got symbols pointNames.length: ' + $scope.symbols.measurements.length)
+        measurementDecimals = newValue.options.measurementDecimals
       }
     })
 
@@ -297,12 +322,37 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       }
     })
 
+    function processMeasurement( measurement) {
+      measurement = angular.copy( measurement)
+      if( measurement.type === 'DOUBLE') {
+        measurement.value = parseFloat( measurement.value).toFixed( measurementDecimals)
+      }
+      return measurement
+    }
+
     function onMeasurements(measurements) {
       measurements.forEach(function(pm) {
         var point = pointIdMap[pm.point.id]
         if( point ) {
-          //pm.measurement.value = formatMeasurementValue( pm.measurement.value )
-          point.currentMeasurement = pm.measurement
+          // point: {
+          //    currentMeasurement: {
+          //      longQuality: "Good"
+          //      shortQuality: ""
+          //      time: 1450763927002
+          //      type: "DOUBLE"
+          //      validity: "GOOD"
+          //      value: "277.128"
+          //    }
+          //    endpoint: "cebd7d00-00fa-4e36-ad37-acf2a7508aba"
+          //    id: "c06f795c-2a7e-4a98-a395-1b410cbebfca"
+          //    name: "Zone1.Load1.Voltage"
+          //    pointType: "ANALOG"
+          //    types: Array[3]
+          //    unit: "V"
+          // }
+
+          point.currentMeasurement = processMeasurement( pm.measurement)
+
         } else {
           console.error('gbSchematicController.onMeasurements could not find point.id = ' + pm.point.id)
         }
