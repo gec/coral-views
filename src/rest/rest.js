@@ -187,7 +187,6 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
               $scope[name] = json;
             $scope.loading = false;
           }
-          console.log('rest.get success json.length: ' + json.length + ', url: ' + url);
 
           // If the get worked, the service must be up.
           if( status.status != STATUS.UP ) {
@@ -238,7 +237,6 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
           var json = response.data
           if( name && $scope)
             $scope[name] = json;
-          console.log('rest.post success json.length: ' + json.length + ', url: ' + url);
 
           if( successListener )
             successListener(json)
