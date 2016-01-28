@@ -178,7 +178,7 @@ angular.module('greenbus.views.command', []).
         },
         function( ex, statusCode, headers, config) {
           console.log( 'gbCommandController.select ' + JSON.stringify( ex))
-          alertException( ex)
+          alertException( ex, statusCode)
           deselected()
         })
     }
@@ -208,7 +208,7 @@ angular.module('greenbus.views.command', []).
           console.log( 'gbCommandController.deselect ' + JSON.stringify( ex))
           if( $scope.state === States.Deselecting)
             setState( States.Selected)
-          alertException( ex)
+          alertException( ex, statusCode)
         })
     }
 
@@ -274,7 +274,7 @@ angular.module('greenbus.views.command', []).
           console.log('gbCommandController.execute ' + JSON.stringify(ex))
           cancelSelectTimer()
           deselected()
-          alertException(ex)
+          alertException(ex, statusCode)
         })
     }
 
@@ -289,11 +289,18 @@ angular.module('greenbus.views.command', []).
       }
     }
 
-    function alertException( ex) {
-      console.log( 'gbCommandController.alertException ' + JSON.stringify( ex))
+    function getMessageFromException( ex) {
+      if( ! ex)
+        return undefined
       var message = ex.message
       if( message === undefined || message === '')
         message = ex.exception
+      return message
+    }
+
+    function alertException( ex, statusCode) {
+      console.log( 'gbCommandController.alertException statusCode: ' + statusCode + ', exception: ' + JSON.stringify( ex))
+      var message = getMessageFromException( ex)
       $scope.replyError = message
     }
 

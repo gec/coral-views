@@ -86,17 +86,18 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
       return Object.prototype.toString.call(obj) == '[object String]'
     }
 
-    function httpRequestError(json, statusCode, headers, config) {
+    function notifyHttpRequestFailure(json, statusCode, headers, config) {
       //   0 Server down
       // 401 Unauthorized
 
 
-      console.error('coralRequest error ' + config.method + ' ' + config.url + ' ' + statusCode + ' json: ' + JSON.stringify(json));
+      console.error('HTTP Request error ' + config.method + ' ' + config.url + ' ' + statusCode + ' json: ' + JSON.stringify(json));
       if( statusCode === 0 ) {
         setStatus({
           status:         STATUS.APPLICATION_SERVER_DOWN,
           reinitializing: false,
-          description:    'Application server is not responding. Your network connection is down or the application server appears to be down.'
+          description:    'Request to server timed out.'
+          //description:    'Application server is not responding. Your network connection is down or the application server appears to be down.'
         });
       } else if( statusCode == 401 ) {
         setStatus({
@@ -126,13 +127,13 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
       return status
     }
 
-    function get(url, name, $scope, successListener, failureListener) {
-      return getDo(url, name, $scope, successListener, failureListener, $q.defer())
+    function get(url, name, scope, successListener, failureListener) {
+      return getDo(url, name, scope, successListener, failureListener, $q.defer())
     }
-    function getDo(url, name, $scope, successListener, failureListener, deferred) {
+    function getDo(url, name, scope, successListener, failureListener, deferred) {
 
-      if( $scope)
-        $scope.loading = true;
+      if( scope)
+        scope.loading = true;
       //console.log( 'rest.get ' + url + ' retries:' + retries.get);
 
 
@@ -146,13 +147,13 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
       }
 
       // Register for controller.$destroy event and kill any retry tasks.
-      if( $scope)
-        $scope.$on('$destroy', function(event) {
+      if( scope)
+        scope.$on('$destroy', function(event) {
           //console.log( 'rest.get destroy ' + url + ' retries:' + retries.get);
-          if( $scope.task ) {
+          if( scope.task ) {
             console.log('rest.get destroy task' + url + ' retries:' + retries.get);
-            $timeout.cancel($scope.task);
-            $scope.task = null;
+            $timeout.cancel(scope.task);
+            scope.task = null;
             retries.get = 0;
           }
         });
@@ -162,9 +163,9 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
         retries.get++;
         var delay = retries.get < 5 ? 1000 : 10000
 
-        if( $scope) {
-          $scope.task = $timeout(function() {
-            self.getDo(url, name, $scope, successListener, failureListener, deferred);
+        if( scope) {
+          scope.task = $timeout(function() {
+            self.getDo(url, name, scope, successListener, failureListener, deferred);
           }, delay);
           deferred.notify( 'Status is ' + status.status + '. Retrying in ' + (delay / 1000) + ' seconds')
         } else
@@ -180,129 +181,112 @@ angular.module('greenbus.views.rest', ['greenbus.views.authentication']).
 
       // encodeURI because objects like point names can have percents in them.
       $http.get(encodeURI(url), httpConfig).then(
-        function( response) {
-          var json = response.data
-          if( $scope) {
-            if( name)
-              $scope[name] = json;
-            $scope.loading = false;
-          }
-
-          // If the get worked, the service must be up.
-          if( status.status != STATUS.UP ) {
-            setStatus({
-              status:         STATUS.UP,
-              reinitializing: false,
-              description:    ''
-            });
-          }
-
-          if( successListener )
-            successListener(json)
-
-          deferred.resolve( {data: json})
-        },
-        function( error) {
-          // error.status
-          //   0 Server down
-          // 400 Bad Request - request is malformed or missing required fields.
-          // 401 Unauthorized
-          // 403 Forbidden - Logged in, but don't have permissions to complete request, resource already locked, etc.
-          // 404 Not Found - Server has not found anything matching the Request-URI
-          // 408 Request Timeout
-          // 500 Internal Server Error
-          //
-          if( failureListener )
-            failureListener(error.data, error.status, error.headers, error.config)
-
-          if( error.status === 401 || error.status === 0 )
-            httpRequestError(error.data, error.status, error.headers, error.config)
-
-          deferred.reject( error)
-        }
+        function( response) { requestSuccess( response, deferred, name, scope, successListener, failureListener) },
+        function( error) { requestFailure( error, deferred, failureListener) }
       )
 
       return deferred.promise
-
     }
 
-    function post(url, data, name, $scope, successListener, failureListener) {
+
+    function post(url, data, name, scope, successListener, failureListener) {
       var deferred = $q.defer()
 
       httpConfig.headers = authentication.getHttpHeaders()
 
       // encodeURI because objects like point names can have percents in them.
       $http.post(url, data, httpConfig).then(
-        function( response) {
-          var json = response.data
-          if( name && $scope)
-            $scope[name] = json;
-
-          if( successListener )
-            successListener(json)
-          deferred.resolve( {data: json})
-        },
-        function( error) {
-          // error.status
-          //   0 Server down
-          // 400 Bad Request - request is malformed or missing required fields.
-          // 401 Unauthorized
-          // 403 Forbidden - Logged in, but don't have permissions to complete request, resource already locked, etc.
-          // 404 Not Found - Server has not found anything matching the Request-URI
-          // 408 Request Timeout
-          // 500 Internal Server Error
-          //
-          if( failureListener )
-            failureListener(error.data, error.status, error.headers, error.config)
-
-          if( error.status === 401 || error.status === 0 )
-            httpRequestError(error.data, error.status, error.headers, error.config)
-
-          deferred.reject( error)
-        }
+        function( response) { requestSuccess( response, deferred, name, scope, successListener, failureListener) },
+        function( error) { requestFailure( error, deferred, failureListener) }
       )
 
       return deferred.promise
     }
 
-    function _delete(url, name, $scope, successListener, failureListener) {
+
+    function _delete(url, name, scope, successListener, failureListener) {
       var deferred = $q.defer()
 
       httpConfig.headers = authentication.getHttpHeaders()
 
       // encodeURI because objects like point names can have percents in them.
       $http.delete(url, httpConfig).then(
-        function( response) {
-          var json = response.data
-          if( name && $scope)
-            $scope[name] = json;
-          console.log('rest.delete success json.length: ' + json.length + ', url: ' + url);
-
-          if( successListener )
-            successListener(json)
-          deferred.resolve( {data: json})
-        },
-        function(error) {
-          // error.status
-          //   0 Server down
-          // 400 Bad Request - request is malformed or missing required fields.
-          // 401 Unauthorized
-          // 403 Forbidden - Logged in, but don't have permissions to complete request, resource already locked, etc.
-          // 404 Not Found - Server has not found anything matching the Request-URI
-          // 408 Request Timeout
-          // 500 Internal Server Error
-          //
-          if( error.status === 400 || error.status === 403 )
-            failureListener(error.data, error.status, error.headers, error.config)
-          else
-            httpRequestError(json, statusCode, headers, config)
-
-          deferred.reject( error)
-        }
-
+        function( response) { requestSuccess( response, deferred, name, scope, successListener, failureListener) },
+        function( error) { requestFailure( error, deferred, failureListener) }
       )
 
       return deferred.promise
+    }
+
+
+    function requestSuccess( response, deferred, name, scope, successListener, failureListener) {
+      if( response.status === 0) {
+        requestFailure( response, deferred, failureListener)
+        return
+      }
+
+      var json = response.data
+      if( scope) {
+        if( name !== undefined)
+          scope[name] = json;
+        scope.loading = false;
+      }
+
+      // If the get worked, the service must be up.
+      if( status.status != STATUS.UP ) {
+        setStatus({
+          status:         STATUS.UP,
+          reinitializing: false,
+          description:    ''
+        });
+      }
+
+      if( successListener )
+        successListener(json)
+
+      deferred.resolve( {data: json})
+    }
+
+    function statusTextNotDefined( statusText) {
+      return ! angular.isDefined( statusText) || ! angular.isString( statusText) || statusText.length === 0
+    }
+
+    function requestFailure( responseOrError, deferred, failureListener) {
+      // error.status
+      //   0 Request timed out. Network down or server down.
+      // 400 Bad Request - request is malformed or missing required fields.
+      // 401 Unauthorized
+      // 403 Forbidden - Logged in, but don't have permissions to complete request, resource already locked, etc.
+      // 404 Not Found - Server has not found anything matching the Request-URI
+      // 408 Request Timeout
+      // 500 Internal Server Error
+      //
+      // If the browser timed out the $http request $http can return status=0 in the success function.
+      // Device select/command may have timed out or network or server could be down.
+      // Example success response with status=0:
+      // response: {
+      //   config: { timeout: 10000, cache: false, data: Object, headers: Object, method: "POST", url: "/models/1/commandlock"},
+      //   data: null,
+      //   headers: function( name) {},
+      //   status: 0,
+      //   statusText: ""
+      // }
+
+      if( responseOrError.status === 0) {
+        if( statusTextNotDefined( responseOrError.statusText))
+          responseOrError.statusText =  'Request timed out (status = 0)'
+
+        if( responseOrError.data === undefined || responseOrError.data === null)
+          responseOrError.data = { exception: responseOrError.statusText}
+      }
+
+      if( failureListener )
+        failureListener(responseOrError.data, responseOrError.status, responseOrError.headers, responseOrError.config)
+
+      if( responseOrError.status === 401 || responseOrError.status === 0 )
+        notifyHttpRequestFailure(responseOrError.data, responseOrError.status, responseOrError.headers, responseOrError.config)
+
+      deferred.reject( responseOrError)
     }
 
 
