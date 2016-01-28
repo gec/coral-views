@@ -226,7 +226,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
      * @param navigationElements The array of Navigation Elements.
      * @returns The first NavigationElement where selected is true; otherwise return undefined.
      */
-    function findFirstSelected(navigationElements) {
+    function findSelected(navigationElements) {
       var i, node, selected
 
       if( !navigationElements || navigationElements.children === 0 )
@@ -244,7 +244,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
       for( i = 0; i < navigationElements.length; i++ ) {
         node = navigationElements[i]
         if( node.children && node.children.length > 0 ) {
-          selected = findFirstSelected(node.children)
+          selected = findSelected(node.children)
           if( selected )
             return selected
         }
@@ -254,7 +254,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
     }
 
     function callMenuSelectOnFirstSelectedItem_or_callWhenLoaded( navigationElements, scope, menuSelect) {
-      var selected = findFirstSelected(navigationElements)
+      var selected = findSelected(navigationElements)
       if( selected) {
         if( selected.sourceUrl) {
           // @param menuItem  The selected item. The original (current scoped variable 'selected') could have been replaced.
@@ -380,6 +380,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
         // need to select one of these new menu items. We'll pick the first one (which is i === 0).
         //
         if( i === 0 && oldParent.selectWhenLoaded) {
+          newParent.selected = true
           oldParent.selectWhenLoaded( newParent);
           delete oldParent.selectWhenLoaded; // just in case
         }
@@ -463,18 +464,26 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
        * @param menuSelect Notify method to call when the NavigationElement marked as selected is finished loading.
        */
       getNavTree: function(url, name, scope, menuSelect) {
-        rest.get(url, name, scope, function(navigationElements) {
-          // example: [ {class:'NavigationItem', data: {label:Dashboard, state:dashboard, url:#/dashboard, selected:false, children:[]}}, ...]
-          flattenNavigationElements(navigationElements)
+        return rest.get(url, name, scope).then(
+          function( response) {
+            var navigationElements = response.data
+            // example: [ {class:'NavigationItem', data: {label:Dashboard, state:dashboard, url:#/dashboard, selected:false, children:[]}}, ...]
+            flattenNavigationElements(navigationElements)
 
-          callMenuSelectOnFirstSelectedItem_or_callWhenLoaded( navigationElements, scope, menuSelect)
+            callMenuSelectOnFirstSelectedItem_or_callWhenLoaded( navigationElements, scope, menuSelect)
 
-          navigationElements.forEach(function(node, index) {
-            if( node.sourceUrl )
-              loadTreeNodesFromSource(navigationElements, index, node, scope)
-          })
+            navigationElements.forEach(function(node, index) {
+              if( node.sourceUrl )
+                loadTreeNodesFromSource(navigationElements, index, node, scope)
+            })
 
-        })
+            return response
+          },
+          function( error) {
+            return error
+          }
+
+        )
       }
     } // end return Public API
 
@@ -566,8 +575,12 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
     }
   }).
 
-  controller('NavTreeController', ['$scope', '$attrs', '$location', '$state', '$cookies', 'rest', 'navigation', function($scope, $attrs, $location, $state, $cookies, rest, navigation) {
+  controller('NavTreeController', ['$rootScope', '$scope', '$attrs', '$location', '$state', '$cookies', 'rest', 'navigation', function( $rootScope, $scope, $attrs, $location, $state, $cookies, rest, navigation) {
 
+    var currentBranch,
+        firstSelectedBranch,
+        treeControl = {}
+    $scope.treeControl = treeControl  // filled in by <abn-tree tree-control = "treeControl"> (see: https://github.com/nickperkinslondon/angular-bootstrap-nav-tree)
     $scope.navTree = [
       {
         class:    'Loading',
@@ -584,26 +597,29 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
       }
     ]
     // GET /models/1/equipment?depth=3&rootTypes=Root
-    var sampleGetResponse = [
-      {
-        'entity':   {
-          'name':  'Some Microgrid',
-          'id':    'b9e6eac2-be4d-41cf-b82a-423d90515f64',
-          'types': ['Root', 'MicroGrid']
-        },
-        'children': [
-          {
-            'entity':   {
-              'name':  'MG1',
-              'id':    '03c2db16-0f78-4800-adfc-9dff9d4598da',
-              'types': ['Equipment', 'EquipmentGroup']
-            },
-            'children': []
-          }
-        ]
-      }
-    ]
+    //var sampleGetResponse = [
+    //  {
+    //    'entity':   {
+    //      'name':  'Some Microgrid',
+    //      'id':    'b9e6eac2-be4d-41cf-b82a-423d90515f64',
+    //      'types': ['Root', 'MicroGrid']
+    //    },
+    //    'children': [
+    //      {
+    //        'entity':   {
+    //          'name':  'MG1',
+    //          'id':    '03c2db16-0f78-4800-adfc-9dff9d4598da',
+    //          'types': ['Equipment', 'EquipmentGroup']
+    //        },
+    //        'children': []
+    //      }
+    //    ]
+    //  }
+    //]
 
+    // When an operator clicks a menu item, the menu item highlighted and this function is called.
+    // This function is specified by the HTML attribute: on-select = "menuSelect(branch)"
+    //
     $scope.menuSelect = function(branch) {
       console.log('NavTreeController.menuSelect ' + branch.label + ', state=' + branch.state + ', class=' + branch.class + ', microgridId=' + branch.microgridId)
 
@@ -632,19 +648,34 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
           shortName: branch.label,
           equipmentChildren: branch.equipmentChildren // children that are equipment
         }
-        }
+      }
 
       if( branch.sourceUrl )
         params.sourceUrl = branch.sourceUrl
 
+      currentBranch = branch
+      if( ! firstSelectedBranch)
+        firstSelectedBranch = branch
       $state.go(branch.state, params)
     }
 
+    $rootScope.$on('$stateChangeSuccess', function( event, toState, toParams, fromState, fromParams) {
+
+      // Clicking 'GreenBus' on top menu goes to state 'loading'.
+      if( firstSelectedBranch && toState.name === 'loading') {
+        // if treeControl is empty, abn-tree needs attribute tree-control = "treeControl"
+        if( currentBranch !== firstSelectedBranch && angular.isFunction( treeControl.select_branch))
+          treeControl.select_branch( firstSelectedBranch) // select menu item and call menuSelect
+        else
+          $scope.menuSelect( firstSelectedBranch)
+      }
+    })
 
     return navigation.getNavTree($attrs.href, 'navTree', $scope, $scope.menuSelect)
   }]).
+
   directive('navTree', function() {
-    // <nav-tree href='/coral/menus/analysis'>
+    // <nav-tree href='/apps/operator/menus/left'>
     return {
       restrict:   'E', // Element name
       scope:      true,
