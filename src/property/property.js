@@ -85,6 +85,11 @@ angular.module('greenbus.views.property', [ 'ui.router', 'greenbus.views.rest', 
         property.isObject = angular.isObject( property.value)
       }
 
+      function applyReplaceSchematicValue( property) {
+        if( property.key === 'schematic')
+          property.value = '...'
+      }
+
       function addProperty( property) {
         $scope.properties.push( property)
         $scope.properties.sort( compare)
@@ -93,6 +98,10 @@ angular.module('greenbus.views.property', [ 'ui.router', 'greenbus.views.rest', 
       function notifyProperty( notificationProperty) {
         var i,
             property = notificationProperty.value
+
+        if( property.key === 'schematic') {
+          property.value = '...'
+        }
 
         switch( notificationProperty.operation) {
           case 'ADDED':
@@ -134,6 +143,7 @@ angular.module('greenbus.views.property', [ 'ui.router', 'greenbus.views.rest', 
               case 'properties':
                 $scope.properties = data.slice()
                 addTypesToPropertiesList()
+                $scope.properties.forEach( applyReplaceSchematicValue)
                 $scope.properties.forEach( applyIsObject)
                 $scope.properties.sort( compare)
                 break
