@@ -256,8 +256,41 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
       subscriptionIdMap[ subscriptionId] = { 'message': messageListener, 'error': errorListener}
     }
 
+    /**
+     * Called on each message coming over the WebSocket
+     * @callback onMessage
+     * @param {string} subscriptionId
+     * @param {string} messageType
+     * @param {(object|array)} data
+     */
 
-    function subscribe( json, scope, messageListener, errorListener) {
+    /**
+     * Called on each error coming over the WebSocket
+     *
+     * @callback onError
+     * @param {string} error - Error description
+     * @param {Object} message - The raw message containing the error
+     * @param {string} message.type - The message type (ex: measurements, endpoints, etc.).
+     * @param {string} message.subscriptionId - The subscription ID assigned by this subscription client.
+     * @param {Object} message.error - Same as error above
+     * @param {Object} message.jsError - Optional JSON error if there was a JSON parsing problem in the request.
+     * @param {(object|array)} data - Data is usually undefined or null.
+     */
+
+    /**
+     *
+     * Error handling
+     * * Send to
+     *
+     * @param {Object} json - The request sent over the WebSocket.
+     * @param {string} json.name - The subscription name recognized by the server.
+     * @param {*}      json.* - The subscription request properties that goes with the specific subscription
+     * @param {scope} scope - Unsubscribe it registered on scope $destroy event.
+     * @param {onMessage} onMessage - Called for each message
+     * @param {onError}   onError - Called when message contains an error (an 'error' property)
+     * @returns {string} subscriptionId used when calling unsubscribe
+     */
+    function subscribe( json, scope, onMessage, onError) {
 
       var subscriptionId = addSubscriptionIdToMessage( json)
       var request = JSON.stringify( json)
@@ -271,10 +304,10 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
           // We're good, so save request for WebSocket.onmessage()
           console.log( 'subscribe: send( ' + request + ')')
           registerSubscriptionOnScope( scope, subscriptionId);
-          subscriptionIdMap[ subscriptionId] = { 'message': messageListener, 'error': errorListener}
+          subscriptionIdMap[ subscriptionId] = { 'message': onMessage, 'error': onError}
         } catch( ex) {
-          if( errorListener)
-            errorListener( 'Could not send subscribe request to server. Exception: ' + ex)
+          if( onError)
+            onError( 'Could not send subscribe request to server. Exception: ' + ex)
           subscriptionId = null
         }
 
@@ -290,21 +323,21 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
             if( ! webSocket)
               throw 'WebSocket create failed.'
 
-            pushPendingSubscription( subscriptionId, scope, request, messageListener, errorListener)
+            pushPendingSubscription( subscriptionId, scope, request, onMessage, onError)
 
           } catch( ex) {
             var description = 'Unable to open WebSocket connection to server. Exception: ' + ex
             // TODO: not logged in!
             setStatus( DIGEST.CURRENT, STATUS.CLOSED, description)
             webSocket = null
-            if( errorListener)
-              errorListener( description)
+            if( onError)
+              onError( description)
             subscriptionId = null
           }
 
         } else {
           // Already opening WebSocket, STATUS.OPENING. Just push pending.
-          pushPendingSubscription( subscriptionId, scope, request, messageListener, errorListener)
+          pushPendingSubscription( subscriptionId, scope, request, onMessage, onError)
         }
 
       }

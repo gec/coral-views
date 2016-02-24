@@ -67,11 +67,11 @@ angular.module( 'greenbus.views.measurement',
      *                          Maximum measurements to keep in Murts.dataStore
      * @param subscriber The subscriber object is used to unsubscribe. It is also the 'this' used
      *                   for calls to notify.
-     * @param notify Optional function to be called each time measurements are added to array.
+     * @param onMessage Optional function to be called each time measurements are added to array.
      *               The function is called with subscriber as 'this'.
-     * @returns An array with measurements. New measurements will be updated as they come in.
+     * @returns An array with measurements. New measurements will be appended as they come in.
      */
-    function subscribeWithHistory(scope, point, constraints, subscriber, notify) {
+    function subscribeWithHistory(scope, point, constraints, subscriber, onMessage, onError) {
       console.log('measurement.subscribeWithHistory ')
 
       var measurementHistory = pointIdToMeasurementHistoryMap[point.id]
@@ -80,7 +80,7 @@ angular.module( 'greenbus.views.measurement',
         pointIdToMeasurementHistoryMap[point.id] = measurementHistory
       }
 
-      return measurementHistory.subscribe(scope, constraints, subscriber, notify)
+      return measurementHistory.subscribe(scope, constraints, subscriber, onMessage, onError)
     }
 
     /**
@@ -98,28 +98,70 @@ angular.module( 'greenbus.views.measurement',
         console.error('ERROR: meas.unsubscribe point.id: ' + point.id + ' was never subscribed.')
     }
 
-    function onMeasurements(measurements, subscriber, notify) {
+    function onMeasurements(measurements, subscriber, onMessage) {
       measurements.forEach(function(pm) {
         pm.measurement.value = formatMeasurementValue(pm.measurement.value)
       })
-      if( notify )
-        notify.call(subscriber, measurements)
+      if( onMessage )
+        onMessage.call(subscriber, measurements)
     }
+
+    /**
+     * Called on each message coming over the WebSocket
+     * @callback onMessage
+     * @param {string} subscriptionId
+     * @param {string} messageType
+     * @param {(object|array)} data
+     */
+
+    /**
+     * Called on each error coming over the WebSocket
+     *
+     * @callback onError
+     * @param {string} error - Error description
+     * @param {Object} message - The raw message containing the error
+     * @param {string} message.type - The message type (ex: measurements, endpoints, etc.).
+     * @param {string} message.subscriptionId - The subscription ID assigned by this subscription client.
+     * @param {Object} message.error - Same as error
+     * @param {Object} message.jsError - Optional JSON error if there was a JSON parsing problem in the request.
+     * @param {(object|array)} data - Data is usually undefined or null.
+     */
 
     /**
      * Subscribe to measurements.
      *
-     * @param scope The scope of the controller requesting the subscription.
-     * @param pointIds Array of point IDs
-     * @param constraints size: Maximum number of measurements to query from the server
-     *                          Maximum measurements to keep in Murts.dataStore
-     * @param subscriber The subscriber object is used as 'this' for calls to notify.
-     * @param notify Optional function to be called each time one measurement is received.
-     *               The function is called with subscriber as 'this'.
-     * @returns A subscription ID which can be used to unsubscribe.
+     * @param {scope}     scope The scope of the controller requesting the subscription.
+     * @param {array}     pointIds Array of point IDs
+     * @param {number}    constraints size: Maximum number of measurements to query from the server
+     *                                      Maximum measurements to keep in Murts.dataStore
+     * @param {Object}    subscriber The subscriber object is used as 'this' for calls to notify.
+     * @param {onMessage} onMessage Optional function to be called each time one measurement is received.
+     *                              The function is called with subscriber as 'this'.
+     * @param {onError}   onError Optional function called on errors.
+     * @returns A subscriptionId used when calling unsubscribe
      */
-    function subscribe(scope, pointIds, constraints, subscriber, notify) {
-      var digestTimer
+    function subscribe(scope, pointIds, constraints, subscriber, onMessage, onError) {
+      var digestThrottleTimer
+
+      function throttleDigest() {
+        var now = Date.now(),
+            delta = now - lastSubscribeSuccessDigestTime
+
+        if( delta >= 500) {
+          if( digestThrottleTimer) {
+            $timeout.cancel( digestThrottleTimer)
+            digestThrottleTimer = undefined
+          }
+          lastSubscribeSuccessDigestTime = now
+          scope.$digest()
+        } else if( digestThrottleTimer === undefined ) {
+          digestThrottleTimer = $timeout( function( ) {
+            digestThrottleTimer = undefined
+            lastSubscribeSuccessDigestTime = Date.now()
+            scope.$digest()
+          }, 500 - delta )
+        }
+      }
 
       //console.log('measurement.subscribe')
       return subscription.subscribe(
@@ -129,33 +171,18 @@ angular.module( 'greenbus.views.measurement',
         },
         scope,
         function(subscriptionId, type, measurements) {
-
-          if( type === 'measurements' )
-            onMeasurements(measurements, subscriber, notify)
-          else
+          if( type === 'measurements' ) {
+            onMeasurements(measurements, subscriber, onMessage)
+            throttleDigest()
+          } else {
             console.error('measurement.subscribe message of unknown type: "' + type + '"')
-
-          var now = Date.now(),
-              delta = now - lastSubscribeSuccessDigestTime
-
-          if( delta >= 500) {
-            if( digestTimer) {
-              $timeout.cancel( digestTimer)
-              digestTimer = undefined
-            }
-            lastSubscribeSuccessDigestTime = now
-            scope.$digest()
-          } else if( digestTimer === undefined ) {
-            digestTimer = $timeout( function( ) {
-              digestTimer = undefined
-              lastSubscribeSuccessDigestTime = Date.now()
-              scope.$digest()
-            }, 500 - delta )
           }
-
         },
         function(error, message) {
           console.error('measurement.subscribe ERROR: ' + error + ', message: ' + message)
+          if( onError) {
+            onError.call( subscriber, error, message)
+          }
         }
       )
     }

@@ -58,14 +58,15 @@ function MeasurementHistory(subscription, point) {
   //Debug: this.measurements.pname = this.point.name
 }
 
-MeasurementHistory.prototype.subscribe = function(scope, constraints, subscriber, notify) {
+MeasurementHistory.prototype.subscribe = function(scope, constraints, subscriber, onMessage, onError) {
 
+  // TODO: each subscribe overrides previous constraints!
   this.measurements.constrainTime(constraints.time)
   this.measurements.constrainSize(constraints.size)
   if( constraints.throttling )
     this.measurements.constrainThrottling(constraints.throttling)
 
-  this.subscribers.push({subscriber: subscriber, notify: notify})
+  this.subscribers.push({subscriber: subscriber, onMessage: onMessage, onError: onError})
 
   if( this.subscriptionId )
     return this.measurements
@@ -128,7 +129,7 @@ MeasurementHistory.prototype.onPointWithMeasurements = function(pointWithMeasure
   //console.log( 'onPointWithMeasurements point.name ' + this.point.name + ' measurements.length=' + pointWithMeasurements.measurements.length)
   measurements = pointWithMeasurements.measurements.map(function(m) { return self.convertMeasurement(m) })
   this.measurements.pushPoints(measurements)
-  this.notifySubscribers()
+  this.notifyOnMessage()
 }
 
 MeasurementHistory.prototype.onMeasurements = function(pointMeasurements) {
@@ -138,7 +139,7 @@ MeasurementHistory.prototype.onMeasurements = function(pointMeasurements) {
 //      console.log( 'onMeasurements point.name ' + this.point.name + ' measurements.length=' + pointMeasurements.length + ' meas[0]: ' + pointMeasurements[0].measurement.value)
   measurements = pointMeasurements.map(function(pm) { return self.convertMeasurement(pm.measurement) })
   this.measurements.pushPoints(measurements)
-  this.notifySubscribers()
+  this.notifyOnMessage()
 }
 
 MeasurementHistory.prototype.convertMeasurement = function(measurement) {
@@ -166,15 +167,24 @@ MeasurementHistory.prototype.convertMeasurement = function(measurement) {
   return measurement
 }
 
-MeasurementHistory.prototype.notifySubscribers = function() {
+/**
+ * Each subscriber handles what to do with new data coming in.
+ */
+MeasurementHistory.prototype.notifyOnMessage = function() {
   this.subscribers.forEach(function(s) {
-    if( s.notify )
-      s.notify.call(s.subscriber)
+    if( s.onMessage )
+      s.onMessage.call(s.subscriber)
   })
+}
 
-//        this.subscribers.forEach( function( subscriber) {
-//            subscriber.traits.update( 'trend')
-//        })
+/**
+ * Each subscriber handles what to do with new data coming in.
+ */
+MeasurementHistory.prototype.notifyOnError = function() {
+  this.subscribers.forEach(function(s) {
+    if( s.onError )
+      s.onError.call(s.subscriber)
+  })
 }
 
 /**'

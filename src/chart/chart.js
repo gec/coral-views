@@ -49,16 +49,18 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
 
 
       function subscribeToMeasurementHistory( chart, point ) {
-        var firstNotify = true
 
-        function notify() {
-          if( firstNotify) {
-            firstNotify = false
-            chart.trendStart( 300)
+        point.measurements = measurement.subscribeWithHistory( $scope, point, historyConstraints, chart,
+          function() {
+             // We call trendStart() once. After that, the GBChart updates (scrolls left)
+             // on it's own.
+            if( ! chart.trendStarted())
+              chart.trendStart( 300)
+          },
+          function( error, message) {
+
           }
-        }
-
-        point.measurements = measurement.subscribeWithHistory( $scope, point, historyConstraints, chart, notify )
+        )
       }
 
       function unsubscribeToMeasurementHistory( chart, point ) {

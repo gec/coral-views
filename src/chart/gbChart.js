@@ -255,6 +255,9 @@ function GBChart( _points, trend, _brushChart) {
   }
 
   self.trendStart = function( interval, duration) {
+    if( self.trendTimer)
+      self.trendStop()
+
     if( duration === undefined)
       duration = interval * 0.95
 
@@ -271,6 +274,10 @@ function GBChart( _points, trend, _brushChart) {
       clearInterval( self.trendTimer)
       self.trendTimer = null
     }
+  }
+
+  self.trendStarted = function() {
+    return self.trendTimer !== null
   }
 
   // typ is usually 'trend'
