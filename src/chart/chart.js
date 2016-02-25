@@ -52,13 +52,15 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
 
         point.measurements = measurement.subscribeWithHistory( $scope, point, historyConstraints, chart,
           function() {
-             // We call trendStart() once. After that, the GBChart updates (scrolls left)
-             // on it's own.
+             // We call trendStart() once. After that, the GBChart auto-updates (scrolls left)
+             // based on wall time.
             if( ! chart.trendStarted())
               chart.trendStart( 300)
           },
           function( error, message) {
-
+            console.error( 'gbChartsController.subscribeToMeasurementHistory.error: ' + error + ', message: ' + JSON.stringify( message))
+            point.error = error
+            $scope.$digest()
           }
         )
       }
@@ -206,7 +208,24 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
     }
 
     function subscribeToMeasurementHistory( chart, point) {
-      point.measurements = measurement.subscribeWithHistory( $scope, point, historyConstraints, chart, notifyMeasurements)
+      point.measurements = measurement.subscribeWithHistory( $scope, point, historyConstraints, chart,
+        function() {
+          // We call trendStart() once. After that, the GBChart auto-updates (scrolls left)
+          // based on wall time.
+          if( ! chart.trendStarted()) {
+            $scope.loading = false
+            $scope.$digest()
+            chart.traits.invalidate( 'resize', 0)
+            chart.brushTraits.invalidate( 'resize', 0)
+            chart.trendStart( 300)
+          }
+        },
+        function( error, message) {
+          console.error( 'gbChartController.subscribeToMeasurementHistory.error: ' + error + ', message: ' + JSON.stringify( message))
+          point.error = error
+          $scope.$digest()
+        }
+      )
     }
 
     function unsubscribeToMeasurementHistory( chart, point) {

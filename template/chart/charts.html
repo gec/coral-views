@@ -12,6 +12,7 @@
             <li class="gb-legend" ng-repeat="point in chart.points">
                 <div class="gb-icon-text draggable" draggable ident="point.id" source="chart" on-drag-success="onDragSuccess">
                     <span class="gb-legend-text" style="border-bottom-color: {{ $parent.chart.traits.color(point) }}">{{point.name}}</span>
+                    <i class="fa fa-exclamation-triangle gb-icon gb-icon-error" ng-show="point.error" title="{{ point.error }}"></i>
                     <a class="gb-remove" href="" ng-click="removePoint( chart, point)"><span class="glyphicon glyphicon-remove"></span></a>
                 </div>
             </li>

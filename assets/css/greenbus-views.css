@@ -51,6 +51,10 @@ td.event-agent {
   to { transform: scale(1) rotate(360deg);}
 }
 
+.gb-icon-error {color: #d50000}
+.gb-icon-warn {color: #ff6d00}
+.gb-icon-ok {}
+
 .validity-good {color: #9de09d; font-size:1.4em;}
 .validity-invalid {color: #b22222; font-size:1.4em;}
 .validity-questionable {color: #f57900; font-size:1.4em;}
