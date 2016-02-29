@@ -47,6 +47,8 @@ module.exports = function(config) {
       'misc/test-lib/d3-traits.js',
 
       // Use the actual source files for testing.
+      'assets/css/*.css',
+      'assets/images/*.png',
       'src/**/*.js',
       'target/**/*.js',
       'template/**/*.js'
