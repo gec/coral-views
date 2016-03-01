@@ -243,10 +243,10 @@ describe('gbCharts', function () {
     $compile = _$compile_;
 
     // Need outer div to contain siblings; otherwise 'element' is a comment and the first chart is a sibling.
-    element = angular.element( '<div style="width:800px;height:200px;"><gb-charts></gb-charts></div>');
+    element = angular.element( '<div class="gb-test-container" style="width:800px;height:200px;"><gb-charts></gb-charts></div>');
     $compile(element)(parentScope);
     $('body').height( 500)
-    $('body').append( element) // append to body so offsetHeight and width are available d3-traits chart base.
+    $('body').append( element) // append to body so offsetHeight and width are available d3-traits chart base. Detach afterEach()
 
     //parentScope.$digest();  This deletes the element.scope() for some reason!
     scope = element.isolateScope() || element.scope()
@@ -257,6 +257,9 @@ describe('gbCharts', function () {
     //$('body').append('<link rel="stylesheet" href="/base/assets/css/greenbus-views.css" />')
   }));
 
+  afterEach( function() {
+    $('div.gb-test-container').detach()
+  })
 
   function findChartDivs() {
     return element.find( '.gb-win')
