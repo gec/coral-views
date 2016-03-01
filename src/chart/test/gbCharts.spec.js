@@ -1,9 +1,15 @@
-describe('chart', function () {
+describe('gbCharts', function () {
   var parentScope, scope, $compile, $httpBackend,
       element, svgOneMeasurement, svgOneEquipmentSymbol,
       subscriptions = [],
       measurements = [],
-      REQUEST_ADD_CHART = 'gb-chart.addChart'
+      REQUEST_ADD_CHART = 'gb-chart.addChart',
+      historyConstraints = {
+        time: 1000 * 60 * 60 * 2, // 2 hours
+        size: 60 * 60 * 2 * 10, // 2 hours of 10 measurements per second data
+        throttling: 5000
+      }
+
 
   var equipmentId = 'equipmentId',
       points = [
@@ -61,8 +67,7 @@ describe('chart', function () {
 
 
   function makeSubscriptionId( request, idCounter) {
-    var messageKey = Object.keys( request)[0]
-    return 'subscription.' + messageKey + '.' + idCounter;
+    return 'subscription.' + request.name + '.' + idCounter;
   }
 
   var authToken = 'some auth token'
@@ -253,14 +258,20 @@ describe('chart', function () {
   }));
 
 
-  function findCharts() {
+  function findChartDivs() {
     return element.find( '.gb-win')
+  }
+  function findChartDiv( index) {
+    return element.find( '.gb-win').eq(index)
   }
   function findLegends( chartDiv) {
     return chartDiv.find('li.gb-legend');
   }
   function findLegendText( legends, index) {
     return legends.eq(index).find('span.gb-legend-text').eq(0).text();
+  }
+  function findLegendRemoveButton( legends, index) {
+    return legends.eq(index).find('a.gb-remove').eq(0);
   }
   function findLegendRemoveIcon( legends, index) {
     return legends.eq(index).find('a.gb-remove').find('span').eq(0);
@@ -270,19 +281,19 @@ describe('chart', function () {
   }
 
 
-  it('should subscribe to one point and build legend', inject( function ( $rootScope, request) {
-    var mh, subscriber, charts, chartDiv, legends, legendText, removeIcon, legendError,
+  it('should subscribe to one point, build legend, then remove point', inject( function ( $rootScope, request) {
+    var mh, subscriber, charts, chartDiv, legends, legendText, removeButton, removeIcon, legendError,
         point = points[0]
 
     request.push(REQUEST_ADD_CHART, [point])
     scope.$digest()
     mh = getMeasurementHistory( point)
     expect( mh.subscribers.length).toBe(1)
-    subscriber = mh[0]
+    subscriber = mh.subscribers[0]
 
-    charts = findCharts()
+    charts = findChartDivs()
     expect(charts.length).toBe(1)
-    chartDiv = charts.eq(0)
+    chartDiv = findChartDiv(0)
     legends = findLegends( chartDiv)
     legendText = findLegendText( legends, 0)
     expect( legendText).toEqual( point.name)
@@ -291,220 +302,43 @@ describe('chart', function () {
     legendError = findLegendError( legends, 0)
     expect( legendError).toHaveClass( 'ng-hide')
 
+    removeButton = findLegendRemoveButton( legends, 0)
+    removeButton.trigger( 'click')
+    expect( mh.subscribers.length).toBe(0)
+
   }));
 
-  //it('should subscribe to schematic and call notify', inject( function ( schematic) {
-  //  var scope = { $digest: jasmine.createSpy('$digest')},
-  //      onSchematic = jasmine.createSpy('onSchematic'),
-  //      svgContent = svgOneMeasurement
-  //
-  //  schematic.subscribe( equipmentId, scope, onSchematic)
-  //
-  //  var properties = [
-  //    {key: 'schematic', value: svgContent}
-  //  ]
-  //
-  //  subscriptions[0].onMessage( subscriptions[0].id, 'properties', properties)
-  //
-  //  var request = {
-  //    name: 'SubscribeToProperties',
-  //    entityId:  equipmentId,
-  //    keys: ['schematic']
-  //  }
-  //  expect( subscriptions[0].onMessage ).toBeDefined()
-  //  expect( subscriptions[0].onError ).toBeDefined()
-  //  expect( subscriptions[0].request ).toEqual( request)
-  //
-  //
-  //  expect( onSchematic.calls.mostRecent().args).toEqual( [subscriptions[0].id, svgContent, 'CURRENT'])
-  //}));
-  //
-  //it('should transform measurements', inject( function ( schematic) {
-  //  var measElems, measElem, measValue, measurements,
-  //      onSchematic = jasmine.createSpy('onSchematic'),
-  //      svgContent = svgOneMeasurement
-  //
-  //  var properties = [
-  //    {key: 'schematic', value: svgContent}
-  //  ]
-  //
-  //  subscriptions[0].onMessage( subscriptions[0].id, 'properties', properties)
-  //  expect( subscriptions[0].onMessage ).toBeDefined()
-  //
-  //  measElems = findMeasurementGs()
-  //  expect( measElems.length).toBe(1)
-  //  measValue = getMeasurementValue( measElems, 0)
-  //  expect( measValue).toEqual( ' ')
-  //
-  //  scope.pointNameMap = {}
-  //  scope.pointNameMap[ points[0].name] = {
-  //    name: points[0].name,
-  //    unit: 'someUnit',
-  //    currentMeasurement: {
-  //      value: 'someValue',
-  //      validity: 'GOOD'
-  //    }
-  //  }
-  //  scope.$digest()
-  //
-  //  measValue = getMeasurementValue( measElems, 0)
-  //  expect( measValue).toEqual( 'someValue someUnit')
-  //
-  //
-  //  // Flush getPoints.
-  //  $httpBackend.flush()
-  //
-  //  measurements = [
-  //    {
-  //      'point': {'id': points[0].id},
-  //      'measurement': {
-  //        'value': '248.000000',
-  //        'type': 'DOUBLE',
-  //        'unit': 'kW',
-  //        'time': 1442261552564,
-  //        'validity': 'GOOD',
-  //        'shortQuality': '',
-  //        'longQuality': 'Good'
-  //      }
-  //    }
-  //  ]
-  //  subscriptions[0].onMessage( subscriptions[0].id, 'measurements', measurements)
-  //  measValue = getMeasurementValue( measElems, 0)
-  //  expect( measValue).toEqual( '248.0 kW')
-  //
-  //}));
-  //
-  //it('should transform measurements based on measurement-decimal', inject( function ( schematic) {
-  //  var measElems, measElem, measValue, measurements,
-  //      onSchematic = jasmine.createSpy('onSchematic'),
-  //      svgContent = svgOneMeasurementMeasurementDecimals3
-  //
-  //  var properties = [
-  //    {key: 'schematic', value: svgContent}
-  //  ]
-  //
-  //  subscriptions[0].onMessage( subscriptions[0].id, 'properties', properties)
-  //  expect( subscriptions[0].onMessage ).toBeDefined()
-  //
-  //  measElems = findMeasurementGs()
-  //  expect( measElems.length).toBe(1)
-  //  measValue = getMeasurementValue( measElems, 0)
-  //  expect( measValue).toEqual( ' ')
-  //
-  //  scope.pointNameMap = {}
-  //  scope.pointNameMap[ points[0].name] = {
-  //    name: points[0].name,
-  //    unit: 'someUnit',
-  //    currentMeasurement: {
-  //      value: 'someValue',
-  //      validity: 'GOOD'
-  //    }
-  //  }
-  //  scope.$digest()
-  //
-  //  measValue = getMeasurementValue( measElems, 0)
-  //  expect( measValue).toEqual( 'someValue someUnit')
-  //
-  //
-  //  // Flush getPoints.
-  //  $httpBackend.flush()
-  //
-  //  measurements = [
-  //    {
-  //      'point': {'id': points[0].id},
-  //      'measurement': {
-  //        'value': '248.000000',
-  //        'type': 'DOUBLE',
-  //        'unit': 'kW',
-  //        'time': 1442261552564,
-  //        'validity': 'GOOD',
-  //        'shortQuality': '',
-  //        'longQuality': 'Good'
-  //      }
-  //    }
-  //  ]
-  //  subscriptions[0].onMessage( subscriptions[0].id, 'measurements', measurements)
-  //  measValue = getMeasurementValue( measElems, 0)
-  //  expect( measValue).toEqual( '248.000 kW')
-  //
-  //}));
-  //
-  //it('should transform equipment symbols and update visible state', inject( function ( schematic, $timeout) {
-  //  var equipmentElems, stateElements, measValue, measurements,
-  //      onSchematic = jasmine.createSpy('onSchematic'),
-  //      svgContent = svgOneEquipmentSymbol
-  //
-  //  var properties = [
-  //    {key: 'schematic', value: svgContent}
-  //  ]
-  //
-  //  subscriptions[0].onMessage( subscriptions[0].id, 'properties', properties)
-  //  expect( subscriptions[0].onMessage ).toBeDefined()
-  //
-  //  equipmentElems = findEquipmentSymbolGs()
-  //  expect( equipmentElems.length).toBe(1)
-  //  stateElements = findEquipmentSymbolStates( equipmentElems.eq(0))
-  //  expect( stateElements.length).toBe( 2)
-  //
-  //  scope.pointNameMap = {}
-  //  scope.pointNameMap[ points[1].name] = {
-  //    name: points[1].name,
-  //    unit: 'someUnit',
-  //    currentMeasurement: {
-  //      value: 'someValue',
-  //      validity: 'GOOD'
-  //    }
-  //  }
-  //  scope.$digest()
-  //
-  //  expect( stateElements.eq(0).attr( 'ng-show')).toEqual( 'pointNameMap[\'' + points[1].name + '\'].currentMeasurement.value === \'OPEN\'')
-  //  expect( stateElements.eq(1).attr( 'ng-show')).toEqual( 'pointNameMap[\'' + points[1].name + '\'].currentMeasurement.value === \'CLOSED\'')
-  //
-  //  // Flush getPoints.
-  //  $httpBackend.flush()
-  //
-  //  measurements = [
-  //    {
-  //      'point': {'id': points[1].id},
-  //      'measurement': {
-  //        'value': 'CLOSED',
-  //        'type': 'STRING',
-  //        'unit': 'Status',
-  //        'time': 1442261552564,
-  //        'validity': 'GOOD',
-  //        'shortQuality': '',
-  //        'longQuality': 'Good'
-  //      }
-  //    }
-  //  ]
-  //  subscriptions[0].onMessage( subscriptions[0].id, 'measurements', measurements)
-  //  expect( stateElements.eq(0).attr( 'class')).toEqual( 'ng-hide')
-  //  expect( stateElements.eq(1).attr( 'class')).toEqual( '')
-  //
-  //  measurements = [
-  //    {
-  //      'point': {'id': points[1].id},
-  //      'measurement': {
-  //        'value': 'OPEN',
-  //        'type': 'STRING',
-  //        'unit': 'Status',
-  //        'time': 1442261552564,
-  //        'validity': 'GOOD',
-  //        'shortQuality': '',
-  //        'longQuality': 'Good'
-  //      }
-  //    }
-  //  ]
-  //  subscriptions[0].onMessage( subscriptions[0].id, 'measurements', measurements)
-  //  $timeout.flush()
-  //  expect( stateElements.eq(0).attr( 'class')).toEqual( '')
-  //  expect( stateElements.eq(1).attr( 'class')).toEqual( 'ng-hide')
-  //
-  //}));
+  it('should subscribe to one point, receive error message and show error icon with hover message', inject( function ( $rootScope, request) {
+    var mh, subscriber, chartDiv, legends, legendError,
+        point = points[0],
+        errorMessage = 'Some error message.',
+        message = {
+          error: errorMessage
+        }
+
+    request.push(REQUEST_ADD_CHART, [point])
+    scope.$digest()
+    mh = getMeasurementHistory( point)
+    expect( mh.subscribers.length).toBe(1)
+    subscriber = mh.subscribers[0]
+
+    chartDiv = findChartDiv(0)
+    legends = findLegends( chartDiv)
+    legendError = findLegendError( legends, 0)
+    expect( legendError).toHaveClass( 'ng-hide')
+
+    subscriber.onError( errorMessage, message)
+    expect( legendError).not.toHaveClass( 'ng-hide')
+    expect( legendError.attr('title')).toBe( errorMessage)
+
+  }));
+
 
 
 });
 
-describe( 'chart tests', function() {
-  it('should ...')
+describe( 'gbCharts tests TODO', function() {
+  it('should add multiple points')
+  it('should open multiple charts')
+  it('should exercise drag-n-drop features')
 })

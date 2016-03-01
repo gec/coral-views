@@ -295,7 +295,6 @@ angular.module('greenbus.views.chart', ['greenbus.views.measurement', 'greenbus.
       restrict: 'E', // Element name
       // The template HTML will replace the directive.
       replace: true,
-      transclude: true,
       scope: true,
       templateUrl: 'greenbus.views.template/chart/charts.html',
       controller: 'gbChartsController'
