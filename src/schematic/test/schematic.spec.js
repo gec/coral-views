@@ -85,12 +85,12 @@ describe('schematic', function () {
   beforeEach(function () {
     subscribeInstance = {}
     _subscription = {
-      subscribe: function (request, subscriberScope, onSuccess, onError) {
+      subscribe: function (request, subscriberScope, onMessage, onError) {
         subscribeInstance = {
           id: makeSubscriptionId( request, 1),
           request: request,
           scope: subscriberScope,
-          onSuccess: onSuccess,
+          onMessage: onMessage,
           onError: onError
         }
 
@@ -188,14 +188,14 @@ describe('schematic', function () {
       {key: 'schematic', value: svgContent}
     ]
 
-    subscribeInstance.onSuccess( subscribeInstance.id, 'properties', properties)
+    subscribeInstance.onMessage( subscribeInstance.id, 'properties', properties)
 
     var request = {
       name: 'SubscribeToProperties',
       entityId:  equipmentId,
       keys: ['schematic']
     }
-    expect( subscribeInstance.onSuccess ).toBeDefined()
+    expect( subscribeInstance.onMessage ).toBeDefined()
     expect( subscribeInstance.onError ).toBeDefined()
     expect( subscribeInstance.request ).toEqual( request)
 
@@ -212,8 +212,8 @@ describe('schematic', function () {
       {key: 'schematic', value: svgContent}
     ]
 
-    subscribeInstance.onSuccess( subscribeInstance.id, 'properties', properties)
-    expect( subscribeInstance.onSuccess ).toBeDefined()
+    subscribeInstance.onMessage( subscribeInstance.id, 'properties', properties)
+    expect( subscribeInstance.onMessage ).toBeDefined()
 
     measElems = findMeasurementGs()
     expect( measElems.length).toBe(1)
@@ -252,7 +252,7 @@ describe('schematic', function () {
         }
       }
     ]
-    subscribeInstance.onSuccess( subscribeInstance.id, 'measurements', measurements)
+    subscribeInstance.onMessage( subscribeInstance.id, 'measurements', measurements)
     measValue = getMeasurementValue( measElems, 0)
     expect( measValue).toEqual( '248.0 kW')
 
@@ -267,8 +267,8 @@ describe('schematic', function () {
       {key: 'schematic', value: svgContent}
     ]
 
-    subscribeInstance.onSuccess( subscribeInstance.id, 'properties', properties)
-    expect( subscribeInstance.onSuccess ).toBeDefined()
+    subscribeInstance.onMessage( subscribeInstance.id, 'properties', properties)
+    expect( subscribeInstance.onMessage ).toBeDefined()
 
     measElems = findMeasurementGs()
     expect( measElems.length).toBe(1)
@@ -307,7 +307,7 @@ describe('schematic', function () {
         }
       }
     ]
-    subscribeInstance.onSuccess( subscribeInstance.id, 'measurements', measurements)
+    subscribeInstance.onMessage( subscribeInstance.id, 'measurements', measurements)
     measValue = getMeasurementValue( measElems, 0)
     expect( measValue).toEqual( '248.000 kW')
 
@@ -322,8 +322,8 @@ describe('schematic', function () {
       {key: 'schematic', value: svgContent}
     ]
 
-    subscribeInstance.onSuccess( subscribeInstance.id, 'properties', properties)
-    expect( subscribeInstance.onSuccess ).toBeDefined()
+    subscribeInstance.onMessage( subscribeInstance.id, 'properties', properties)
+    expect( subscribeInstance.onMessage ).toBeDefined()
 
     equipmentElems = findEquipmentSymbolGs()
     expect( equipmentElems.length).toBe(1)
@@ -361,7 +361,7 @@ describe('schematic', function () {
         }
       }
     ]
-    subscribeInstance.onSuccess( subscribeInstance.id, 'measurements', measurements)
+    subscribeInstance.onMessage( subscribeInstance.id, 'measurements', measurements)
     expect( stateElements.eq(0).attr( 'class')).toEqual( 'ng-hide')
     expect( stateElements.eq(1).attr( 'class')).toEqual( '')
 
@@ -379,7 +379,7 @@ describe('schematic', function () {
         }
       }
     ]
-    subscribeInstance.onSuccess( subscribeInstance.id, 'measurements', measurements)
+    subscribeInstance.onMessage( subscribeInstance.id, 'measurements', measurements)
     $timeout.flush()
     expect( stateElements.eq(0).attr( 'class')).toEqual( '')
     expect( stateElements.eq(1).attr( 'class')).toEqual( 'ng-hide')
