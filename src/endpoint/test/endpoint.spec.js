@@ -66,12 +66,12 @@ describe('endpoint', function () {
   beforeEach(function() {
     subscribeInstance = {}
     _subscription = {
-      subscribe: function (request, subscriberScope, onSuccess, onError) {
+      subscribe: function (request, subscriberScope, onMessage, onError) {
         subscribeInstance = {
           id: makeSubscriptionId( request, 1),
           request: request,
           scope: subscriberScope,
-          onSuccess: onSuccess,
+          onMessage: onMessage,
           onError: onError
         }
 
@@ -113,9 +113,23 @@ describe('endpoint', function () {
     return endpoint.find('td').eq(tdIndex);
   }
 
+  function findAlerts() {
+    return element.find('div.alert')
+  }
+  function findAlertCloseButton( alerts, index) {
+    return alerts.eq(index).find('button')
+  }
+
+  function findAlertText( alerts, index) {
+    return alerts.eq(index).find('span.ng-binding').text()
+  }
+
+
   it('should start with 0 endpoints', inject( function () {
-    var foundEndpoints = initCoralEndpointsElement();
+    var foundEndpoints = initCoralEndpointsElement(),
+        foundAlerts = findAlerts();
     expect( foundEndpoints.length).toEqual(0);
+    expect( foundAlerts.length).toEqual(0);
   }));
 
   it('should subscribe to endpoints', inject( function () {
@@ -126,7 +140,7 @@ describe('endpoint', function () {
     initCoralEndpointsElement();
     $httpBackend.flush();
 
-    expect( subscribeInstance.onSuccess ).toBeDefined()
+    expect( subscribeInstance.onMessage ).toBeDefined()
     expect( subscribeInstance.onError ).toBeDefined()
     expect( subscribeInstance.request ).toEqual( request)
   }));
@@ -155,7 +169,7 @@ describe('endpoint', function () {
     scope.$digest();
     $httpBackend.flush();
 
-    subscribeInstance.onSuccess( subscribeInstance.id, 'endpoints',  endpointsMessage1)
+    subscribeInstance.onMessage( subscribeInstance.id, 'endpoints',  endpointsMessage1)
     scope.$digest();
 
     var foundEndpoints = findEndpoints()
@@ -189,7 +203,7 @@ describe('endpoint', function () {
       }
     }
 
-    subscribeInstance.onSuccess( subscribeInstance.id, 'endpoint',  endpointMessageN[0])
+    subscribeInstance.onMessage( subscribeInstance.id, 'endpoint',  endpointMessageN[0])
     scope.$digest();
 
     var foundEndpoints = findEndpoints()
@@ -206,5 +220,28 @@ describe('endpoint', function () {
     expect( findTd( endpoint, 4).text()).toBe('07:00:00 PM, 12-31-1969'); // 0: start of epoch
   }));
 
+  it('should receive error message, show alert, and click to remove alert.', inject( function () {
+    var foundAlerts, closeButton,
+        errorMessage = 'Some error message.',
+        message = {
+          error: errorMessage
+        }
+
+    initCoralEndpointsElement();
+    scope.$digest();
+    $httpBackend.flush();
+
+    subscribeInstance.onError( errorMessage, message)
+    scope.$digest();
+    foundAlerts = findAlerts()
+    expect( foundAlerts.length).toEqual(1)
+    expect( findAlertText( foundAlerts, 0)).toBe( errorMessage)
+
+    closeButton = findAlertCloseButton( foundAlerts, 0)
+    closeButton.trigger( 'click')
+    foundAlerts = findAlerts()
+    expect( foundAlerts.length).toEqual(0)
+
+  }));
 
 });

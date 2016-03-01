@@ -26,6 +26,7 @@ angular.module('greenbus.views.endpoint', ['greenbus.views.rest', 'greenbus.view
 
   controller( 'gbEndpointsController', ['$scope', 'rest', 'subscription', function( $scope, rest, subscription) {
     $scope.endpoints = []
+    $scope.alerts = []
 
     var CommStatusNames = {
       COMMS_DOWN: 'Down',
@@ -34,7 +35,12 @@ angular.module('greenbus.views.endpoint', ['greenbus.views.rest', 'greenbus.view
       UNKNOWN: 'Unknown'
     }
 
-    function findEndpointIndex( id) {
+  $scope.closeAlert = function(index) {
+    if( index < $scope.alerts.length)
+      $scope.alerts.splice(index, 1)
+  }
+
+  function findEndpointIndex( id) {
       var i, endpoint,
           length = $scope.endpoints.length
 
@@ -126,7 +132,8 @@ angular.module('greenbus.views.endpoint', ['greenbus.views.rest', 'greenbus.view
           $scope.$digest()
         },
         function( messageError, message){
-          console.error( 'EndpointController.subscription error: ' + messageError)
+          console.error( 'EndpointController.subscription error: ' + messageError + ', ' + JSON.stringify( message))
+          $scope.alerts = [{ type: 'danger', message: messageError}]
         })
 
     });

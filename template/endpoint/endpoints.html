@@ -2,6 +2,7 @@
     <h3>Endpoints</h3>
 
     <div class="table-responsive" style="overflow-x: auto">
+        <alert ng-repeat="alert in alerts" type="{{alert.type}}" close="closeAlert($index)">{{alert.message}}</alert>
         <table class="table table-condensed">
             <thead>
             <tr>
