@@ -15,8 +15,7 @@ describe('gb-properties-table', function () {
   }
 
   function makeSubscriptionId( request, idCounter) {
-    var messageKey = Object.keys( request)[0]
-    return 'subscription.' + messageKey + '.' + idCounter;
+    return 'subscription.' + request.name + '.' + idCounter;
   }
 
   var authToken = 'some auth token',

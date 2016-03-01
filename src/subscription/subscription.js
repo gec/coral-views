@@ -221,8 +221,6 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
     }
 
     function makeSubscriptionId( json) {
-      //var messageKey = Object.keys( json)[0]
-      // add the messageKey just for easier debugging.
       return 'subscription.' + json.name + '.' + generateUUID();
     }
 
