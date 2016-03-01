@@ -1,5 +1,5 @@
 describe('gb-points-table', function () {
-  var scope, $compile, _equipment;
+  var scope, $compile, _equipment, pointsDefer, getCurrentPointsDefer;
   var element,
       entityId = 'entity-1',
       pointCount = 3,
@@ -27,13 +27,12 @@ describe('gb-points-table', function () {
 
     _equipment = {
       getCurrentPoints: function (collapsePointsToArray) {
-        return {
-          then: function( f1, f2) {
-            f1( {data: points})
-          }
-        }
+        getCurrentPointsDefer = $q.defer()
+        return getCurrentPointsDefer.promise
       }
     }
+
+    spyOn( _equipment, 'getCurrentPoints').and.callThrough()
 
     module( function ($provide) {
       $provide.value('equipment', _equipment);
@@ -56,7 +55,8 @@ describe('gb-points-table', function () {
     parentScope = $rootScope;
     $compile = _$compile_;
 
-    parentScope.pointsPromise = $q.when( {data: points})
+    pointsDefer = $q.defer()
+    parentScope.pointsPromise = pointsDefer.promise //$q.when( {data: points})
 
     element = angular.element( '<gb-points-table  points-promise="pointsPromise"></gb-points-table>');
     $compile(element)(parentScope);
@@ -73,30 +73,58 @@ describe('gb-points-table', function () {
   function findTd( point, tdIndex) {
     return point.find('td').eq(tdIndex);
   }
-  
-  it('should get points from points-promise', inject( function () {
-    var foundPoints = findPointRows()
+
+  function findAlerts() {
+    return element.find('div.alert')
+  }
+  function findAlertCloseButton( alerts, index) {
+    return alerts.eq(index).find('button')
+  }
+
+  function findAlertText( alerts, index) {
+    return alerts.eq(index).find('span.ng-binding').text()
+  }
+
+
+  it('should get points from points-promise', inject( function(equipment) {
+    var foundPoints, foundAlerts
+
+    foundPoints = findPointRows()
+    expect( foundPoints.length).toEqual(0);
+    // Using pointsDefer instead of equipment.geCurrentPoints
+    expect( equipment.getCurrentPoints.calls.count()).toBe(0)
+
+    pointsDefer.resolve( {data: points})
+    scope.$digest()
+
+    foundPoints = findPointRows()
+    foundAlerts = findAlerts()
     expect( foundPoints.length).toEqual(3);
-  }));
+    expect( foundAlerts.length).toEqual(0);
+  }))
   
-  //it('should create one point', inject( function () {
-  //  subscribeInstance.onSuccess( subscribeInstance.id, 'point', points[0])
-  //  scope.$digest();
-  //
-  //  var foundPoints = findPointRows()
-  //  expect( foundPoints.length).toEqual(1);
-  //
-  //  var point = foundPoints.eq(0)
-  //  expect( findTd( point, 0).text()).toBe( points[0].key);
-  //  expect( findTd( point, 1).text()).toBe(points[0].value.toString());
-  //}));
-  //
-  //it('should create multiple points', inject( function () {
-  //  subscribeInstance.onSuccess( subscribeInstance.id, 'points', points)
-  //  scope.$digest();
-  //  var foundPoints = findPointRows()
-  //  expect( foundPoints.length).toEqual(3);
-  //
-  //}));
+  it('should fail on points-promise and show alert', inject( function(equipment) {
+    var foundPoints, foundAlerts, closeButton,
+        someStatusText = 'Some status message.'
+
+    foundPoints = findPointRows()
+    expect( foundPoints.length).toEqual(0);
+    // Using pointsDefer instead of equipment.geCurrentPoints
+    expect( equipment.getCurrentPoints.calls.count()).toBe(0)
+
+    pointsDefer.reject( {statusText: someStatusText})
+    scope.$digest()
+
+    foundPoints = findPointRows()
+    foundAlerts = findAlerts()
+    expect( foundPoints.length).toEqual(0);
+    expect( foundAlerts.length).toEqual(1);
+    expect( findAlertText( foundAlerts, 0)).toBe( someStatusText)
+
+    closeButton = findAlertCloseButton( foundAlerts, 0)
+    closeButton.trigger( 'click')
+    foundAlerts = findAlerts()
+    expect( foundAlerts.length).toEqual(0)
+  }))
 
 });

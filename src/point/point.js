@@ -32,18 +32,26 @@ angular.module('greenbus.views.point', [ 'ui.router', 'greenbus.views.equipment'
           navigationElement = $stateParams.navigationElement
 
       $scope.points = []
+      $scope.alerts = []
+
+      $scope.closeAlert = function(index) {
+        if( index < $scope.alerts.length)
+          $scope.alerts.splice(index, 1)
+      }
 
       // Initialized from URL or menu click or both
       //
       if( ! navigationElement)
         return
       var promise = $scope.pointsPromise || equipment.getCurrentPoints( true)
-      $scope.points = promise.then(
+      promise.then(
         function( response) {
           $scope.points = response.data
           return response // for the then() chain
         },
         function( error) {
+          console.error( 'gbPointsTableController. Error ' + error.statusText)
+          $scope.alerts = [{ type: 'danger', message: error.statusText}]
           return error
         }
       )
