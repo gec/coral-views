@@ -26,6 +26,7 @@ describe('gb-points-table', function () {
   beforeEach(function() {
 
     _equipment = {
+      // Not used in current tests. Getting points form parentScope.pointsPromise below.
       getCurrentPoints: function (collapsePointsToArray) {
         getCurrentPointsDefer = $q.defer()
         return getCurrentPointsDefer.promise
@@ -56,7 +57,7 @@ describe('gb-points-table', function () {
     $compile = _$compile_;
 
     pointsDefer = $q.defer()
-    parentScope.pointsPromise = pointsDefer.promise //$q.when( {data: points})
+    parentScope.pointsPromise = pointsDefer.promise
 
     element = angular.element( '<gb-points-table  points-promise="pointsPromise"></gb-points-table>');
     $compile(element)(parentScope);

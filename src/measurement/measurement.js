@@ -214,6 +214,7 @@ angular.module( 'greenbus.views.measurement',
       $scope.points = []
       $scope.pointsFiltered = []
       $scope.selectAllState = 0
+      $scope.alerts = []
 
       // Search
       $scope.searchText = ''
@@ -268,6 +269,11 @@ angular.module( 'greenbus.views.measurement',
             return point
         }
         return null
+      }
+
+      $scope.closeAlert = function(index) {
+        if( index < $scope.alerts.length)
+          $scope.alerts.splice(index, 1)
       }
 
       $scope.selectAllChanged = function(state) {
@@ -350,21 +356,25 @@ angular.module( 'greenbus.views.measurement',
       }
 
 
-      function onMeasurements(measurements) {
-        //console.log( 'onMeasurements ' + Date.now() + ' ' + measurements.map( function(pm) { return pm.point.id}).join())
-        measurements.forEach(function(pm) {
-          var point = findPoint(pm.point.id)
-          if( point ) {
-            //pm.measurement.value = formatMeasurementValue( pm.measurement.value )
-            point.currentMeasurement = pm.measurement
-          } else {
-            console.error('MeasurementsController.onMeasurements could not find point.id = ' + pm.point.id)
-          }
-        })
-      }
-
       function subscribeToMeasurements(pointIds) {
-        measurement.subscribe($scope, pointIds, {}, self, onMeasurements)
+        measurement.subscribe($scope, pointIds, {}, self,
+          function( measurements) {
+            //console.log( 'onMeasurements ' + Date.now() + ' ' + measurements.map( function(pm) { return pm.point.id}).join())
+            measurements.forEach(function(pm) {
+              var point = findPoint(pm.point.id)
+              if( point ) {
+                //pm.measurement.value = formatMeasurementValue( pm.measurement.value )
+                point.currentMeasurement = pm.measurement
+              } else {
+                console.error('MeasurementsController.onMeasurements could not find point.id = ' + pm.point.id)
+              }
+            })
+          },
+          function( error, message){
+            console.error('gbMeasurementsController.subscribe ' + error + ', ' + JSON.stringify( message))
+            $scope.alerts = [{ type: 'danger', message: error}]
+          }
+        )
       }
 
 
@@ -528,12 +538,18 @@ angular.module( 'greenbus.views.measurement',
         promise.then(
           function( response) {
             $scope.points = response.data
-            var pointIds = processPointsAndReturnPointIds($scope.points)
-            subscribeToMeasurements(pointIds)
-            getCommandsForPoints(pointIds)
+            if( $scope.points.length > 0) {
+              var pointIds = processPointsAndReturnPointIds($scope.points)
+              subscribeToMeasurements(pointIds)
+              getCommandsForPoints(pointIds)
+            } else {
+              $scope.alerts = [{ type: 'info', message: 'No points found.'}]
+            }
             return response // for the then() chain
           },
           function( error) {
+            console.error( 'gbPointsTableController. Error ' + error.statusText)
+            $scope.alerts = [{ type: 'danger', message: error.statusText}]
             return error
           }
         )

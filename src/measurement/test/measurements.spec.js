@@ -1,5 +1,5 @@
 describe('gb-measurements', function () {
-  var parentScope, scope, $compile, _subscription, $httpBackend,
+  var parentScope, scope, $compile, _subscription, $httpBackend, pointsDefer
       subscribeInstance = {};
   var element,
       measurements = [];
@@ -54,12 +54,12 @@ describe('gb-measurements', function () {
   beforeEach(function () {
     subscribeInstance = {}
     _subscription = {
-      subscribe: function (request, subscriberScope, onSuccess, onError) {
+      subscribe: function (request, subscriberScope, onMessage, onError) {
         subscribeInstance = {
           id: makeSubscriptionId( request, 1),
           request: request,
           scope: subscriberScope,
-          onSuccess: onSuccess,
+          onMessage: onMessage,
           onError: onError
         }
 
@@ -100,7 +100,8 @@ describe('gb-measurements', function () {
     parentScope = $rootScope.$new();
     $compile = _$compile_;
 
-    parentScope.pointsPromise = $q.when( {data: points})
+    pointsDefer = $q.defer()
+    parentScope.pointsPromise = pointsDefer.promise
 
     element = angular.element( '<gb-measurements points-promise="pointsPromise"></gb-measurements>');
     $compile(element)(parentScope);
@@ -130,7 +131,21 @@ describe('gb-measurements', function () {
     return checkboxDivs
   }
 
+  function findAlerts() {
+    return element.find('div.alert')
+  }
+  function findAlertCloseButton( alerts, index) {
+    return alerts.eq(index).find('button')
+  }
+
+  function findAlertText( alerts, index) {
+    return alerts.eq(index).find('span.ng-binding').text()
+  }
+
+
   it('should create multiple sorted points', inject( function () {
+    pointsDefer.resolve( {data: points})
+    scope.$digest()
     $httpBackend.flush();
     parentScope.$digest();
 
@@ -151,6 +166,7 @@ describe('gb-measurements', function () {
   }));
 
   it('should select/deselect all points when selectAll is clicked', inject( function () {
+    pointsDefer.resolve( {data: points})
     $httpBackend.flush();
     parentScope.$digest();
 
@@ -175,6 +191,7 @@ describe('gb-measurements', function () {
   }));
 
   it('should display selected buttons when some points are selected', inject( function () {
+    pointsDefer.resolve( {data: points})
     $httpBackend.flush()
     parentScope.$digest()
 
@@ -224,21 +241,90 @@ describe('gb-measurements', function () {
 
   }));
 
+  it('should show alert when no points found', inject( function () {
+    var foundPointTrs, foundAlerts
+
+    pointsDefer.resolve( {data: []})
+    scope.$digest()
+    //$httpBackend.flush(); No points, so no requests to flush.
+    parentScope.$digest();
+
+    foundPointTrs = findPointTrs()
+    expect( foundPointTrs.length).toEqual(0);
+
+    foundAlerts = findAlerts()
+    expect( foundAlerts.length).toBe( 1)
+    expect( findAlertText( foundAlerts, 0)).toBe( 'No points found.')
+  }));
+
+  it('should show alert when pointsPromise resolves with error', inject( function () {
+    var foundPointTrs, foundAlerts,
+        someStatusText = 'Some status message.'
+
+    pointsDefer.reject( {statusText: someStatusText})
+    scope.$digest()
+    //$httpBackend.flush(); No points, so no requests to flush.
+    parentScope.$digest();
+
+    foundPointTrs = findPointTrs()
+    expect( foundPointTrs.length).toEqual(0);
+
+    foundAlerts = findAlerts()
+    expect( foundAlerts.length).toBe( 1)
+    expect( findAlertText( foundAlerts, 0)).toBe( someStatusText)
+  }));
+
+  it('should show alert when measurement subscription sends an error message', inject( function () {
+    var foundPointTrs, foundAlerts,
+        someStatusText = 'Some status message.',
+        errorMessage = 'Some error message.',
+        message = {
+          error: errorMessage
+        }
+
+
+    pointsDefer.resolve( {data: points})
+    scope.$digest()
+    $httpBackend.flush();
+    parentScope.$digest();
+
+    foundPointTrs = findPointTrs()
+    expect( foundPointTrs.length).toEqual(5);
+
+    foundAlerts = findAlerts()
+    expect( foundAlerts.length).toBe( 0)
+
+    subscribeInstance.onError( errorMessage, message)
+    scope.$digest();
+
+    foundAlerts = findAlerts()
+    expect( foundAlerts.length).toBe( 1)
+    expect( findAlertText( foundAlerts, 0)).toBe( errorMessage)
+
+    closeButton = findAlertCloseButton( foundAlerts, 0)
+    closeButton.trigger( 'click')
+    foundAlerts = findAlerts()
+    expect( foundAlerts.length).toEqual(0)
+
+  }));
+
+
+
 //  it('should handle subscribe messages that are updates (single alarm)', inject( function () {
-//    subscribeInstance.onSuccess( subscribeInstance.id, 'measurements', measurements[0])
+//    subscribeInstance.onMessage( subscribeInstance.id, 'measurements', measurements[0])
 //    parentScope.$digest();
-//    subscribeInstance.onSuccess( subscribeInstance.id, 'measurements', angular.extend( {}, measurements[0]))
+//    subscribeInstance.onMessage( subscribeInstance.id, 'measurements', angular.extend( {}, measurements[0]))
 //    parentScope.$digest();
 //    var foundPoints = findPoints()
 //    expect( foundPoints.length).toEqual(1);
 //  }));
 //
 //  it('should handle subscribe messages that are updates (array of measurements)', inject( function () {
-//    subscribeInstance.onSuccess( subscribeInstance.id, 'measurements', measurements)
+//    subscribeInstance.onMessage( subscribeInstance.id, 'measurements', measurements)
 //    parentScope.$digest();
 //
 //    var updates = measurements.map( function( a) { return copyAlarmWithState( a, 'UNACK_SILENT')})
-//    subscribeInstance.onSuccess( subscribeInstance.id, 'measurements', updates)
+//    subscribeInstance.onMessage( subscribeInstance.id, 'measurements', updates)
 //    parentScope.$digest();
 //    var foundPoints = findPoints()
 //    expect( foundPoints.length).toEqual(3);
