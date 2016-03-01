@@ -85,16 +85,29 @@ describe('gb-properties-table', function () {
 
 
   function findPropertyRows() {
-    return element.find('.gb-property');
+    return element.find('.gb-property')
+  }
+
+  function findAlerts() {
+    return element.find('div.alert')
+  }
+  function findAlertCloseButton( alerts, index) {
+    return alerts.eq(index).find('button')
+  }
+
+  function findAlertText( alerts, index) {
+    return alerts.eq(index).find('span.ng-binding').text()
   }
 
   function findTd( property, tdIndex) {
-    return property.find('td').eq(tdIndex);
+    return property.find('td').eq(tdIndex)
   }
 
   it('should start with 0 properties', inject( function () {
-    var foundProperties = findPropertyRows()
-    expect( foundProperties.length).toEqual(0);
+    var foundProperties = findPropertyRows(),
+        foundAlerts = findAlerts()
+    expect( foundProperties.length).toEqual(0)
+    expect( foundAlerts.length).toEqual(0)
   }));
 
   it('should subscribe to properties', inject( function () {
@@ -111,7 +124,7 @@ describe('gb-properties-table', function () {
     subscribeInstance.onSuccess( subscribeInstance.id, 'properties', properties)
     scope.$digest();
     var foundProperties = findPropertyRows()
-    expect( foundProperties.length).toEqual(3);
+    expect( foundProperties.length).toEqual(3)
 
   }));
 
@@ -126,11 +139,11 @@ describe('gb-properties-table', function () {
     scope.$digest();
 
     var foundProperties = findPropertyRows()
-    expect( foundProperties.length).toEqual(3);
+    expect( foundProperties.length).toEqual(3)
 
     var property = foundProperties.eq(0)
-    expect( findTd( property, 0).text()).toBe( properties[0].key);
-    expect( findTd( property, 1).text()).toBe( 'updated');
+    expect( findTd( property, 0).text()).toBe( properties[0].key)
+    expect( findTd( property, 1).text()).toBe( 'updated')
   }));
 
   it('should add new property', inject( function () {
@@ -148,11 +161,11 @@ describe('gb-properties-table', function () {
     scope.$digest();
 
     var foundProperties = findPropertyRows()
-    expect( foundProperties.length).toEqual(4);
+    expect( foundProperties.length).toEqual(4)
 
     var property = foundProperties.eq(3)
-    expect( findTd( property, 0).text()).toBe( newProperty.key);
-    expect( findTd( property, 1).text()).toBe( newProperty.value);
+    expect( findTd( property, 0).text()).toBe( newProperty.key)
+    expect( findTd( property, 1).text()).toBe( newProperty.value)
   }));
 
   it('should delete existing property', inject( function () {
@@ -166,10 +179,30 @@ describe('gb-properties-table', function () {
     scope.$digest();
 
     var foundProperties = findPropertyRows()
-    expect( foundProperties.length).toEqual(2);
+    expect( foundProperties.length).toEqual(2)
 
-    expect( findTd( foundProperties.eq(0), 0).text()).toBe( properties[0].key);
-    expect( findTd( foundProperties.eq(1), 0).text()).toBe( properties[1].key);
+    expect( findTd( foundProperties.eq(0), 0).text()).toBe( properties[0].key)
+    expect( findTd( foundProperties.eq(1), 0).text()).toBe( properties[1].key)
+  }));
+
+  it('should receive error message, show alert, and click to remove alert.', inject( function () {
+    var foundAlerts, closeButton,
+        errorMessage = 'Some error message.',
+        message = {
+          error: errorMessage
+        }
+
+    subscribeInstance.onError( errorMessage, message)
+    scope.$digest();
+    foundAlerts = findAlerts()
+    expect( foundAlerts.length).toEqual(1)
+    expect( findAlertText( foundAlerts, 0)).toBe( errorMessage)
+
+    closeButton = findAlertCloseButton( foundAlerts, 0)
+    closeButton.trigger( 'click')
+    foundAlerts = findAlerts()
+    expect( foundAlerts.length).toEqual(0)
+
   }));
 
 });

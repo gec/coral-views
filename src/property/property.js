@@ -33,6 +33,7 @@ angular.module('greenbus.views.property', [ 'ui.router', 'greenbus.views.rest', 
           navigationElement = $stateParams.navigationElement
 
       $scope.properties = []
+      $scope.alerts = []
 
       // Initialized from URL or menu click or both
       //
@@ -48,6 +49,12 @@ angular.module('greenbus.views.property', [ 'ui.router', 'greenbus.views.rest', 
       }
 
       equipmentId = navigationElement.id
+
+
+      $scope.closeAlert = function(index) {
+        if( index < $scope.alerts.length)
+          $scope.alerts.splice(index, 1)
+      }
 
       function addTypesToPropertiesList() {
         if( navigationElement.types)
@@ -153,7 +160,8 @@ angular.module('greenbus.views.property', [ 'ui.router', 'greenbus.views.rest', 
             $scope.$digest()
           },
           function(error, message) {
-            console.error('gbPropertiesTableController.subscribe ' + error + ', ' + message)
+            console.error('gbPropertiesTableController.subscribe ' + error + ', ' + JSON.stringify( message))
+            $scope.alerts = [{ type: 'danger', message: error}]
           }
         )
       }
