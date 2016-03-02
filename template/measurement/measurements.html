@@ -9,6 +9,7 @@
     <div class="row">
         <div class="col-md-12">
             <div class="table-responsive" style="overflow-x: auto">
+                <alert ng-repeat="alert in alerts" type="{{alert.type}}" close="closeAlert($index)">{{alert.message}}</alert>
                 <table class="table table-condensed gb-row-radius" ng-show="points.length > 0">
                     <thead>
                     <tr>
