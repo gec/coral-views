@@ -37,8 +37,20 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
 
     // public API
     var exports = {
-      KEY_SCHEMATIC: 'schematic'
-    }
+          KEY_SCHEMATIC: 'schematic'
+        },
+        SVG_QUALITY = {
+          GOOD: '<symbol id="quality_good"><title>Quality Good</title></symbol>',
+          INVALID: '<symbol id="quality_invalid"><title>Quality Invalid</title><g>' +
+                      '<path d="m7.5,5c0,0 2.5,0 5,0c2.5,0 2.5,0 2.5,2.5c0,2.5 0,2.5 0,5c0,2.5 0,2.5 -2.5,2.5c-2.5,0 -2.5,0 -5,0c-2.5,0 -2.5,0 -2.5,-2.5c0,-2.5 0,-2.5 0,-5c0,-2.5 0,-2.5 2.5,-2.5z" stroke="#999999" fill="#FF0000"/>' +
+                      '<text fill="#FFFFFF" stroke="#999999" stroke-width="0" stroke-dasharray="null" stroke-linejoin="null" stroke-linecap="null" x="10" y="14" font-size="10" font-family="serif" text-anchor="middle" space="preserve" fill-opacity="1" stroke-opacity="1" transform="" font-weight="bold">X</text>' +
+                    '</g></symbol>',
+          QUESTIONABLE: '<symbol id="quality_questionable"><title>Quality Questionable</title><g>' +
+                            '<path fill="#FFFF00" stroke="#999999" d="m7.5,5c0,0 2.5,0 5,0c2.5,0 2.5,0 2.5,2.5c0,2.5 0,2.5 0,5c0,2.5 0,2.5 -2.5,2.5c-2.5,0 -2.5,0 -5,0c-2.5,0 -2.5,0 -2.5,-2.5c0,-2.5 0,-2.5 0,-5c0,-2.5 0,-2.5 2.5,-2.5z"/>' +
+                            '<text font-weight="bold" text-anchor="middle" font-family="serif" font-size="10" y="14" x="10" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="0" stroke="#999999" fill="#000000">?</text>' +
+                        '</g></symbol>'
+        }
+
 
 
     Array.prototype.unique = [].unique || function(){
@@ -53,7 +65,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       return a;
     }
 
-    exports.subscribe = function( equipmentId, scope, notify) {
+    exports.subscribe = function( equipmentId, scope, onMessage, onError) {
 
       var subscriptionId,
           json = {
@@ -68,14 +80,16 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
           switch( type) {
             case 'notification.property':
               assert.equals( data.value.key, exports.KEY_SCHEMATIC, 'schematic.subscribe notification.property: ')
-              notify( subscriptionId, data.value.value, data.operation)
+              onMessage( subscriptionId, data.value.value, data.operation)
               break
             case 'properties':
               if( data.length > 0) {
                 assert.equals( data[0].key, exports.KEY_SCHEMATIC, 'schematic.subscribe properties: ')
-                notify( subscriptionId, data[0].value, 'CURRENT')
+                onMessage( subscriptionId, data[0].value, 'CURRENT')
               } else {
                 console.log( 'schematic.subscribe to schematic - no schematic property')
+                var error = 'No "schematic" property found.'
+                onError( error, {error: error})
               }
               break
             default:
@@ -85,6 +99,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
         },
         function(error, message) {
           console.error('gbPropertiesTableController.subscribe ' + error + ', ' + message)
+          onError( error, message)
         }
       )
 
@@ -143,8 +158,49 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       return symbols
     }
 
+    /**
+     *
+     * <?xml version="1.0"?>
+     *   <svg ...>
+     *     <title>...</title>
+     *     <defs>
+     *       <symbol id="quality_questionable"> ...</symbol>
+     *       <symbol id="quality_invalid"> ...</symbol>
+     *       <symbol id="quality_good"> ...</symbol>
+     *     </defs>
+     *     ...
+     *   </svg>
+     *
+     * @param rootElement
+     */
+    exports.ensureQualitySymbolsInDefs = function( rootElement) {
+      var defs, good, invalid, questionable,
+          svg = rootElement.children( 'svg').eq(0)
+
+      if( svg.length === 0)
+        return  // TODO: handle no SVG error case
+
+      defs = svg.children( 'defs').eq(0)
+      if( defs.length === 0) {
+        svg.prepend( '<defs></defs>')
+        defs = svg.children( 'defs')
+      }
+
+      good = defs.children( '#quality_good')
+      invalid = defs.children( '#quality_invalid')
+      questionable = defs.children( '#quality_questionable')
+
+      if( good.length === 0)
+        defs.append( SVG_QUALITY.GOOD)
+      if( invalid.length === 0)
+        defs.append( SVG_QUALITY.INVALID)
+      if( questionable.length === 0)
+        defs.append( SVG_QUALITY.QUESTIONABLE)
+
+    }
+
     exports.transformSymbols = function( symbols) {
-      var measurementPointNames, equipmentPointNames, pointNames, t
+      var measurementPointNames, equipmentPointNames, pointNames
       // Convert jQuery object to array of strings.
       measurementPointNames  = symbols.measurements.map( exports.transformMeasurementAndReturnPointName).get()
       equipmentPointNames  = symbols.equipment.map( exports.transformEquipmentAndReturnPointName).get()
@@ -437,6 +493,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
           if( newValue !== undefined) {
 
             elem.html(newValue);
+            schematic.ensureQualitySymbolsInDefs( elem)
             symbols = schematic.parseElements( elem)
             symbols.pointNames = schematic.transformSymbols( symbols)
 

@@ -1,7 +1,6 @@
 describe('schematic', function () {
-  var parentScope, scope, $compile, _subscription, $httpBackend,
-      subscribeInstance = {};
-  var element, svgOneMeasurement, svgOneEquipmentSymbol,
+  var _subscription, $httpBackend, svgOneMeasurement, svgOneEquipmentSymbol,
+      subscribeInstance = {},
       measurements = [];
 
   var equipmentId = 'equipmentId',
@@ -134,260 +133,413 @@ describe('schematic', function () {
     ])
   }))
 
-
-  beforeEach(inject(function ($rootScope, _$compile_, $q) {
-
-    parentScope = $rootScope.$new();
-    $compile = _$compile_;
-
-    //parentScope.pointsPromise = $q.when( {data: points})
-
-    element = angular.element( '<gb-equipment-schematic></gb-equipment-schematic>');
-    $compile(element)(parentScope);
-    parentScope.$digest();
-    // No isolateScope() until after parentScope.$digest(). Possibly because of points-promise parameter?
-    scope = element.isolateScope() || element.scope()
-  }));
+  describe('gbEquipmentSchematic', function () {
+    var parentScope, scope, $compile, element
 
 
-  function findMeasurementGs() {
-    return element.find('g[tgs\\:schematic-type="point"]');
-  }
+    beforeEach(inject(function ($rootScope, _$compile_, $q) {
 
-  function findEquipmentSymbolGs() {
-    return element.find('[tgs\\:schematic-type="equipment-symbol"]');  // Usually <svg></svg> instead of <g></g>, but could be either.
-  }
+      parentScope = $rootScope.$new();
+      $compile    = _$compile_;
 
-  function findEquipmentSymbolStates( equipmentElement) {
-    return equipmentElement.find('[tgs\\:state]');
-  }
+      //parentScope.pointsPromise = $q.when( {data: points})
 
-  function findMeasurementUse( measurementG) {
-    return measurementG.find('use').eq(0);
-  }
+      element = angular.element('<gb-equipment-schematic></gb-equipment-schematic>');
+      $compile(element)(parentScope);
+      parentScope.$digest();
+      // No isolateScope() until after parentScope.$digest(). Possibly because of points-promise parameter?
+      scope = element.isolateScope() || element.scope()
+    }));
 
-  function getMeasurementValue( measurementGs, index) {
-    return measurementGs.eq(index).find('text').eq(0).text();
-  }
 
-  function findCheckboxDivForOneTr( pointTr) {
-    var td = pointTr.find('td').eq(0)
-    return td.find('div').eq(0);
-  }
-
-  it('should subscribe to schematic and call notify', inject( function ( schematic) {
-    var points,
-        scope = { $digest: jasmine.createSpy('$digest')},
-        onSchematic = jasmine.createSpy('onSchematic'),
-        svgContent = svgOneMeasurement
-
-    schematic.subscribe( equipmentId, scope, onSchematic)
-
-    var properties = [
-      {key: 'schematic', value: svgContent}
-    ]
-
-    subscribeInstance.onMessage( subscribeInstance.id, 'properties', properties)
-
-    var request = {
-      name: 'SubscribeToProperties',
-      entityId:  equipmentId,
-      keys: ['schematic']
+    function findMeasurementGs() {
+      return element.find('g[tgs\\:schematic-type="point"]');
     }
-    expect( subscribeInstance.onMessage ).toBeDefined()
-    expect( subscribeInstance.onError ).toBeDefined()
-    expect( subscribeInstance.request ).toEqual( request)
 
-
-    expect( onSchematic.calls.mostRecent().args).toEqual( [subscribeInstance.id, svgContent, 'CURRENT'])
-  }));
-
-  it('should transform measurements', inject( function ( schematic) {
-    var measElems, measElem, measValue, measurements,
-        onSchematic = jasmine.createSpy('onSchematic'),
-        svgContent = svgOneMeasurement
-
-    var properties = [
-      {key: 'schematic', value: svgContent}
-    ]
-
-    subscribeInstance.onMessage( subscribeInstance.id, 'properties', properties)
-    expect( subscribeInstance.onMessage ).toBeDefined()
-
-    measElems = findMeasurementGs()
-    expect( measElems.length).toBe(1)
-    measValue = getMeasurementValue( measElems, 0)
-    expect( measValue).toEqual( ' ')
-
-    scope.pointNameMap = {}
-    scope.pointNameMap[ points[0].name] = {
-      name: points[0].name,
-      unit: 'someUnit',
-      currentMeasurement: {
-        value: 'someValue',
-        validity: 'GOOD'
-      }
+    function findEquipmentSymbolGs() {
+      return element.find('[tgs\\:schematic-type="equipment-symbol"]');  // Usually <svg></svg> instead of <g></g>, but could be either.
     }
-    scope.$digest()
 
-    measValue = getMeasurementValue( measElems, 0)
-    expect( measValue).toEqual( 'someValue someUnit')
+    function findEquipmentSymbolStates(equipmentElement) {
+      return equipmentElement.find('[tgs\\:state]');
+    }
 
+    function findMeasurementUse(measurementG) {
+      return measurementG.find('use').eq(0);
+    }
 
-    // Flush getPoints.
-    $httpBackend.flush()
+    function getMeasurementValue(measurementGs, index) {
+      return measurementGs.eq(index).find('text').eq(0).text();
+    }
 
-    measurements = [
-      {
-        'point': {'id': points[0].id},
-        'measurement': {
-          'value': '248.000000',
-          'type': 'DOUBLE',
-          'unit': 'kW',
-          'time': 1442261552564,
-          'validity': 'GOOD',
-          'shortQuality': '',
-          'longQuality': 'Good'
+    function findCheckboxDivForOneTr(pointTr) {
+      var td = pointTr.find('td').eq(0)
+      return td.find('div').eq(0);
+    }
+
+    it('should ensure defs section is populated with quality symbols', inject(function (schematic) {
+      var onSchematic = jasmine.createSpy('onSchematic'),
+          svgContent  = svgOneMeasurement
+
+      var properties = [
+        {key: 'schematic', value: svgContent}
+      ]
+      expect(subscribeInstance.onMessage).toBeDefined()
+      subscribeInstance.onMessage(subscribeInstance.id, 'properties', properties)
+
+      scope.pointNameMap                 = {}
+      scope.pointNameMap[points[0].name] = {
+        name: points[0].name,
+        unit: 'someUnit',
+        currentMeasurement: {
+          value: 'someValue',
+          validity: 'GOOD'
         }
       }
-    ]
-    subscribeInstance.onMessage( subscribeInstance.id, 'measurements', measurements)
-    measValue = getMeasurementValue( measElems, 0)
-    expect( measValue).toEqual( '248.0 kW')
-
-  }));
-
-  it('should transform measurements based on measurement-decimal', inject( function ( schematic) {
-    var measElems, measElem, measValue, measurements,
-        onSchematic = jasmine.createSpy('onSchematic'),
-        svgContent = svgOneMeasurementMeasurementDecimals3
-
-    var properties = [
-      {key: 'schematic', value: svgContent}
-    ]
-
-    subscribeInstance.onMessage( subscribeInstance.id, 'properties', properties)
-    expect( subscribeInstance.onMessage ).toBeDefined()
-
-    measElems = findMeasurementGs()
-    expect( measElems.length).toBe(1)
-    measValue = getMeasurementValue( measElems, 0)
-    expect( measValue).toEqual( ' ')
-
-    scope.pointNameMap = {}
-    scope.pointNameMap[ points[0].name] = {
-      name: points[0].name,
-      unit: 'someUnit',
-      currentMeasurement: {
-        value: 'someValue',
-        validity: 'GOOD'
-      }
-    }
-    scope.$digest()
-
-    measValue = getMeasurementValue( measElems, 0)
-    expect( measValue).toEqual( 'someValue someUnit')
+      scope.$digest()
 
 
-    // Flush getPoints.
-    $httpBackend.flush()
+      var defs, good, invalid, questionable
 
-    measurements = [
-      {
-        'point': {'id': points[0].id},
-        'measurement': {
-          'value': '248.000000',
-          'type': 'DOUBLE',
-          'unit': 'kW',
-          'time': 1442261552564,
-          'validity': 'GOOD',
-          'shortQuality': '',
-          'longQuality': 'Good'
+      defs = element.find( 'defs')
+      expect( defs.length).toBe(1)
+
+      good = defs.children( '#quality_good')
+      invalid = defs.children( '#quality_invalid')
+      questionable = defs.children( '#quality_questionable')
+
+      expect( good.length).toBe(1)
+      expect( invalid.length).toBe(1)
+      expect( questionable.length).toBe(1)
+
+    }));
+
+    it('should transform measurements', inject(function (schematic) {
+      var measElems, measElem, measValue, measurements,
+          onSchematic = jasmine.createSpy('onSchematic'),
+          svgContent  = svgOneMeasurement
+
+      var properties = [
+        {key: 'schematic', value: svgContent}
+      ]
+
+      expect(subscribeInstance.onMessage).toBeDefined()
+      subscribeInstance.onMessage(subscribeInstance.id, 'properties', properties)
+
+      measElems = findMeasurementGs()
+      expect(measElems.length).toBe(1)
+      measValue = getMeasurementValue(measElems, 0)
+      expect(measValue).toEqual(' ')
+
+      scope.pointNameMap                 = {}
+      scope.pointNameMap[points[0].name] = {
+        name: points[0].name,
+        unit: 'someUnit',
+        currentMeasurement: {
+          value: 'someValue',
+          validity: 'GOOD'
         }
       }
-    ]
-    subscribeInstance.onMessage( subscribeInstance.id, 'measurements', measurements)
-    measValue = getMeasurementValue( measElems, 0)
-    expect( measValue).toEqual( '248.000 kW')
+      scope.$digest()
 
-  }));
+      measValue = getMeasurementValue(measElems, 0)
+      expect(measValue).toEqual('someValue someUnit')
 
-  it('should transform equipment symbols and update visible state', inject( function ( schematic, $timeout) {
-    var equipmentElems, stateElements, measValue, measurements,
-        onSchematic = jasmine.createSpy('onSchematic'),
-        svgContent = svgOneEquipmentSymbol
 
-    var properties = [
-      {key: 'schematic', value: svgContent}
-    ]
+      // Flush getPoints.
+      $httpBackend.flush()
 
-    subscribeInstance.onMessage( subscribeInstance.id, 'properties', properties)
-    expect( subscribeInstance.onMessage ).toBeDefined()
+      measurements = [
+        {
+          'point': {'id': points[0].id},
+          'measurement': {
+            'value': '248.000000',
+            'type': 'DOUBLE',
+            'unit': 'kW',
+            'time': 1442261552564,
+            'validity': 'GOOD',
+            'shortQuality': '',
+            'longQuality': 'Good'
+          }
+        }
+      ]
+      subscribeInstance.onMessage(subscribeInstance.id, 'measurements', measurements)
+      measValue = getMeasurementValue(measElems, 0)
+      expect(measValue).toEqual('248.0 kW')
 
-    equipmentElems = findEquipmentSymbolGs()
-    expect( equipmentElems.length).toBe(1)
-    stateElements = findEquipmentSymbolStates( equipmentElems.eq(0))
-    expect( stateElements.length).toBe( 2)
+    }));
 
-    scope.pointNameMap = {}
-    scope.pointNameMap[ points[1].name] = {
-      name: points[1].name,
-      unit: 'someUnit',
-      currentMeasurement: {
-        value: 'someValue',
-        validity: 'GOOD'
-      }
-    }
-    scope.$digest()
+    it('should transform measurements based on measurement-decimal', inject(function (schematic) {
+      var measElems, measElem, measValue, measurements,
+          onSchematic = jasmine.createSpy('onSchematic'),
+          svgContent  = svgOneMeasurementMeasurementDecimals3
 
-    expect( stateElements.eq(0).attr( 'ng-show')).toEqual( 'pointNameMap[\'' + points[1].name + '\'].currentMeasurement.value === \'OPEN\'')
-    expect( stateElements.eq(1).attr( 'ng-show')).toEqual( 'pointNameMap[\'' + points[1].name + '\'].currentMeasurement.value === \'CLOSED\'')
+      var properties = [
+        {key: 'schematic', value: svgContent}
+      ]
 
-    // Flush getPoints.
-    $httpBackend.flush()
+      subscribeInstance.onMessage(subscribeInstance.id, 'properties', properties)
+      expect(subscribeInstance.onMessage).toBeDefined()
 
-    measurements = [
-      {
-        'point': {'id': points[1].id},
-        'measurement': {
-          'value': 'CLOSED',
-          'type': 'STRING',
-          'unit': 'Status',
-          'time': 1442261552564,
-          'validity': 'GOOD',
-          'shortQuality': '',
-          'longQuality': 'Good'
+      measElems = findMeasurementGs()
+      expect(measElems.length).toBe(1)
+      measValue = getMeasurementValue(measElems, 0)
+      expect(measValue).toEqual(' ')
+
+      scope.pointNameMap                 = {}
+      scope.pointNameMap[points[0].name] = {
+        name: points[0].name,
+        unit: 'someUnit',
+        currentMeasurement: {
+          value: 'someValue',
+          validity: 'GOOD'
         }
       }
-    ]
-    subscribeInstance.onMessage( subscribeInstance.id, 'measurements', measurements)
-    expect( stateElements.eq(0).attr( 'class')).toEqual( 'ng-hide')
-    expect( stateElements.eq(1).attr( 'class')).toEqual( '')
+      scope.$digest()
 
-    measurements = [
-      {
-        'point': {'id': points[1].id},
-        'measurement': {
-          'value': 'OPEN',
-          'type': 'STRING',
-          'unit': 'Status',
-          'time': 1442261552564,
-          'validity': 'GOOD',
-          'shortQuality': '',
-          'longQuality': 'Good'
+      measValue = getMeasurementValue(measElems, 0)
+      expect(measValue).toEqual('someValue someUnit')
+
+
+      // Flush getPoints.
+      $httpBackend.flush()
+
+      measurements = [
+        {
+          'point': {'id': points[0].id},
+          'measurement': {
+            'value': '248.000000',
+            'type': 'DOUBLE',
+            'unit': 'kW',
+            'time': 1442261552564,
+            'validity': 'GOOD',
+            'shortQuality': '',
+            'longQuality': 'Good'
+          }
+        }
+      ]
+      subscribeInstance.onMessage(subscribeInstance.id, 'measurements', measurements)
+      measValue = getMeasurementValue(measElems, 0)
+      expect(measValue).toEqual('248.000 kW')
+
+    }));
+
+    it('should transform equipment symbols and update visible state', inject(function (schematic, $timeout) {
+      var equipmentElems, stateElements, measValue, measurements,
+          onSchematic = jasmine.createSpy('onSchematic'),
+          svgContent  = svgOneEquipmentSymbol
+
+      var properties = [
+        {key: 'schematic', value: svgContent}
+      ]
+
+      subscribeInstance.onMessage(subscribeInstance.id, 'properties', properties)
+      expect(subscribeInstance.onMessage).toBeDefined()
+
+      equipmentElems = findEquipmentSymbolGs()
+      expect(equipmentElems.length).toBe(1)
+      stateElements = findEquipmentSymbolStates(equipmentElems.eq(0))
+      expect(stateElements.length).toBe(2)
+
+      scope.pointNameMap                 = {}
+      scope.pointNameMap[points[1].name] = {
+        name: points[1].name,
+        unit: 'someUnit',
+        currentMeasurement: {
+          value: 'someValue',
+          validity: 'GOOD'
         }
       }
-    ]
-    subscribeInstance.onMessage( subscribeInstance.id, 'measurements', measurements)
-    $timeout.flush()
-    expect( stateElements.eq(0).attr( 'class')).toEqual( '')
-    expect( stateElements.eq(1).attr( 'class')).toEqual( 'ng-hide')
+      scope.$digest()
 
-  }));
+      expect(stateElements.eq(0).attr('ng-show')).toEqual('pointNameMap[\'' + points[1].name + '\'].currentMeasurement.value === \'OPEN\'')
+      expect(stateElements.eq(1).attr('ng-show')).toEqual('pointNameMap[\'' + points[1].name + '\'].currentMeasurement.value === \'CLOSED\'')
+
+      // Flush getPoints.
+      $httpBackend.flush()
+
+      measurements = [
+        {
+          'point': {'id': points[1].id},
+          'measurement': {
+            'value': 'CLOSED',
+            'type': 'STRING',
+            'unit': 'Status',
+            'time': 1442261552564,
+            'validity': 'GOOD',
+            'shortQuality': '',
+            'longQuality': 'Good'
+          }
+        }
+      ]
+      subscribeInstance.onMessage(subscribeInstance.id, 'measurements', measurements)
+      expect(stateElements.eq(0).attr('class')).toEqual('ng-hide')
+      expect(stateElements.eq(1).attr('class')).toEqual('')
+
+      measurements = [
+        {
+          'point': {'id': points[1].id},
+          'measurement': {
+            'value': 'OPEN',
+            'type': 'STRING',
+            'unit': 'Status',
+            'time': 1442261552564,
+            'validity': 'GOOD',
+            'shortQuality': '',
+            'longQuality': 'Good'
+          }
+        }
+      ]
+      subscribeInstance.onMessage(subscribeInstance.id, 'measurements', measurements)
+      $timeout.flush()
+      expect(stateElements.eq(0).attr('class')).toEqual('')
+      expect(stateElements.eq(1).attr('class')).toEqual('ng-hide')
+
+    }));
+
+  }) // end describe 'gbEquipmentSchematic'
+
+
+
+  describe( 'factory.schematic', function() {
+
+    var svgNoDefs = '<?xml version="1.0"?>' +
+                    '<svg  xmlns="http://www.w3.org/2000/svg" xmlns:tgs="http://www.totalgrid.org" xmlns:xlink="http://www.w3.org/1999/xlink" style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
+                      '<title>Zone1</title>' +
+                      '<g><title>modeling</title></g>' +
+                      '<g display="none"><title>navigation</title></g>' +
+                    '</svg>',
+        svgNoSymbols =  '<?xml version="1.0"?>' +
+                        '<svg  xmlns="http://www.w3.org/2000/svg" xmlns:tgs="http://www.totalgrid.org" xmlns:xlink="http://www.w3.org/1999/xlink" style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
+                          '<title>Zone1</title>' +
+                          '<defs></defs>' +
+                          '<g><title>modeling</title></g>' +
+                          '<g display="none"><title>navigation</title></g>' +
+                        '</svg>'
+
+
+    it('should ensure defs section and quality symbols', inject( function ( schematic) {
+      var element, defs, good, invalid, questionable
+
+      element = $(document.createElement('div'))
+      element.html( svgNoDefs)
+      schematic.ensureQualitySymbolsInDefs( element)
+
+      defs = element.find( 'defs')
+      expect( defs.length).toBe(1)
+
+      good = defs.children( '#quality_good')
+      invalid = defs.children( '#quality_invalid')
+      questionable = defs.children( '#quality_questionable')
+
+      expect( good.length).toBe(1)
+      expect( invalid.length).toBe(1)
+      expect( questionable.length).toBe(1)
+
+    }));
+
+    it('should ensure quality symbols are in existing defs section', inject( function ( schematic) {
+      var element, defs, good, invalid, questionable
+
+      element = $(document.createElement('div'))
+      element.html( svgNoSymbols)
+      schematic.ensureQualitySymbolsInDefs( element)
+
+      defs = element.find( 'defs')
+      expect( defs.length).toBe(1)
+
+      good = defs.children( '#quality_good')
+      invalid = defs.children( '#quality_invalid')
+      questionable = defs.children( '#quality_questionable')
+
+      expect( good.length).toBe(1)
+      expect( invalid.length).toBe(1)
+      expect( questionable.length).toBe(1)
+
+    }));
+
+    it('should subscribe to "schematic" property and call onMessage', inject( function ( schematic) {
+      var scope = { $digest: jasmine.createSpy('$digest')},
+          onSchematic = jasmine.createSpy('onSchematic'),
+          svgContent = svgOneMeasurement
+
+      schematic.subscribe( equipmentId, scope, onSchematic)
+
+      var properties = [
+        {key: 'schematic', value: svgContent}
+      ]
+
+      var request = {
+        name: 'SubscribeToProperties',
+        entityId:  equipmentId,
+        keys: ['schematic']
+      }
+      expect( subscribeInstance.onMessage ).toBeDefined()
+      expect( subscribeInstance.onError ).toBeDefined()
+      expect( subscribeInstance.request ).toEqual( request)
+      subscribeInstance.onMessage( subscribeInstance.id, 'properties', properties)
+
+
+
+      expect( onSchematic.calls.mostRecent().args).toEqual( [subscribeInstance.id, svgContent, 'CURRENT'])
+    }));
+
+    it('should handle subscription error by calling onError ', inject( function ( schematic) {
+      var scope = { $digest: jasmine.createSpy('$digest')},
+          onSchematic = jasmine.createSpy('onSchematic'),
+          onError = jasmine.createSpy('onError'),
+          svgContent = svgOneMeasurement,
+          errorMessage = 'Some error message.',
+          message = {
+            error: errorMessage
+          }
+
+
+      schematic.subscribe( equipmentId, scope, onSchematic, onError)
+
+      var properties = [
+        {key: 'schematic', value: svgContent}
+      ]
+
+      var request = {
+        name: 'SubscribeToProperties',
+        entityId:  equipmentId,
+        keys: ['schematic']
+      }
+      expect( subscribeInstance.onMessage ).toBeDefined()
+      expect( subscribeInstance.onError ).toBeDefined()
+      expect( subscribeInstance.request ).toEqual( request)
+      subscribeInstance.onError( errorMessage, message)
+
+      expect( onSchematic).not.toHaveBeenCalled()
+      expect( onError.calls.mostRecent().args).toEqual( [errorMessage, message])
+    }));
+
+
+    it('should handle no schematic property by calling onError ', inject( function ( schematic) {
+      var points, scope = { $digest: jasmine.createSpy('$digest')},
+          onSchematic = jasmine.createSpy('onSchematic'),
+          onError = jasmine.createSpy('onError'),
+          errorMessage = 'No "schematic" property found.',
+          message = {
+            error: errorMessage
+          }
+
+
+      schematic.subscribe( equipmentId, scope, onSchematic, onError)
+
+      var noProperties = []
+      subscribeInstance.onMessage( subscribeInstance.id, 'properties', noProperties)
+
+      expect( onSchematic).not.toHaveBeenCalled()
+      expect( onError.calls.mostRecent().args).toEqual( [errorMessage, message])
+    }));
+
+
+
+
+  }) // end of describe 'factory.schematic'
 
 
 });
 
-describe( 'schematic tests', function() {
-  it('should ...')
-})
