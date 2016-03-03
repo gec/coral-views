@@ -415,10 +415,22 @@ describe('schematic', function () {
                           '<defs></defs>' +
                           '<g><title>modeling</title></g>' +
                           '<g display="none"><title>navigation</title></g>' +
+                        '</svg>',
+        svgOneSymbol =  '<?xml version="1.0"?>' +
+                        '<svg  xmlns="http://www.w3.org/2000/svg" xmlns:tgs="http://www.totalgrid.org" xmlns:xlink="http://www.w3.org/1999/xlink" style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
+                          '<title>Zone1</title>' +
+                          '<defs>'+
+                            '<symbol id="quality_questionable"><title>Quality Questionable</title><g>' +
+                            '<path fill="#FFFF00" stroke="#999999" d="m7.5,5c0,0 2.5,0 5,0c2.5,0 2.5,0 2.5,2.5c0,2.5 0,2.5 0,5c0,2.5 0,2.5 -2.5,2.5c-2.5,0 -2.5,0 -5,0c-2.5,0 -2.5,0 -2.5,-2.5c0,-2.5 0,-2.5 0,-5c0,-2.5 0,-2.5 2.5,-2.5z"/>' +
+                            '<text font-weight="bold" text-anchor="middle" font-family="serif" font-size="10" y="14" x="10" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="0" stroke="#999999" fill="#000000">?</text>' +
+                            '</g></symbol>' +
+                          '</defs>' +
+                          '<g><title>modeling</title></g>' +
+                          '<g display="none"><title>navigation</title></g>' +
                         '</svg>'
 
 
-    it('should ensure defs section and quality symbols', inject( function ( schematic) {
+    it('should ensure quality symbols when no defs section', inject( function ( schematic) {
       var element, defs, good, invalid, questionable
 
       element = $(document.createElement('div'))
@@ -438,11 +450,31 @@ describe('schematic', function () {
 
     }));
 
-    it('should ensure quality symbols are in existing defs section', inject( function ( schematic) {
+    it('should ensure quality symbols when all are missing', inject( function ( schematic) {
       var element, defs, good, invalid, questionable
 
       element = $(document.createElement('div'))
       element.html( svgNoSymbols)
+      schematic.ensureQualitySymbolsInDefs( element)
+
+      defs = element.find( 'defs')
+      expect( defs.length).toBe(1)
+
+      good = defs.children( '#quality_good')
+      invalid = defs.children( '#quality_invalid')
+      questionable = defs.children( '#quality_questionable')
+
+      expect( good.length).toBe(1)
+      expect( invalid.length).toBe(1)
+      expect( questionable.length).toBe(1)
+
+    }));
+
+    it('should ensure quality symbols when some are missing', inject( function ( schematic) {
+      var element, defs, good, invalid, questionable
+
+      element = $(document.createElement('div'))
+      element.html( svgOneSymbol)
       schematic.ensureQualitySymbolsInDefs( element)
 
       defs = element.find( 'defs')

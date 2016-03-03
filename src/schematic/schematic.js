@@ -159,21 +159,22 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
     }
 
     /**
-     *
-     * <?xml version="1.0"?>
-     *   <svg ...>
-     *     <title>...</title>
-     *     <defs>
-     *       <symbol id="quality_questionable"> ...</symbol>
-     *       <symbol id="quality_invalid"> ...</symbol>
-     *       <symbol id="quality_good"> ...</symbol>
-     *     </defs>
-     *     ...
-     *   </svg>
+     * Ensure quality symbols exist in first defs element in schematic.
      *
      * @param rootElement
      */
     exports.ensureQualitySymbolsInDefs = function( rootElement) {
+      // Example schematic
+      //   <?xml version="1.0"?>
+      //   <svg ...>
+      //     <title>...</title>
+      //     <defs>
+      //       <symbol id="quality_questionable"> ...</symbol>
+      //       <symbol id="quality_invalid"> ...</symbol>
+      //       <symbol id="quality_good"> ...</symbol>
+      //     </defs>
+      //     ...
+      //   </svg>
       var defs, good, invalid, questionable,
           svg = rootElement.children( 'svg').eq(0)
 
