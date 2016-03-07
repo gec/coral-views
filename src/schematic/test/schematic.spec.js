@@ -78,6 +78,7 @@ describe('schematic', function () {
   beforeEach(module('greenbus.views.assert'));
   beforeEach(module('greenbus.views.schematic'));
   beforeEach(module('greenbus.views.measurement'));
+  beforeEach(module('greenbus.views.template/schematic/equipmentSchematic.html'));
 
 
   beforeEach(function () {
@@ -431,11 +432,12 @@ describe('schematic', function () {
 
 
     it('should ensure quality symbols when no defs section', inject( function ( schematic) {
-      var element, defs, good, invalid, questionable
+      var svg, element, defs, good, invalid, questionable
 
       element = $(document.createElement('div'))
-      element.html( svgNoDefs)
-      schematic.ensureQualitySymbolsInDefs( element)
+      svg = $.parseHTML( svgNoDefs)
+      schematic.ensureQualitySymbolsInDefs( svg)
+      element.prepend( svg)
 
       defs = element.find( 'defs')
       expect( defs.length).toBe(1)
@@ -454,8 +456,9 @@ describe('schematic', function () {
       var element, defs, good, invalid, questionable
 
       element = $(document.createElement('div'))
-      element.html( svgNoSymbols)
-      schematic.ensureQualitySymbolsInDefs( element)
+      svg = $.parseHTML( svgNoSymbols)
+      schematic.ensureQualitySymbolsInDefs( svg)
+      element.prepend( svg)
 
       defs = element.find( 'defs')
       expect( defs.length).toBe(1)
@@ -474,8 +477,10 @@ describe('schematic', function () {
       var element, defs, good, invalid, questionable
 
       element = $(document.createElement('div'))
-      element.html( svgOneSymbol)
-      schematic.ensureQualitySymbolsInDefs( element)
+      svg = $.parseHTML( svgOneSymbol)
+      schematic.ensureQualitySymbolsInDefs( svg)
+      element.prepend( svg)
+
 
       defs = element.find( 'defs')
       expect( defs.length).toBe(1)
@@ -545,6 +550,26 @@ describe('schematic', function () {
 
       expect( onSchematic).not.toHaveBeenCalled()
       expect( onError.calls.mostRecent().args).toEqual( [errorMessage, message])
+    }));
+
+
+    it('should handle subscriber with no onError function', inject( function ( schematic) {
+      var scope = { $digest: jasmine.createSpy('$digest')},
+          onSchematic = jasmine.createSpy('onSchematic'),
+          svgContent = svgOneMeasurement,
+          errorMessage = 'Some error message.',
+          message = {
+            error: errorMessage
+          }
+
+
+      schematic.subscribe( equipmentId, scope, onSchematic)
+      // Schematic error because no properties. Shouldn't call onError because it's undefined
+      subscribeInstance.onMessage( subscribeInstance.id, 'properties', [])
+
+      // Schematic should check for onError === undefined
+      subscribeInstance.onError(errorMessage, message)
+
     }));
 
 

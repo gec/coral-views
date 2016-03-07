@@ -35,35 +35,55 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
    */
   factory('schematic', [ 'rest', 'subscription', 'assert', '$q', function( rest, subscription, assert, $q) {
 
+    //var SVG_QUALITY_CONTENT = {
+    //  GOOD: '<symbol id="quality_good"><title>Quality Good</title></symbol>',
+    //  INVALID: '<symbol id="quality_invalid"><title>Quality Invalid</title><g>' +
+    //  '<path d="m7.5,5c0,0 2.5,0 5,0c2.5,0 2.5,0 2.5,2.5c0,2.5 0,2.5 0,5c0,2.5 0,2.5 -2.5,2.5c-2.5,0 -2.5,0 -5,0c-2.5,0 -2.5,0 -2.5,-2.5c0,-2.5 0,-2.5 0,-5c0,-2.5 0,-2.5 2.5,-2.5z" stroke="#999999" fill="#FF0000"></path>' +
+    //  '<text fill="#FFFFFF" stroke="#999999" stroke-width="0" stroke-dasharray="null" stroke-linejoin="null" stroke-linecap="null" x="10" y="14" font-size="10" font-family="serif" text-anchor="middle" space="preserve" fill-opacity="1" stroke-opacity="1" transform="" font-weight="bold">X</text>' +
+    //  '</g></symbol>',
+    //  QUESTIONABLE: '<symbol id="quality_questionable"><title>Quality Questionable</title><g>' +
+    //  '<path fill="#FFFF00" stroke="#999999" d="m7.5,5c0,0 2.5,0 5,0c2.5,0 2.5,0 2.5,2.5c0,2.5 0,2.5 0,5c0,2.5 0,2.5 -2.5,2.5c-2.5,0 -2.5,0 -5,0c-2.5,0 -2.5,0 -2.5,-2.5c0,-2.5 0,-2.5 0,-5c0,-2.5 0,-2.5 2.5,-2.5z"></path>' +
+    //  '<text font-weight="bold" text-anchor="middle" font-family="serif" font-size="10" y="14" x="10" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="0" stroke="#999999" fill="#000000">?</text>' +
+    //  '</g></symbol>'
+    //}
+
     // public API
     var exports = {
           KEY_SCHEMATIC: 'schematic'
         },
         SVG_QUALITY = {
-          GOOD: '<symbol id="quality_good"><title>Quality Good</title></symbol>',
-          INVALID: '<symbol id="quality_invalid"><title>Quality Invalid</title><g>' +
-                      '<path d="m7.5,5c0,0 2.5,0 5,0c2.5,0 2.5,0 2.5,2.5c0,2.5 0,2.5 0,5c0,2.5 0,2.5 -2.5,2.5c-2.5,0 -2.5,0 -5,0c-2.5,0 -2.5,0 -2.5,-2.5c0,-2.5 0,-2.5 0,-5c0,-2.5 0,-2.5 2.5,-2.5z" stroke="#999999" fill="#FF0000"/>' +
-                      '<text fill="#FFFFFF" stroke="#999999" stroke-width="0" stroke-dasharray="null" stroke-linejoin="null" stroke-linecap="null" x="10" y="14" font-size="10" font-family="serif" text-anchor="middle" space="preserve" fill-opacity="1" stroke-opacity="1" transform="" font-weight="bold">X</text>' +
-                    '</g></symbol>',
-          QUESTIONABLE: '<symbol id="quality_questionable"><title>Quality Questionable</title><g>' +
-                            '<path fill="#FFFF00" stroke="#999999" d="m7.5,5c0,0 2.5,0 5,0c2.5,0 2.5,0 2.5,2.5c0,2.5 0,2.5 0,5c0,2.5 0,2.5 -2.5,2.5c-2.5,0 -2.5,0 -5,0c-2.5,0 -2.5,0 -2.5,-2.5c0,-2.5 0,-2.5 0,-5c0,-2.5 0,-2.5 2.5,-2.5z"/>' +
-                            '<text font-weight="bold" text-anchor="middle" font-family="serif" font-size="10" y="14" x="10" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="0" stroke="#999999" fill="#000000">?</text>' +
-                        '</g></symbol>'
+          GOOD: {
+            id:'quality_good',
+            title:'Quality Good'
+          },
+          INVALID: {
+            id:'quality_invalid',
+            title:'Quality Invalid',
+            pathAttrs: {d:'m7.5,5c0,0 2.5,0 5,0c2.5,0 2.5,0 2.5,2.5c0,2.5 0,2.5 0,5c0,2.5 0,2.5 -2.5,2.5c-2.5,0 -2.5,0 -5,0c-2.5,0 -2.5,0 -2.5,-2.5c0,-2.5 0,-2.5 0,-5c0,-2.5 0,-2.5 2.5,-2.5z', stroke:'#999999', fill:'#FF0000'},
+            textAttrs: {fill:'#FFFFFF', stroke:'#999999', 'stroke-width':'0', 'stroke-dasharray':'null', 'stroke-linejoin':'null', 'stroke-linecap':'null', x:'10', y:'14', 'font-size':'10', 'font-family':'serif', 'text-anchor':'middle', space:'preserve', 'fill-opacity':'1', 'stroke-opacity':'1', transform:'', 'font-weight':'bold'},
+            text: 'X'
+          },
+          QUESTIONABLE: {
+            id:'quality_questionable',
+            title:'Quality Questionable',
+            pathAttrs: {d:'m7.5,5c0,0 2.5,0 5,0c2.5,0 2.5,0 2.5,2.5c0,2.5 0,2.5 0,5c0,2.5 0,2.5 -2.5,2.5c-2.5,0 -2.5,0 -5,0c-2.5,0 -2.5,0 -2.5,-2.5c0,-2.5 0,-2.5 0,-5c0,-2.5 0,-2.5 2.5,-2.5z', stroke:'#999999', fill:'#FFFF00'},
+            textAttrs: {fill:'#000000', stroke:'#999999', 'stroke-width':'0', 'stroke-dasharray':'null', 'stroke-linejoin':'null', 'stroke-linecap':'null', x:'10', y:'14', 'font-size':'10', 'font-family':'serif', 'text-anchor':'middle', space:'preserve', 'fill-opacity':'1', 'stroke-opacity':'1', transform:'', 'font-weight':'bold'},
+            text: '?'
+          }
         }
-
 
 
     Array.prototype.unique = [].unique || function(){
-      var u = {}, a = [];
-      for(var i = 0, l = this.length; i < l; ++i){
-        if(u.hasOwnProperty(this[i])) {
-          continue;
+        var u = {}, a = [];
+        for(var i = 0, l = this.length; i < l; ++i){
+          if(u.hasOwnProperty(this[i])) {
+            continue;
+          }
+          a.push(this[i]);
+          u[this[i]] = 1;
         }
-        a.push(this[i]);
-        u[this[i]] = 1;
+        return a;
       }
-      return a;
-    }
 
     exports.subscribe = function( equipmentId, scope, onMessage, onError) {
 
@@ -88,8 +108,10 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
                 onMessage( subscriptionId, data[0].value, 'CURRENT')
               } else {
                 console.log( 'schematic.subscribe to schematic - no schematic property')
-                var error = 'No "schematic" property found.'
-                onError( error, {error: error})
+                if( angular.isFunction( onError)) {
+                  var error = 'No "schematic" property found.'
+                  onError( error, {error: error})
+                }
               }
               break
             default:
@@ -99,7 +121,9 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
         },
         function(error, message) {
           console.error('gbPropertiesTableController.subscribe ' + error + ', ' + message)
-          onError( error, message)
+          if( angular.isFunction( onError)) {
+            onError(error, message)
+          }
         }
       )
 
@@ -158,6 +182,49 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       return symbols
     }
 
+
+    /**
+     * Must create SVG elements in the 'http://www.w3.org/2000/svg' namespace!
+     *
+     * @param tag
+     * @param attrs
+     * @returns {Element}
+     */
+    function makeSvgElement(tag, attrs) {
+      var xmlElem = document.createElementNS('http://www.w3.org/2000/svg', tag)
+      if( attrs) {
+        for (var k in attrs)
+          xmlElem.setAttribute(k, attrs[k])
+      }
+      return xmlElem
+    }
+
+    /**
+     * Have to crate the quality symbols manually in the 'http://www.w3.org/2000/svg' namespace!
+     * @param symbol
+     * @returns {SvgSymbol}
+     */
+    function makeSvgSymbol( symbol) {
+      var symbolEl, el
+
+      symbolEl = makeSvgElement( 'symbol', {id: symbol.id})
+      el = makeSvgElement( 'title')
+      el.appendChild( document.createTextNode(symbol.title))
+      symbolEl.appendChild( el)
+
+      if( symbol.pathAttrs) {
+        el = makeSvgElement( 'path', symbol.pathAttrs)
+        symbolEl.appendChild( el)
+      }
+      if( symbol.textAttrs) {
+        el = makeSvgElement( 'text', symbol.textAttrs)
+        el.appendChild( document.createTextNode(symbol.text))
+        symbolEl.appendChild( el)
+      }
+
+      return symbolEl
+    }
+
     /**
      * Ensure quality symbols exist in first defs element in schematic.
      *
@@ -176,14 +243,14 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       //     ...
       //   </svg>
       var defs, good, invalid, questionable,
-          svg = rootElement.children( 'svg').eq(0)
+          svg = $(rootElement)
 
       if( svg.length === 0)
         return  // TODO: handle no SVG error case
 
       defs = svg.children( 'defs').eq(0)
       if( defs.length === 0) {
-        svg.prepend( '<defs></defs>')
+        svg.prepend( makeSvgElement('defs'))
         defs = svg.children( 'defs')
       }
 
@@ -192,12 +259,11 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       questionable = defs.children( '#quality_questionable')
 
       if( good.length === 0)
-        defs.append( SVG_QUALITY.GOOD)
+        defs.append( makeSvgSymbol( SVG_QUALITY.GOOD))
       if( invalid.length === 0)
-        defs.append( SVG_QUALITY.INVALID)
+        defs.append( makeSvgSymbol( SVG_QUALITY.INVALID))
       if( questionable.length === 0)
-        defs.append( SVG_QUALITY.QUESTIONABLE)
-
+        defs.append( makeSvgSymbol( SVG_QUALITY.QUESTIONABLE))
     }
 
     exports.transformSymbols = function( symbols) {
@@ -243,7 +309,9 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       //    unit: "V"
       // }
       text.html( '{{ pointNameMap[\'' + pointName + '\'].currentMeasurement.value }} {{ pointNameMap[\'' + pointName + '\'].unit }}')
-      useQuality.attr( 'xlink:href', '{{ pointNameMap[\'' + pointName + '\'].currentMeasurement.validity | schematicValidityDef }} ')
+      //useQuality.attr( 'ng-href', '{{ pointNameMap[\'' + pointName + '\'].currentMeasurement.validity | schematicValidityToHref }} ')
+      //useQuality.attr( 'xlink:href', '')  // ng-href will fill this in. See http://jsbin.com/sigoleya/1/edit?html,js,output
+      useQuality.attr( 'xlink:href', '{{ pointNameMap[\'' + pointName + '\'].currentMeasurement.validity | schematicValidityToHref }} ')
 
       element.attr( 'ng-click', 'equipmentClicked( pointNameMap[\'' + pointName + '\'])')
 
@@ -282,13 +350,6 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
     }
 
 
-    function filterPoints( elem) {
-      return elem.attr('tgs\\:schematic-type') === 'point'
-    }
-    function filterEquipment( elem) { return elem.attr('tgs\\:schematic-type') === 'equipment-symbol'}
-    function filterNavigationAreas( elem) { return elem.attr('tgs\\:schematic-type') === 'navigation-area'}
-    function filterNavigationLabels( elem) { return elem.attr('tgs\\:schematic-type') === 'navigation-label'}
-
     return exports
 
   }]).
@@ -316,21 +377,15 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
     $scope.symbols = undefined
     $scope.pointNames = []
     $scope.pointNameMap = {} // points by point name. {id, name:, currentMeasurement:}
+    $scope.alerts = []
 
 
-    //if( pointIds.length > 0) {
-    //  var url = '/models/1/points?' + rest.queryParameterFromArrayOrString( 'pids', pointIds)
-    //  rest.get( url, 'points', $scope, function( data) {
-    //    data.forEach( function( point) {
-    //      $scope.schematic.addPoint( point)
-    //      subscribeToMeasurementHistory( $scope.schematic, point )
-    //    })
-    //    $scope.invalidateWindow()
-    //  })
-    //}
+    $scope.closeAlert = function(index) {
+      if( index < $scope.alerts.length)
+        $scope.alerts.splice(index, 1)
+    }
 
     $scope.equipmentClicked = function( point) {
-
     }
 
     /**
@@ -419,11 +474,11 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
     function processPointsAndReturnPointIdMap(points) {
       var idMap           = {},
           currentMeasurement = {
-            value:        '-',
+            value:        'XXXXXXXX', // start with XXX in case point ID is wrong.
             time:         null,
             shortQuality: '',
             longQuality:  '',
-            validity:     'NOTLOADED',
+            validity:     'INVALID', // start as invalid in case point ID is wrong.
             expandRow:    false,
             commandSet:   undefined
           }
@@ -467,11 +522,18 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       if( !equipmentId)
         return
 
-      return schematic.subscribe( equipmentId, $scope, onSchematic)
-    }
-    function onSchematic( subscriptionId, content, eventType) {
-      $scope.svgSource = content  // directive is watching this and will parse SVG and set $scope.pointNames.
-      $scope.$digest()
+      return schematic.subscribe( equipmentId, $scope,
+        function( subscriptionId, content, eventType) {
+          $scope.svgSource = content  // directive is watching this and will parse SVG and set $scope.pointNames.
+          $scope.loading = false
+          $scope.$digest()
+        },
+        function( error, message) {
+          $scope.alerts = [{ type: 'danger', message: error}]
+          $scope.loading = false
+          $scope.$digest()
+        }
+      )
     }
 
     subscribe()
@@ -482,23 +544,25 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
   directive('gbEquipmentSchematic', [ '$compile', 'schematic', function( $compile, schematic) {
     return {
       restrict: 'E',
-      scope: {
-        //equipmentId: '='
-      },
+      scope:    true,
       controller: 'gbSchematicController',
+      templateUrl: 'greenbus.views.template/schematic/equipmentSchematic.html',
       link: function (scope, elem, attrs) {
         var symbols
-        //var chartEl = d3.select(elem[0])
 
+        // The controller does the subscription and we add the SVG schematic to the DOM.
         scope.$watch('svgSource', function(newValue) {
           if( newValue !== undefined) {
+            var elemChild, svg
 
-            elem.html(newValue);
-            schematic.ensureQualitySymbolsInDefs( elem)
-            symbols = schematic.parseElements( elem)
+            elemChild = elem.children(':first-child')
+            svg = $.parseHTML( newValue)
+            schematic.ensureQualitySymbolsInDefs( svg)
+            elemChild.prepend(svg)
+            symbols = schematic.parseElements( elemChild)
             symbols.pointNames = schematic.transformSymbols( symbols)
 
-            $compile(elem.contents())(scope);
+            $compile(svg)(scope);
             scope.symbols = symbols
             scope.pointNames = symbols.pointNames
           }
@@ -508,17 +572,29 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
     };
   }]).
 
-  filter('schematicValidityDef', function() {
+  filter('schematicValidityToHref', function() {
     return function(validity) {
       switch( validity ) {
         case 'GOOD':         return '#quality_good';
         case 'QUESTIONABLE': return '#quality_questionable';
-        case 'NOTLOADED':    return '#quality_questionable'
         case 'INVALID':      return '#quality_invalid';
         default:
-          return '#quality_questionable';
+          return '#quality_invalid';
       }
     };
-  })
+  })//.
+
+  // Was being used for modal with list of issues.
+  //filter('schematicIssueIcon', function() {
+  //  return function(validity) {
+  //    switch( validity ) {
+  //      case 'error':         return 'fa fa-times-circle gb-icon-error';
+  //      case 'warning': return 'fa fa-exclamation-triangle gb-icon-warn';
+  //      case 'information':    return 'fa fa-info-circle gb-icon-ok'
+  //      default:
+  //        return 'fa fa-exclamation-triangle';
+  //    }
+  //  };
+  //})
 
 

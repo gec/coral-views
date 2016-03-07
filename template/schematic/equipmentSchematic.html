@@ -1,0 +1,6 @@
+<div class="gb-equipment-schematic gb-loading-container">
+    <alert ng-repeat="alert in alerts" type="{{alert.type}}" close="closeAlert($index)">{{alert.message}}</alert>
+
+    <div class="gb-loading-glass" ng-show="loading"></div>
+    <i class="gb-loading-spinner fa fa-spinner fa-pulse" ng-show="loading"></i>
+</div>
