@@ -422,9 +422,10 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
               $scope.points.forEach( function( p) { $scope.pointNameMap[p.name] = p})
               var pointIds = Object.keys(pointIdMap)
 
-              measurement.subscribe( $scope, pointIds, {}, self, onMeasurements)
+              measurement.subscribe( $scope, pointIds, {}, self, onMeasurements, onError)
               getCommandsForPoints( pointIds)  // TODO: does nothing for now.
 
+              $scope.loading = false
               return response // for the then() chain
             },
             function( error) {
@@ -469,6 +470,10 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
           console.error('gbSchematicController.onMeasurements could not find point.id = ' + pm.point.id)
         }
       })
+    }
+    function onError(error, message) {
+      console.error( 'gbSchematicController.subscribe.onError: ' + error + ', message = ' + JSON.stringify( message))
+      $scope.alerts = [{ type: 'danger', message: error}]
     }
 
     function processPointsAndReturnPointIdMap(points) {
@@ -525,7 +530,6 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       return schematic.subscribe( equipmentId, $scope,
         function( subscriptionId, content, eventType) {
           $scope.svgSource = content  // directive is watching this and will parse SVG and set $scope.pointNames.
-          $scope.loading = false
           $scope.$digest()
         },
         function( error, message) {
@@ -555,7 +559,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
           if( newValue !== undefined) {
             var elemChild, svg
 
-            elemChild = elem.children(':first-child')
+            elemChild = elem.find('.gb-equipment-schematic')
             svg = $.parseHTML( newValue)
             schematic.ensureQualitySymbolsInDefs( svg)
             elemChild.prepend(svg)
