@@ -413,9 +413,10 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       if( newValue !== undefined) {
         console.log( 'gbSchematicController: got pointNames.length: ' + $scope.pointNames.length)
         // TODO: unsubscribe from previous schematic's points. Could optimize for large overlaps in points when schematic changes.
-        if( $scope.pointNames.length > 0)
+        if( $scope.pointNames.length > 0) {
           schematic.getPointsByName( $scope.pointNames).then(
             function( response) {
+              // We get the points that exist. If some points don't exist, the values remain as XXXX and invalid quality.
               $scope.points = response.data
               pointIdMap = processPointsAndReturnPointIdMap($scope.points)
               // TODO: what about the old names in the map?
@@ -429,9 +430,13 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
               return response // for the then() chain
             },
             function( error) {
+              var message = 'Error getting points by name - status: ' + error.status + ', statusText: ' + error.statusText
+              console.error( 'gbSchematicController: ' + message)
+              $scope.alerts = [{ type: 'danger', message: message}]
               return error
             }
           )
+        }
       }
     })
 
