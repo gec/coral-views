@@ -270,6 +270,30 @@ describe('subscription', function () {
       expect(mock.websocket.send).not.toHaveBeenCalled()
     }));
 
+    it('should $broadcast status on AllSubscriptionsCancelledMessage', inject(function(subscription) {
+      var subscriptionId = subscription.subscribe(json, scope, mock.messageListener, mock.errorListener)
+
+      // Receive a message
+      var message = {
+        type:           'AllSubscriptionsCancelledMessage',
+        subscriptionId: '',
+        data:           null,
+        error:          'some error',
+        throwable:      'some throwable'
+      }
+      var event = {
+        data: JSON.stringify(message)
+      }
+      mock.websocket.onmessage(event)
+
+      expect(mock.rootScope.$apply).toHaveBeenCalled();
+      expect(mock.rootScope.$broadcast).toHaveBeenCalledWith('subscription.status', {
+        status:         subscription.STATUS.ALL_SUBSCRIPTIONS_CANCELLED,
+        reinitializing: false,
+        description :   'All subscriptions cancelled. Please refresh browser.'
+      })
+    }));
+
   });
 
   describe('login failure', function() {

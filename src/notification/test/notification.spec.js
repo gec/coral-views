@@ -128,6 +128,22 @@ describe('gb-notification', function () {
       notifications = findNotifications()
       expect( notifications.length).toEqual(0)
     }));
+
+    it('should show webSocket ALL_SUBSCRIPTIONS_CANCELLED', inject( function (subscription) {
+      var notifications = initGbNotificationElement(),
+          description = 'description'
+
+      scope.$broadcast('subscription.status', {
+        status: subscription.STATUS.ALL_SUBSCRIPTIONS_CANCELLED,
+        description: description
+      });
+      scope.$digest()
+
+      notifications = findNotifications()
+      expect( notifications.length).toEqual(1)
+      expect( notifications.eq(0).text()).toBe( description)
+    }));
+
   });
 
   describe('rest notifications', function() {

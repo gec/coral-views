@@ -43,7 +43,8 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
           UNOPENED: 'UNOPENED',
           OPENING: 'OPENING',
           CLOSED: 'CLOSED',
-          UP: 'UP'
+          UP: 'UP',
+          ALL_SUBSCRIPTIONS_CANCELLED: 'ALL_SUBSCRIPTIONS_CANCELLED'
         },
         DIGEST = {
           NONE: 0,   // No current Angular digest cycle
@@ -97,6 +98,10 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
             break;
           case 'SubscriptionExceptionMessage':
             console.error( 'SubscriptionExceptionMessage: ' + JSON.stringify( message.data))
+            break;
+          case 'AllSubscriptionsCancelledMessage':
+            console.error( 'AllSubscriptionsCancelledMessage: ' + JSON.stringify( message.data))
+            setStatus( DIGEST.NONE, STATUS.ALL_SUBSCRIPTIONS_CANCELLED, 'All subscriptions cancelled. Please refresh browser.')
             break;
 
           default:
