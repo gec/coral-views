@@ -25,8 +25,8 @@
                 <th><a href="" ng-click="sortColumn = 'state'; reverse=!reverse">State</a></th>
                 <th title="State of Charge %" style="text-align: center">SOC %</th>
                 <th></th>
-                <th class="gb-cell-highlight gb-cell-highlight-left"><a href="" ng-click="sortColumn = 'powerCapacity'; reverse=!reverse">Power</a></th>
-                <th class="gb-cell-highlight gb-cell-highlight-right"><a href="" ng-click="sortColumn = 'energyCapacity'; reverse=!reverse">Energy</a></th>
+                <th class="gb-cell-highlight gb-cell-highlight-left"><a href="" ng-click="sortColumn = 'powerCapacity'; reverse=!reverse">Power (kW)</a></th>
+                <th class="gb-cell-highlight gb-cell-highlight-right"><a href="" ng-click="sortColumn = 'energyCapacity'; reverse=!reverse">Energy (kWh)</a></th>
             </tr>
             </thead>
             <tbody>
@@ -42,8 +42,8 @@
                     </div>
                 </td>
                 <td>{{ces.percentSoc}}%</td>
-                <td class="gb-cell-highlight gb-cell-highlight-left">{{ces.powerCapacity}}</td>
-                <td class="gb-cell-highlight gb-cell-highlight-right">{{ces.energyCapacity}}</td>
+                <td class="gb-cell-highlight gb-cell-highlight-left">{{ces.capacity.power}}</td>
+                <td class="gb-cell-highlight gb-cell-highlight-right">{{ces.capacity.energy}}</td>
             </tr>
             </tbody>
         </table>

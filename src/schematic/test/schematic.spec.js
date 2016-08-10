@@ -503,12 +503,12 @@ describe('schematic', function () {
       schematic.subscribe( equipmentId, scope, onSchematic)
 
       var properties = [
-        {key: 'schematic', value: svgContent}
+        {key: 'schematic', value: svgContent, entityId: 'some-uuid'}
       ]
 
       var request = {
         name: 'SubscribeToProperties',
-        entityId:  equipmentId,
+        entityIds:  [equipmentId],
         keys: ['schematic']
       }
       expect( subscribeInstance.onMessage ).toBeDefined()
@@ -540,7 +540,7 @@ describe('schematic', function () {
 
       var request = {
         name: 'SubscribeToProperties',
-        entityId:  equipmentId,
+        entityIds:  [equipmentId],
         keys: ['schematic']
       }
       expect( subscribeInstance.onMessage ).toBeDefined()

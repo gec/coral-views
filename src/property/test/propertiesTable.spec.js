@@ -1,5 +1,5 @@
 describe('gb-properties-table', function () {
-  var scope, $compile, _subscription,
+  var scope, $compile, _subscription, _websocketFactory,
       subscribeInstance = {};
   var element,
       entityId = 'entity-1',
@@ -10,7 +10,8 @@ describe('gb-properties-table', function () {
   for( var index = 0; index < propertyCount; index++) {
     properties.push( {
       key: 'key'+index,
-      value: index
+      value: index,
+      entityId: 'some-uuid'
     })
   }
 
@@ -112,7 +113,7 @@ describe('gb-properties-table', function () {
   it('should subscribe to properties', inject( function () {
     var request = {
       name: 'SubscribeToProperties',
-      entityId: entityId
+      entityIds: [entityId]
     }
     expect( subscribeInstance.onSuccess ).toBeDefined()
     expect( subscribeInstance.onError ).toBeDefined()

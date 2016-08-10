@@ -26,7 +26,7 @@ angular.module('greenbus.views.demo').controller('EssesDemoCtrl', function ($sco
       }
     ])
 
-  rest.whenGET( '/models/1/points?equipmentIds=4e9a2bca-593d-491f-b8a4-1ed4ae2b6633&pointTypes=%SOC&pointTypes=OutputPower&pointTypes=Standby&pointTypes=EnergyCapacity&pointTypes=PowerCapacity').
+  rest.whenGET( '/models/1/points?equipmentIds=4e9a2bca-593d-491f-b8a4-1ed4ae2b6633&pointTypes=%SOC&pointTypes=OutputPower&pointTypes=Standby').
     respond({
       '4e9a2bca-593d-491f-b8a4-1ed4ae2b6633': [
         {'name': 'Eugene.ESS.Mode', 'id': '49f847d5-9f2c-419a-a5cf-ca6d90bea442', 'pointType': 'COUNTER', 'types': ['ESSMode', 'Point', 'Imported'], 'unit': 'Mode', 'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6'},

@@ -137,7 +137,7 @@ angular.module('greenbus.views.property', [ 'ui.router', 'greenbus.views.rest', 
 
         var json = {
           name: 'SubscribeToProperties',
-          entityId:  equipmentId
+          entityIds:  [equipmentId]
         }
 
         subscriptionId = subscription.subscribe( json, $scope,

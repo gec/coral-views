@@ -1,5 +1,5 @@
-###gb-esses
-A tabular view of ESSes.
+###gb-esses-table
+A tabular view of ESS devices.
 
 ## Dependencies
 * /dist/images

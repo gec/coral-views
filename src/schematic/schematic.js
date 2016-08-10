@@ -90,7 +90,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       var subscriptionId,
           json = {
             name: 'SubscribeToProperties',
-            entityId:  equipmentId,
+            entityIds:  [equipmentId],
             keys: [exports.KEY_SCHEMATIC]
           }
 
