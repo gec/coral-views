@@ -225,6 +225,44 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       return symbolEl
     }
 
+
+    /**
+     * Update the SVG element to scale to fit inside parent div.
+     *
+     * @param rootElement
+     */
+    exports.updateSvgElementToFitParentDiv = function( rootElement) {
+      // Convert:
+      //   <svg width="1680" height="800" >...</svg>
+      // To:
+      //   <svg width="100%" height="auto"
+      //        viewBox="0 0 1680.0 800"
+      //        preserveAspectRatio="xMidYMid meet"
+      //   >...</svg>
+
+      var svg = $(rootElement)
+      if (svg.length === 0)
+        return  // TODO: handle no SVG error case
+
+      var w, h,
+          width = svg.attr('width'),
+          height = svg.attr('height'),
+          viewBox = svg.attr('viewBox')
+      console.log( 'gbSchematicController: Updating svg attributes to auto-size and fit in div. Initial svg attributes: width="' + width + '" height="' + height + '" viewBox="' + viewBox + '"')
+
+      if( viewBox === undefined || viewBox === '') {
+        w = width === undefined || width.indexOf('%') >= 0 ? 1680 : width
+        h = height === undefined || height.indexOf('%') >= 0 ? 800 : height
+        viewBox = '0 0 ' + w + ' ' + h
+        console.log( 'gbSchematicController: Setting viewBox="' + viewBox + '"')
+        svg.attr('viewBox', viewBox)
+      } // else assume the viewBox is setup correctly
+
+      svg.attr('width', '100%')
+      svg.attr('height', 'auto')
+      svg.attr('preserveAspectRatio', 'xMidYMid meet')
+    }
+
     /**
      * Ensure quality symbols exist in first defs element in schematic.
      *
@@ -566,6 +604,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
 
             elemChild = elem.find('.gb-equipment-schematic')
             svg = $.parseHTML( newValue)
+            schematic.updateSvgElementToFitParentDiv( svg)
             schematic.ensureQualitySymbolsInDefs( svg)
             elemChild.prepend(svg)
             symbols = schematic.parseElements( elemChild)
