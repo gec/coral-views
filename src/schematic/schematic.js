@@ -240,27 +240,29 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       //        preserveAspectRatio="xMidYMid meet"
       //   >...</svg>
 
-      var svg = $(rootElement)
+      var svg = $(rootElement).filter(function(){return this.nodeType===1;}) // fitler out '<?xml version="1.0"?>'
       if (svg.length === 0)
         return  // TODO: handle no SVG error case
+
+      // IMPORTANT - jQuery .attr() ignores case. Need case sensitive Javascript .getAttribute().
 
       var w, h,
           width = svg.attr('width'),
           height = svg.attr('height'),
-          viewBox = svg.attr('viewBox')
+          viewBox = svg[0].getAttribute('viewBox')
       console.log( 'gbSchematicController: Updating svg attributes to auto-size and fit in div. Initial svg attributes: width="' + width + '" height="' + height + '" viewBox="' + viewBox + '"')
 
-      if( viewBox === undefined || viewBox === '') {
+      if( viewBox === null || viewBox === undefined || viewBox === '') {
         w = width === undefined || width.indexOf('%') >= 0 ? 1680 : width
         h = height === undefined || height.indexOf('%') >= 0 ? 800 : height
         viewBox = '0 0 ' + w + ' ' + h
         console.log( 'gbSchematicController: Setting viewBox="' + viewBox + '"')
-        svg.attr('viewBox', viewBox)
+        svg[0].setAttribute('viewBox', viewBox) // setAttribute for case sensitive
       } // else assume the viewBox is setup correctly
 
       svg.attr('width', '100%')
       svg.attr('height', 'auto')
-      svg.attr('preserveAspectRatio', 'xMidYMid meet')
+      svg[0].setAttribute('preserveAspectRatio', 'xMidYMid meet')  // setAttribute for case sensitive
     }
 
     /**

@@ -459,10 +459,12 @@ describe('schematic', function () {
       svgElem = element.find( 'svg')
       expect( svgElem.length).toBe(1)
 
-      expect( svgElem.attr('width')).toEqual( '100%')
-      expect( svgElem.attr('height')).toEqual( 'auto')
-      expect( svgElem.attr('viewBox')).toEqual( svgViewBox)
-      expect( svgElem.attr('preserveAspectRatio')).toEqual( svgPreserveAspectRatio)
+      svgElem = svgElem[0]
+      // IMPORTANT - jQuery .attr() ignores case. Need case sensitive Javascript .getAttribute().
+      expect( svgElem.getAttribute('width')).toEqual( '100%')
+      expect( svgElem.getAttribute('height')).toEqual( 'auto')
+      expect( svgElem.getAttribute('viewBox')).toEqual( svgViewBox)
+      expect( svgElem.getAttribute('preserveAspectRatio')).toEqual( svgPreserveAspectRatio)
     }));
 
     it('should ensure scale to fit when viewBox, but no width or height', inject( function ( schematic) {
@@ -476,10 +478,12 @@ describe('schematic', function () {
       svgElem = element.find( 'svg')
       expect( svgElem.length).toBe(1)
 
-      expect( svgElem.attr('width')).toEqual( '100%')
-      expect( svgElem.attr('height')).toEqual( 'auto')
-      expect( svgElem.attr('viewBox')).toEqual( svgViewBox)
-      expect( svgElem.attr('preserveAspectRatio')).toEqual( svgPreserveAspectRatio)
+      svgElem = svgElem[0]
+      // IMPORTANT - jQuery .attr() ignores case. Need case sensitive Javascript .getAttribute().
+      expect( svgElem.getAttribute('width')).toEqual( '100%')
+      expect( svgElem.getAttribute('height')).toEqual( 'auto')
+      expect( svgElem.getAttribute('viewBox')).toEqual( svgViewBox)
+      expect( svgElem.getAttribute('preserveAspectRatio')).toEqual( svgPreserveAspectRatio)
     }));
 
     it('should ensure quality symbols when no defs section', inject( function ( schematic) {
