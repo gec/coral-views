@@ -231,12 +231,12 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
      *
      * @param rootElement
      */
-    exports.updateSvgElementToFitParentDiv = function( rootElement) {
+    exports.updateSvgElementAttributesToScaleToFitParentDiv = function( rootElement) {
       // Convert:
       //   <svg width="1680" height="800" >...</svg>
       // To:
       //   <svg width="100%" height="auto"
-      //        viewBox="0 0 1680.0 800"
+      //        viewBox="0 0 1680 800"
       //        preserveAspectRatio="xMidYMid meet"
       //   >...</svg>
 
@@ -604,7 +604,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
 
             elemChild = elem.find('.gb-equipment-schematic')
             svg = $.parseHTML( newValue)
-            schematic.updateSvgElementToFitParentDiv( svg)
+            schematic.updateSvgElementAttributesToScaleToFitParentDiv( svg)
             schematic.ensureQualitySymbolsInDefs( svg)
             elemChild.prepend(svg)
             symbols = schematic.parseElements( elemChild)

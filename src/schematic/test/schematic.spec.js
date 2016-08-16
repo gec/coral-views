@@ -1,5 +1,5 @@
 describe('schematic', function () {
-  var _subscription, $httpBackend, svgOneMeasurement, svgOneEquipmentSymbol,
+  var _subscription, $httpBackend,
       subscribeInstance = {},
       measurements = [];
 
@@ -22,40 +22,41 @@ describe('schematic', function () {
         ]
       }
 
-  svgOneMeasurement  =
-    '<?xml version="1.0"?>' +
-    '<svg  xmlns="http://www.w3.org/2000/svg" xmlns:tgs="http://www.totalgrid.org" xmlns:xlink="http://www.w3.org/1999/xlink" style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
-      '<g id="svgContent">' +
-        '<g tgs:schematic-type="point" name="' + points[0].name + '" tgs:point-name="' + points[0].name + '" id="' + points[0].name + '">' +
-          '<use class="quality-display" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#quality_invalid" y="78" x="257" id="svg_550"></use>' +
-          '<text class="data-label" x="277" y="92" id="svg_551">48 kW</text>' +
-        '</g>' +
-      '</g>' +
-    '</svg>'
-  svgOneMeasurementMeasurementDecimals3  =
-    '<?xml version="1.0"?>' +
-    '<svg  xmlns="http://www.w3.org/2000/svg" xmlns:tgs="http://www.totalgrid.org" xmlns:xlink="http://www.w3.org/1999/xlink" tgs:measurement-decimals="3" style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
-      '<g id="svgContent">' +
-        '<g tgs:schematic-type="point" name="' + points[0].name + '" tgs:point-name="' + points[0].name + '" id="' + points[0].name + '">' +
-          '<use class="quality-display" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#quality_invalid" y="78" x="257" id="svg_550"></use>' +
-          '<text class="data-label" x="277" y="92" id="svg_551">48 kW</text>' +
-        '</g>' +
-      '</g>' +
-    '</svg>'
-  svgOneEquipmentSymbol =
-    '<?xml version="1.0"?>' +
-    '<svg  xmlns="http://www.w3.org/2000/svg" xmlns:tgs="http://www.totalgrid.org" xmlns:xlink="http://www.w3.org/1999/xlink" style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
-      '<g id="svgContent">' +
-        '<svg preserveAspectRatio="xMaxYMax" class="symbol" tgs:schematic-type="equipment-symbol" id="svg_619" x="484" y="404" tgs:point-name="' + points[1].name + '" tgs:symbol-type="circuitbreaker">' +
-          '<g tgs:state="OPEN" display="none" id="svg_622">' +
-          ' <rect x="2" y="2" width="30" height="30" fill="#00FF00" id="svg_623"/>' +
+  var svgNamespaces = ' xmlns="http://www.w3.org/2000/svg" xmlns:tgs="http://www.totalgrid.org" xmlns:xlink="http://www.w3.org/1999/xlink" ',
+      svgOneMeasurement  =
+        '<?xml version="1.0"?>' +
+        '<svg' + svgNamespaces + 'style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
+          '<g id="svgContent">' +
+            '<g tgs:schematic-type="point" name="' + points[0].name + '" tgs:point-name="' + points[0].name + '" id="' + points[0].name + '">' +
+              '<use class="quality-display" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#quality_invalid" y="78" x="257" id="svg_550"></use>' +
+              '<text class="data-label" x="277" y="92" id="svg_551">48 kW</text>' +
+            '</g>' +
           '</g>' +
-          '<g tgs:state="CLOSED" id="svg_620">' +
-            '<rect x="2" y="2" width="30" height="30" fill="#A40000" id="svg_621"/>' +
+        '</svg>',
+      svgOneMeasurementMeasurementDecimals3  =
+        '<?xml version="1.0"?>' +
+        '<svg' + svgNamespaces + 'tgs:measurement-decimals="3" style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
+          '<g id="svgContent">' +
+            '<g tgs:schematic-type="point" name="' + points[0].name + '" tgs:point-name="' + points[0].name + '" id="' + points[0].name + '">' +
+              '<use class="quality-display" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#quality_invalid" y="78" x="257" id="svg_550"></use>' +
+              '<text class="data-label" x="277" y="92" id="svg_551">48 kW</text>' +
+            '</g>' +
           '</g>' +
-        '</svg>' +
-      '</g>' +
-    '</svg>'
+        '</svg>',
+      svgOneEquipmentSymbol =
+        '<?xml version="1.0"?>' +
+        '<svg' + svgNamespaces + 'style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
+          '<g id="svgContent">' +
+            '<svg preserveAspectRatio="xMaxYMax" class="symbol" tgs:schematic-type="equipment-symbol" id="svg_619" x="484" y="404" tgs:point-name="' + points[1].name + '" tgs:symbol-type="circuitbreaker">' +
+              '<g tgs:state="OPEN" display="none" id="svg_622">' +
+              ' <rect x="2" y="2" width="30" height="30" fill="#00FF00" id="svg_623"/>' +
+              '</g>' +
+              '<g tgs:state="CLOSED" id="svg_620">' +
+                '<rect x="2" y="2" width="30" height="30" fill="#A40000" id="svg_621"/>' +
+              '</g>' +
+            '</svg>' +
+          '</g>' +
+        '</svg>'
 
 
   function makeSubscriptionId( request, idCounter) {
@@ -404,21 +405,37 @@ describe('schematic', function () {
 
   describe( 'factory.schematic', function() {
 
-    var svgNoDefs = '<?xml version="1.0"?>' +
-                    '<svg  xmlns="http://www.w3.org/2000/svg" xmlns:tgs="http://www.totalgrid.org" xmlns:xlink="http://www.w3.org/1999/xlink" style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
+    var svgWidth = '1680',
+        svgHeight = '800',
+        svgViewBox = '0 0 ' + svgWidth + ' '+ svgHeight,
+        svgPreserveAspectRatio = 'xMidYMid meet',
+        svgWidthHeightNoViewBox = '<?xml version="1.0"?>' +
+                    '<svg' + svgNamespaces + 'width="'+svgWidth+'" height="'+svgHeight+'" meet"style="background-color:black;">' +
+                      '<title>Zone1</title>' +
+                      '<g><title>modeling</title></g>' +
+                      '<g display="none"><title>navigation</title></g>' +
+                    '</svg>',
+        svgViewBoxAndPreserveAspectRatio = '<?xml version="1.0"?>' +
+                    '<svg' + svgNamespaces + 'preserveAspectRatio="xMidYMid meet" viewBox="' + svgViewBox + '" style="background-color:black;">' +
+                      '<title>Zone1</title>' +
+                      '<g><title>modeling</title></g>' +
+                      '<g display="none"><title>navigation</title></g>' +
+                    '</svg>',
+        svgNoDefs = '<?xml version="1.0"?>' +
+                    '<svg' + svgNamespaces + 'style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
                       '<title>Zone1</title>' +
                       '<g><title>modeling</title></g>' +
                       '<g display="none"><title>navigation</title></g>' +
                     '</svg>',
         svgNoSymbols =  '<?xml version="1.0"?>' +
-                        '<svg  xmlns="http://www.w3.org/2000/svg" xmlns:tgs="http://www.totalgrid.org" xmlns:xlink="http://www.w3.org/1999/xlink" style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
+                        '<svg' + svgNamespaces + 'style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
                           '<title>Zone1</title>' +
                           '<defs></defs>' +
                           '<g><title>modeling</title></g>' +
                           '<g display="none"><title>navigation</title></g>' +
                         '</svg>',
         svgOneSymbol =  '<?xml version="1.0"?>' +
-                        '<svg  xmlns="http://www.w3.org/2000/svg" xmlns:tgs="http://www.totalgrid.org" xmlns:xlink="http://www.w3.org/1999/xlink" style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
+                        '<svg' + svgNamespaces + 'style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
                           '<title>Zone1</title>' +
                           '<defs>'+
                             '<symbol id="quality_questionable"><title>Quality Questionable</title><g>' +
@@ -430,6 +447,40 @@ describe('schematic', function () {
                           '<g display="none"><title>navigation</title></g>' +
                         '</svg>'
 
+
+    it('should ensure scale to fit when width and height but no viewBox', inject( function ( schematic) {
+      var svg, element, svgElem, width, height, viewBox, preserveAspectRatio
+
+      element = $(document.createElement('div'))
+      svg = $.parseHTML( svgWidthHeightNoViewBox)
+      schematic.updateSvgElementAttributesToScaleToFitParentDiv( svg)
+      element.prepend( svg)
+
+      svgElem = element.find( 'svg')
+      expect( svgElem.length).toBe(1)
+
+      expect( svgElem.attr('width')).toEqual( '100%')
+      expect( svgElem.attr('height')).toEqual( 'auto')
+      expect( svgElem.attr('viewBox')).toEqual( svgViewBox)
+      expect( svgElem.attr('preserveAspectRatio')).toEqual( svgPreserveAspectRatio)
+    }));
+
+    it('should ensure scale to fit when viewBox, but no width or height', inject( function ( schematic) {
+      var svg, element, svgElem, width, height, viewBox, preserveAspectRatio
+
+      element = $(document.createElement('div'))
+      svg = $.parseHTML( svgViewBoxAndPreserveAspectRatio)
+      schematic.updateSvgElementAttributesToScaleToFitParentDiv( svg)
+      element.prepend( svg)
+
+      svgElem = element.find( 'svg')
+      expect( svgElem.length).toBe(1)
+
+      expect( svgElem.attr('width')).toEqual( '100%')
+      expect( svgElem.attr('height')).toEqual( 'auto')
+      expect( svgElem.attr('viewBox')).toEqual( svgViewBox)
+      expect( svgElem.attr('preserveAspectRatio')).toEqual( svgPreserveAspectRatio)
+    }));
 
     it('should ensure quality symbols when no defs section', inject( function ( schematic) {
       var svg, element, defs, good, invalid, questionable
