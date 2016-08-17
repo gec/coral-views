@@ -261,7 +261,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       } // else assume the viewBox is setup correctly
 
       svg.attr('width', '100%')
-      svg.attr('height', 'auto')
+      svg.attr('height', '100%')
       svg[0].setAttribute('preserveAspectRatio', 'xMidYMid meet')  // setAttribute for case sensitive
     }
 
@@ -556,8 +556,6 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       //      if( point ) {
       //        // TODO: see measurement.getCommandsForPoints
       //        point.commands = data[pointId]
-      //        //point.commandTypes = getCommandTypes( point.commands).toLowerCase()
-      //        console.log('commandTypes: ' + point.commandTypes)
       //      }
       //      else
       //        console.error( 'gbSchematicController.getCommandsForPoints Unknown point ID ' + pointId)

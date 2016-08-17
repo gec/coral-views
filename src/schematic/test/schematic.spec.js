@@ -462,7 +462,7 @@ describe('schematic', function () {
       svgElem = svgElem[0]
       // IMPORTANT - jQuery .attr() ignores case. Need case sensitive Javascript .getAttribute().
       expect( svgElem.getAttribute('width')).toEqual( '100%')
-      expect( svgElem.getAttribute('height')).toEqual( 'auto')
+      expect( svgElem.getAttribute('height')).toEqual( '100%')
       expect( svgElem.getAttribute('viewBox')).toEqual( svgViewBox)
       expect( svgElem.getAttribute('preserveAspectRatio')).toEqual( svgPreserveAspectRatio)
     }));
@@ -481,7 +481,7 @@ describe('schematic', function () {
       svgElem = svgElem[0]
       // IMPORTANT - jQuery .attr() ignores case. Need case sensitive Javascript .getAttribute().
       expect( svgElem.getAttribute('width')).toEqual( '100%')
-      expect( svgElem.getAttribute('height')).toEqual( 'auto')
+      expect( svgElem.getAttribute('height')).toEqual( '100%')
       expect( svgElem.getAttribute('viewBox')).toEqual( svgViewBox)
       expect( svgElem.getAttribute('preserveAspectRatio')).toEqual( svgPreserveAspectRatio)
     }));
