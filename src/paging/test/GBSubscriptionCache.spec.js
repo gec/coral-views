@@ -1,9 +1,9 @@
-describe('SubscriptionCache', function () {
+describe('GBSubscriptionCache', function () {
 
   beforeEach(module('greenbus.views.event'));
 
   it('should start with 0 items and set limit', inject( function () {
-    var cache = new SubscriptionCache( 3)
+    var cache = new GBSubscriptionCache( 3)
     expect(cache.itemStore.length).toEqual(0);
     expect(cache.cacheSize).toEqual(3);
   }));
@@ -13,14 +13,14 @@ describe('SubscriptionCache', function () {
         i1 = {time: 1, id: 'id1'},
         i2 = {time: 2, id: 'id2'}
 
-    var cache = new SubscriptionCache( 2, [i0,i1,i2])
+    var cache = new GBSubscriptionCache( 2, [i0,i1,i2])
     expect(cache.cacheSize).toEqual(2);
     expect(cache.itemStore.length).toEqual(2);
   }));
 
   it('should add single items sorted by reverse time and limit total items', inject( function () {
     var actions, action,
-        cache = new SubscriptionCache( 3),
+        cache = new GBSubscriptionCache( 3),
         i0 = {time: 0, id: 'id0'},
         i1 = {time: 1, id: 'id1'},
         i2 = {time: 2, id: 'id2'},
@@ -33,7 +33,7 @@ describe('SubscriptionCache', function () {
     expect(cache.itemStore.length).toEqual(1);
     expect(actions.length).toEqual( 1);
     action = actions[0]
-    expect(action.type).toEqual( SubscriptionCacheAction.INSERT);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.INSERT);
     expect(action.at).toEqual( 0);
     expect(action.item).toEqual( i0);
 
@@ -41,7 +41,7 @@ describe('SubscriptionCache', function () {
     expect(cache.itemStore.length).toEqual(2);
     expect(actions.length).toEqual( 1);
     action = actions[0]
-    expect(action.type).toEqual( SubscriptionCacheAction.INSERT);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.INSERT);
     expect(action.at).toEqual( 0);
     expect(action.item).toEqual( i2);
     expect(cache.itemStore).toEqual( [i2,i0]);
@@ -50,7 +50,7 @@ describe('SubscriptionCache', function () {
     expect(cache.itemStore.length).toEqual(3);
     expect(actions.length).toEqual( 1);
     action = actions[0]
-    expect(action.type).toEqual( SubscriptionCacheAction.INSERT);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.INSERT);
     expect(action.at).toEqual( 1);
     expect(action.item).toEqual( i1);
     expect(cache.itemStore).toEqual( [i2,i1,i0]);
@@ -59,11 +59,11 @@ describe('SubscriptionCache', function () {
     expect(cache.itemStore.length).toEqual(3);
     expect(actions.length).toEqual( 2);
     action = actions[0]
-    expect(action.type).toEqual( SubscriptionCacheAction.INSERT);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.INSERT);
     expect(action.at).toEqual( 0);
     expect(action.item).toEqual( i5);
     action = actions[1]
-    expect(action.type).toEqual( SubscriptionCacheAction.TRIM);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.TRIM);
     expect(action.at).toEqual( 3);
     expect(action.count).toEqual( 1);
     expect(action.items).toEqual( [i0]);
@@ -79,11 +79,11 @@ describe('SubscriptionCache', function () {
     expect(cache.itemStore.length).toEqual(3);
     expect(actions.length).toEqual( 2);
     action = actions[0]
-    expect(action.type).toEqual( SubscriptionCacheAction.INSERT);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.INSERT);
     expect(action.at).toEqual( 1);
     expect(action.item).toEqual( i4);
     action = actions[1]
-    expect(action.type).toEqual( SubscriptionCacheAction.TRIM);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.TRIM);
     expect(action.at).toEqual( 3);
     expect(action.count).toEqual( 1);
     expect(action.items).toEqual( [i1]);
@@ -94,7 +94,7 @@ describe('SubscriptionCache', function () {
 
   it('should add item arrays sorted by reverse time and limit total items', inject( function () {
     var actions, action,
-        cache = new SubscriptionCache( 3),
+        cache = new GBSubscriptionCache( 3),
         i0 = {time: 0, id: 'id0'},
         i1 = {time: 1, id: 'id1'},
         i2 = {time: 2, id: 'id2'},
@@ -107,11 +107,11 @@ describe('SubscriptionCache', function () {
     expect(cache.itemStore.length).toEqual(2);
     expect(actions.length).toEqual( 2);
     action = actions[0]
-    expect(action.type).toEqual( SubscriptionCacheAction.INSERT);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.INSERT);
     expect(action.at).toEqual( 0);
     expect(action.item).toEqual( i2);
     action = actions[1]
-    expect(action.type).toEqual( SubscriptionCacheAction.INSERT);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.INSERT);
     expect(action.at).toEqual( 1);
     expect(action.item).toEqual( i0);
     expect(cache.itemStore).toEqual( [i2,i0]);
@@ -120,7 +120,7 @@ describe('SubscriptionCache', function () {
     expect(cache.itemStore.length).toEqual(3);
     expect(actions.length).toEqual( 1);
     action = actions[0]
-    expect(action.type).toEqual( SubscriptionCacheAction.INSERT);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.INSERT);
     expect(action.at).toEqual( 1);
     expect(action.item).toEqual( i1);
     expect(cache.itemStore).toEqual( [i2,i1,i0]);
@@ -129,15 +129,15 @@ describe('SubscriptionCache', function () {
     expect(cache.itemStore.length).toEqual(3);
     expect(actions.length).toEqual( 3);
     action = actions[0]
-    expect(action.type).toEqual( SubscriptionCacheAction.INSERT);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.INSERT);
     expect(action.at).toEqual( 0);
     expect(action.item).toEqual( i4);
     action = actions[1]
-    expect(action.type).toEqual( SubscriptionCacheAction.INSERT);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.INSERT);
     expect(action.at).toEqual( 0);
     expect(action.item).toEqual( i6);
     action = actions[2]
-    expect(action.type).toEqual( SubscriptionCacheAction.TRIM);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.TRIM);
     expect(action.at).toEqual( 3);
     expect(action.count).toEqual( 2);
     expect(action.items).toEqual( [i1,i0]);
@@ -153,11 +153,11 @@ describe('SubscriptionCache', function () {
     expect(cache.itemStore.length).toEqual(3);
     expect(actions.length).toEqual( 2);
     action = actions[0]
-    expect(action.type).toEqual( SubscriptionCacheAction.INSERT);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.INSERT);
     expect(action.at).toEqual( 1);
     expect(action.item).toEqual( i5);
     action = actions[1]
-    expect(action.type).toEqual( SubscriptionCacheAction.TRIM);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.TRIM);
     expect(action.at).toEqual( 3);
     expect(action.count).toEqual( 1);
     expect(action.items).toEqual( [i2]);
@@ -171,7 +171,7 @@ describe('SubscriptionCache', function () {
 
   it('should manage item updates', inject( function () {
     var actions, action,
-        cache = new SubscriptionCache( 3),
+        cache = new GBSubscriptionCache( 3),
         i0 = {time: 0, id: 'id0'},
         i1 = {time: 1, id: 'id1'},
         i2 = {time: 2, id: 'id2'},
@@ -185,7 +185,7 @@ describe('SubscriptionCache', function () {
     expect(cache.itemStore.length).toEqual(1);
     expect(actions.length).toEqual( 1);
     action = actions[0]
-    expect(action.type).toEqual( SubscriptionCacheAction.UPDATE);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.UPDATE);
     expect(action.at).toEqual( 0);
     expect(action.item).toEqual( i1);
 
@@ -195,7 +195,7 @@ describe('SubscriptionCache', function () {
     expect(cache.itemStore.length).toEqual(2);
     expect(actions.length).toEqual( 1);
     action = actions[0]
-    expect(action.type).toEqual( SubscriptionCacheAction.UPDATE);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.UPDATE);
     expect(action.at).toEqual( 0);
     expect(action.item).toEqual( i2);
     expect(cache.itemStore).toEqual( [i2,i1]);
@@ -206,7 +206,7 @@ describe('SubscriptionCache', function () {
     expect(cache.itemStore.length).toEqual(3);
     expect(actions.length).toEqual( 1);
     action = actions[0]
-    expect(action.type).toEqual( SubscriptionCacheAction.UPDATE);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.UPDATE);
     expect(action.at).toEqual( 0);
     expect(action.item).toEqual( i3);
     expect(cache.itemStore).toEqual( [i3,i2,i1]);
@@ -220,7 +220,7 @@ describe('SubscriptionCache', function () {
     expect(cache.itemStore.length).toEqual(3);
     expect(actions.length).toEqual( 1);
     action = actions[0]
-    expect(action.type).toEqual( SubscriptionCacheAction.MOVE);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.MOVE);
     expect(action.from).toEqual( 1);
     expect(action.to).toEqual( 0);
     expect(action.item).toEqual( i2t4);
@@ -231,7 +231,7 @@ describe('SubscriptionCache', function () {
     expect(cache.itemStore.length).toEqual(3);
     expect(actions.length).toEqual( 1);
     action = actions[0]
-    expect(action.type).toEqual( SubscriptionCacheAction.MOVE);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.MOVE);
     expect(action.from).toEqual( 0);
     expect(action.to).toEqual( 2);
     expect(action.item).toEqual( i2t0);
@@ -243,7 +243,7 @@ describe('SubscriptionCache', function () {
     expect(cache.itemStore.length).toEqual(3);
     expect(actions.length).toEqual( 1);
     action = actions[0]
-    expect(action.type).toEqual( SubscriptionCacheAction.MOVE);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.MOVE);
     expect(action.from).toEqual( 2);
     expect(action.to).toEqual( 1);
     expect(action.item).toEqual( i2);
@@ -260,7 +260,7 @@ describe('SubscriptionCache', function () {
     expect(cache.itemStore.length).toEqual(3);
     expect(actions.length).toEqual( 1);
     action = actions[0]
-    expect(action.type).toEqual( SubscriptionCacheAction.MOVE);
+    expect(action.type).toEqual( GBSubscriptionCacheAction.MOVE);
     expect(action.from).toEqual( 1);
     expect(action.to).toEqual( 2);
     expect(action.item).toEqual( i2t0);

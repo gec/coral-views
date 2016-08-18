@@ -1,4 +1,4 @@
-SubscriptionViewState =
+GBSubscriptionViewState =
   CURRENT:         0  # Viewing current items (aka. on the first page).
   PAGING_NEXT:     1  # Waiting on REST request for pageNext or pagePrevious.
   PAGING_PREVIOUS: 2  # Waiting on REST request for pageNext or pagePrevious.
@@ -21,7 +21,7 @@ SubscriptionViewState =
                   Each item needs a 'time' property which holds a Javascript Date.
   @constructor
 ###
-class SubscriptionView extends SubscriptionCache
+class GBSubscriptionView extends GBSubscriptionCache
   constructor: ( @viewSize, @cacheSize, items) ->
     @cacheSize ?= @viewSize
     super @cacheSize, items
@@ -30,7 +30,7 @@ class SubscriptionView extends SubscriptionCache
     if( @items.length > @viewSize)
       @items.splice( @viewSize, @items.length - @viewSize)
       
-    @state = SubscriptionViewState.CURRENT
+    @state = GBSubscriptionViewState.CURRENT
     @pageCacheOffset = 0 # current page's index into cache
     @backgrounded = false
 
@@ -70,11 +70,11 @@ class SubscriptionView extends SubscriptionCache
     
   act: (action) ->
     switch action.type
-      when SubscriptionCacheAction.UPDATE then @actionUpdate action  # item
-      when SubscriptionCacheAction.INSERT then @actionInsert action.item, action.at  # item, at
-      when SubscriptionCacheAction.REMOVE then @actionRemove action.item, action.from  # item, at
-      when SubscriptionCacheAction.MOVE   then @actionMove   action  # item, from, to
-      when SubscriptionCacheAction.TRIM   then @actionTrim   action  # items, at, count
+      when GBSubscriptionCacheAction.UPDATE then @actionUpdate action  # item
+      when GBSubscriptionCacheAction.INSERT then @actionInsert action.item, action.at  # item, at
+      when GBSubscriptionCacheAction.REMOVE then @actionRemove action.item, action.from  # item, at
+      when GBSubscriptionCacheAction.MOVE   then @actionMove   action  # item, from, to
+      when GBSubscriptionCacheAction.TRIM   then @actionTrim   action  # items, at, count
       
 
   actionUpdate: (action) ->
@@ -141,9 +141,9 @@ class SubscriptionView extends SubscriptionCache
 
   updateState: ->
     @state = switch
-      when @items.length == 0 then SubscriptionViewState.NO_ITEMS
-      when @pageCacheOffset != 0 then SubscriptionViewState.PAGED  # -1 or > 0
-      else SubscriptionViewState.CURRENT
+      when @items.length == 0 then GBSubscriptionViewState.NO_ITEMS
+      when @pageCacheOffset != 0 then GBSubscriptionViewState.PAGED  # -1 or > 0
+      else GBSubscriptionViewState.CURRENT
 
   pageSuccess: (items) =>
     switch @pagePending?.direction
@@ -176,7 +176,7 @@ class SubscriptionView extends SubscriptionCache
         @pagePending = undefined
 
       else
-        console.log( 'SubscriptionView.pageSuccess but pagePending is ' + @pagePending?.direction)
+        console.log( 'GBSubscriptionView.pageSuccess but pagePending is ' + @pagePending?.direction)
   
   pageFailure: (items) =>
 
@@ -186,7 +186,7 @@ class SubscriptionView extends SubscriptionCache
   #
   # @param pageRest has pageFirst, pageNext, pagePrevious,
   # @param notify function( paged, pageCacheOffset, lastPage)
-  # @return SubscriptionViewState
+  # @return GBSubscriptionViewState
   #
   pageNext: (pageRest, notify) ->
     return 'pastPending' if @pagePending
@@ -204,13 +204,13 @@ class SubscriptionView extends SubscriptionCache
           notify: notify
         # TODO: what if length is 0!
         pageRest.pageNext( @items[@items.length-1].id, @viewSize, @pageSuccess, @pageFailure)
-        @state = SubscriptionViewState.PAGING_NEXT
+        @state = GBSubscriptionViewState.PAGING_NEXT
         
       when @pageCacheOffset + 2 * @viewSize <= @itemStore.length
         # Load page from cache
         @pageCacheOffset += @viewSize
         @replaceItems @itemStore[@pageCacheOffset ... (@pageCacheOffset + @viewSize)] # exclude 'to' index
-        @state = SubscriptionViewState.PAGED
+        @state = GBSubscriptionViewState.PAGED
         
       else
         # At least some of the next page is off the end of what's loaded in the cache. Maybe past cache capacity.
@@ -223,7 +223,7 @@ class SubscriptionView extends SubscriptionCache
         limit = @viewSize - @pagePending.cache.length
         # TODO: what if length is 0!
         pageRest.pageNext( @items[@items.length-1].id, limit, @pageSuccess, @pageFailure)
-        @state = SubscriptionViewState.PAGING_NEXT
+        @state = GBSubscriptionViewState.PAGING_NEXT
 
   # Get previous page and return state
   pagePrevious: (pageRest, notify)->
@@ -248,18 +248,18 @@ class SubscriptionView extends SubscriptionCache
           notify: notify
         # TODO: what if length is 0!
         pageRest.pagePrevious( @items[0].id, @viewSize, @pageSuccess, @pageFailure)
-        @state = SubscriptionViewState.PAGING_PREVIOUS
+        @state = GBSubscriptionViewState.PAGING_PREVIOUS
         
       when @pageCacheOffset == 0
         # TODO: we're already on the first page. What's up?
-        @state = SubscriptionViewState.CURRENT
+        @state = GBSubscriptionViewState.CURRENT
         
       else
         # Load page from cache
         @pageCacheOffset -= @viewSize
         @pageCacheOffset = 0 if @pageCacheOffset < 0
         @replaceItems @itemStore[@pageCacheOffset ... (@pageCacheOffset + @viewSize)] # exclude 'to' index
-        @state = if @pageCacheOffset > 0 then SubscriptionViewState.PAGED else SubscriptionViewState.CURRENT
+        @state = if @pageCacheOffset > 0 then GBSubscriptionViewState.PAGED else GBSubscriptionViewState.CURRENT
 
   pageFirst: ->
     @pagePending = undefined # cancel pagePending
@@ -274,18 +274,3 @@ class SubscriptionView extends SubscriptionCache
     Array.prototype.splice.apply(@items, args)
 
 
-class AlarmSubscriptionView extends SubscriptionView
-  # Should this item be removed?
-  # @param item - The item after it's been updated.
-  #
-  shouldRemoveItemOnUpdate: ( item) ->
-    item._updateState = 'none'
-    return item.state == 'REMOVED'
-
-  onUpdateFailure: ( ids, newState) ->
-    for id in ids
-      alarm = @getItemById id
-      alarm._updateState = 'none' if alarm
-
-  filter: (theFilter) ->
-    @items.filter( theFilter)

@@ -291,10 +291,10 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
   controller('gbAlarmsController', ['$scope', '$attrs', 'rest', 'subscription', 'alarmWorkflow', 'alarmRest', '$timeout', function( $scope, $attrs, rest, subscription, alarmWorkflow, alarmRest, $timeout) {
     $scope.loading = true
     $scope.limit = Number( $attrs.limit || 20);
-    var subscriptionView = new AlarmSubscriptionView( $scope.limit, $scope.limit * 4)
+    var subscriptionView = new GBAlarmSubscriptionView( $scope.limit, $scope.limit * 4)
     $scope.alarms = subscriptionView.items
     // Paging
-    $scope.pageState = SubscriptionViewState.CURRENT
+    $scope.pageState = GBSubscriptionViewState.CURRENT
     $scope.lastPage = false
     $scope.newItems = undefined
     // Alarm workflow
@@ -307,7 +307,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     //
     function updatePageState( state) {
       $scope.pageState = state
-      if( state === SubscriptionViewState.CURRENT)
+      if( state === GBSubscriptionViewState.CURRENT)
         $scope.newItems = undefined
     }
     function pageNotify( state, pageCacheOffset, lastPage, oldItems) {
@@ -331,7 +331,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
       var state = subscriptionView.pagePrevious( alarmRest, pageNotify)
       updatePageState( state)
       // TODO: We're assuming that if previous was successful, there must be a next page. This may not always be true, especially with search!
-      if( state !== SubscriptionViewState.PAGING_PREVIOUS && $scope.lastPage)
+      if( state !== GBSubscriptionViewState.PAGING_PREVIOUS && $scope.lastPage)
         $scope.lastPage = false
     }
 
@@ -374,7 +374,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
           $scope.selectItem( a, 0) // 0: unchecked. Selection needs to decrement its select count.
       })
 
-      if( $scope.pageState !== SubscriptionViewState.CURRENT)
+      if( $scope.pageState !== GBSubscriptionViewState.CURRENT)
         $scope.newItems = 'New alarms'
 
       $scope.loading = false
@@ -397,9 +397,9 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
   controller('gbEventsController', ['$scope', '$attrs', 'subscription', 'eventRest', function( $scope, $attrs, subscription, eventRest) {
     $scope.loading = true
     $scope.limit = Number( $attrs.limit || 20);
-    var subscriptionView = new SubscriptionView( $scope.limit, $scope.limit * 4)
+    var subscriptionView = new GBSubscriptionView( $scope.limit, $scope.limit * 4)
     $scope.events = subscriptionView.items
-    $scope.pageState = SubscriptionViewState.CURRENT
+    $scope.pageState = GBSubscriptionViewState.CURRENT
     $scope.lastPage = false
     $scope.newItems = undefined
 
@@ -407,7 +407,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     //
     function updatePageState( state) {
       $scope.pageState = state
-      if( state === SubscriptionViewState.CURRENT)
+      if( state === GBSubscriptionViewState.CURRENT)
         $scope.newItems = undefined
     }
     function pageNotify( state, pageCacheOffset, lastPage, oldItems) {
@@ -427,14 +427,14 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
       var state = subscriptionView.pagePrevious( eventRest, pageNotify)
       updatePageState( state)
       // TODO: We're assuming that if previous was successful, there must be a next page. This may not always be true, especially with search!
-      if( state !== SubscriptionViewState.PAGING_PREVIOUS && $scope.lastPage)
+      if( state !== GBSubscriptionViewState.PAGING_PREVIOUS && $scope.lastPage)
         $scope.lastPage = false
     }
 
 
     $scope.onEvent = function( subscriptionId, type, event) {
       subscriptionView.onMessage( event)
-      if( $scope.pageState !== SubscriptionViewState.CURRENT)
+      if( $scope.pageState !== GBSubscriptionViewState.CURRENT)
         $scope.newItems = 'New events'
       $scope.loading = false
       $scope.$digest()
@@ -609,17 +609,17 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
 
   filter('pagePreviousClass', function() {
     return function(pageState) {
-      return pageState !== SubscriptionViewState.PAGED && pageState !== SubscriptionViewState.NO_ITEMS ? 'btn btn-default disabled' : 'btn btn-default'
+      return pageState !== GBSubscriptionViewState.PAGED && pageState !== GBSubscriptionViewState.NO_ITEMS ? 'btn btn-default disabled' : 'btn btn-default'
     };
   }).
   filter('pageNextClass', function() {
     return function(pageState, lastPage) {
-      return lastPage || pageState === SubscriptionViewState.PAGING_NEXT || pageState === SubscriptionViewState.NO_ITEMS ? 'btn btn-default disabled' : 'btn btn-default'
+      return lastPage || pageState === GBSubscriptionViewState.PAGING_NEXT || pageState === GBSubscriptionViewState.NO_ITEMS ? 'btn btn-default disabled' : 'btn btn-default'
     };
   }).
   filter('pagingIcon', function() {
     return function(pageState, direction) {
-      var spin = (direction === 'right' && pageState === SubscriptionViewState.PAGING_NEXT) || (direction === 'left' && pageState === SubscriptionViewState.PAGING_PREVIOUS)
+      var spin = (direction === 'right' && pageState === GBSubscriptionViewState.PAGING_NEXT) || (direction === 'left' && pageState === GBSubscriptionViewState.PAGING_PREVIOUS)
       return spin ? 'fa fa-spin fa-chevron-' + direction : 'fa fa-chevron-' + direction
     };
   }).

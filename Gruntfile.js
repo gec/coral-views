@@ -301,7 +301,7 @@ module.exports = function(grunt) {
       moduleName: enquote('<%= rootModule %>.' + name),
       displayName: ucwords(breakup(name, ' ')),
       // coffeeFiles: grunt.file.expand('src/'+name+'/*.coffee'),
-      srcFiles: grunt.file.expand(['src/'+name+'/*.js','target/'+name+'/*.js']),
+      srcFiles: grunt.file.expand(['src/'+name+'/*.js','target/paging/*.js','target/'+name+'/*.js']),
       cssFiles: grunt.file.expand(['assets/css/*.css', 'src/'+name+'/*.css']),
       tplFiles: grunt.file.expand('template/'+name+'/*.html'),
       tpljsFiles: grunt.file.expand('template/'+name+'/*.html.js'),

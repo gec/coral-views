@@ -1,5 +1,5 @@
 
-SubscriptionCacheAction =
+GBSubscriptionCacheAction =
   NONE:   0  # item
   UPDATE: 1  # item, at - Do we need always know 'at'?
   INSERT: 2  # item, at
@@ -7,7 +7,7 @@ SubscriptionCacheAction =
   MOVE:   4  # item, from, to
   TRIM:   5  # items, at, count
 
-class SubscriptionCache
+class GBSubscriptionCache
   
   ###
     @param cacheSize -   
@@ -37,17 +37,17 @@ class SubscriptionCache
           item = item[0]
           
     if( isArray)
-      console.log( 'SubscriptionCache onMessage length=' + item.length)
+      console.log( 'GBSubscriptionCache onMessage length=' + item.length)
       actions = (@updateOrInsert i for i in item by -1)
     else
       action = @updateOrInsert item
-      if action.type isnt SubscriptionCacheAction.NONE
+      if action.type isnt GBSubscriptionCacheAction.NONE
         actions[actions.length] = action
     if( @itemStore.length > @cacheSize)
       count = @itemStore.length - @cacheSize
       trimmed = @itemStore.splice( @cacheSize, count)
       actions[actions.length] =
-        type: SubscriptionCacheAction.TRIM
+        type: GBSubscriptionCacheAction.TRIM
         at: @cacheSize
         count: count
         items: trimmed
@@ -72,14 +72,14 @@ class SubscriptionCache
   shouldRemoveItemOnUpdate: ( item) -> false
   
   convertInsertActionToIncludeRemove: (item, index, action) ->
-    if action.type is SubscriptionCacheAction.INSERT
-      type: SubscriptionCacheAction.MOVE
+    if action.type is GBSubscriptionCacheAction.INSERT
+      type: GBSubscriptionCacheAction.MOVE
       from: index
       to: action.at
       item: item
     else
       # No insert, just remove
-      type: SubscriptionCacheAction.REMOVE
+      type: GBSubscriptionCacheAction.REMOVE
       from: index
       item: item
 
@@ -89,7 +89,7 @@ class SubscriptionCache
     if index >= 0
       if @shouldRemoveItemOnUpdate( item)
         @itemStore.splice( index, 1)
-        type: SubscriptionCacheAction.REMOVE
+        type: GBSubscriptionCacheAction.REMOVE
         from: index
         item: item
       else if @itemIsOutOfOrder( item, index)
@@ -97,11 +97,11 @@ class SubscriptionCache
         action = @insert item
         @convertInsertActionToIncludeRemove item, index, action
       else
-        type: SubscriptionCacheAction.UPDATE
+        type: GBSubscriptionCacheAction.UPDATE
         at: index
         item: item
     else
-      type: SubscriptionCacheAction.NONE
+      type: GBSubscriptionCacheAction.NONE
       item: item
 
       
@@ -129,13 +129,13 @@ class SubscriptionCache
     if insertAt >= 0
       @itemIdMap[item.id] = item
       # return
-      type: SubscriptionCacheAction.INSERT
+      type: GBSubscriptionCacheAction.INSERT
       at: insertAt
       item: item
     else
       # Insert is past @cacheSize
       #return
-      type: SubscriptionCacheAction.NONE
+      type: GBSubscriptionCacheAction.NONE
       item: item
 
   indexOfId: (id) ->

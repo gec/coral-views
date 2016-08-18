@@ -50,6 +50,7 @@ module.exports = function(config) {
       'assets/css/*.css',
       'assets/images/*.png',
       'src/**/*.js',
+      'target/paging/*.js', // load paging first, so GBAlarmSubscriptionView succeeds.
       'target/**/*.js',
       'template/**/*.js'
     ],
