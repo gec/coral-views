@@ -294,7 +294,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     var subscriptionView = new GBAlarmSubscriptionView( $scope.limit, $scope.limit * 4)
     $scope.alarms = subscriptionView.items
     // Paging
-    $scope.pageState = GBSubscriptionViewState.CURRENT
+    $scope.pageState = GBSubscriptionViewState.FIRST_PAGE
     $scope.lastPage = false
     $scope.newItems = undefined
     // Alarm workflow
@@ -307,7 +307,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     //
     function updatePageState( state) {
       $scope.pageState = state
-      if( state === GBSubscriptionViewState.CURRENT)
+      if( state === GBSubscriptionViewState.FIRST_PAGE)
         $scope.newItems = undefined
     }
     function pageNotify( state, pageCacheOffset, lastPage, oldItems) {
@@ -374,7 +374,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
           $scope.selectItem( a, 0) // 0: unchecked. Selection needs to decrement its select count.
       })
 
-      if( $scope.pageState !== GBSubscriptionViewState.CURRENT)
+      if( $scope.pageState !== GBSubscriptionViewState.FIRST_PAGE)
         $scope.newItems = 'New alarms'
 
       $scope.loading = false
@@ -399,7 +399,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     $scope.limit = Number( $attrs.limit || 20);
     var subscriptionView = new GBSubscriptionView( $scope.limit, $scope.limit * 4)
     $scope.events = subscriptionView.items
-    $scope.pageState = GBSubscriptionViewState.CURRENT
+    $scope.pageState = GBSubscriptionViewState.FIRST_PAGE
     $scope.lastPage = false
     $scope.newItems = undefined
 
@@ -407,7 +407,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
     //
     function updatePageState( state) {
       $scope.pageState = state
-      if( state === GBSubscriptionViewState.CURRENT)
+      if( state === GBSubscriptionViewState.FIRST_PAGE)
         $scope.newItems = undefined
     }
     function pageNotify( state, pageCacheOffset, lastPage, oldItems) {
@@ -434,7 +434,7 @@ angular.module('greenbus.views.event', ['greenbus.views.rest', 'greenbus.views.s
 
     $scope.onEvent = function( subscriptionId, type, event) {
       subscriptionView.onMessage( event)
-      if( $scope.pageState !== GBSubscriptionViewState.CURRENT)
+      if( $scope.pageState !== GBSubscriptionViewState.FIRST_PAGE)
         $scope.newItems = 'New events'
       $scope.loading = false
       $scope.$digest()

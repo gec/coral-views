@@ -380,7 +380,7 @@ describe('GBSubscriptionView', function () {
     expect(view.items).toEqual( page2);
 
     state = view.pagePrevious( pageRest)
-    expect(state).toBe(GBSubscriptionViewState.CURRENT);
+    expect(state).toBe(GBSubscriptionViewState.FIRST_PAGE);
     expect(view.pagePending).not.toBeDefined();
     expect(view.items.length).toEqual(2);
     expect(view.items).toEqual( page1);
@@ -421,7 +421,7 @@ describe('GBSubscriptionView', function () {
     expect(view.pageCacheOffset).toBe(2);
 
     state = view.pagePrevious( pageRest)
-    expect(state).toBe(GBSubscriptionViewState.CURRENT);
+    expect(state).toBe(GBSubscriptionViewState.FIRST_PAGE);
     expect(view.pagePending).toBeUndefined();
     expect(view.items.length).toEqual(2);
     expect(view.items).toEqual( page1);

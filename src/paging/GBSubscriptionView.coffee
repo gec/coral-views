@@ -1,9 +1,10 @@
 GBSubscriptionViewState =
-  CURRENT:         0  # Viewing current items (aka. on the first page).
-  PAGING_NEXT:     1  # Waiting on REST request for pageNext or pagePrevious.
-  PAGING_PREVIOUS: 2  # Waiting on REST request for pageNext or pagePrevious.
-  PAGED:           3  # pageNext or pagePrevious was successful and not on first page (aka. current items)
-  NO_ITEMS:        4  # pageNext or pagePrevious was successful but there were no more items.
+  NO_ITEMS:        'no-items'         # pageNext or pagePrevious was successful but there were no more items.
+  FIRST_PAGE:      'first-page'       # On the first page (i.e. not paged).
+  PAGING_NEXT:     'paging-next'      # Waiting on completion of pageNext.
+  PAGING_PREVIOUS: 'paging-previous'  # Waiting on completion of pagePrevious.
+  PAGED:           'paged'            # pageNext or pagePrevious was successful and not on first page (aka. current items)
+  LAST_PAGE:       'last-page'        # pageNext or pagePrevious was successful and not on first page (aka. current items)
 
 ###
 
@@ -30,7 +31,7 @@ class GBSubscriptionView extends GBSubscriptionCache
     if( @items.length > @viewSize)
       @items.splice( @viewSize, @items.length - @viewSize)
       
-    @state = GBSubscriptionViewState.CURRENT
+    @state = GBSubscriptionViewState.FIRST_PAGE
     @pageCacheOffset = 0 # current page's index into cache
     @backgrounded = false
 
@@ -143,7 +144,7 @@ class GBSubscriptionView extends GBSubscriptionCache
     @state = switch
       when @items.length == 0 then GBSubscriptionViewState.NO_ITEMS
       when @pageCacheOffset != 0 then GBSubscriptionViewState.PAGED  # -1 or > 0
-      else GBSubscriptionViewState.CURRENT
+      else GBSubscriptionViewState.FIRST_PAGE
 
   pageSuccess: (items) =>
     switch @pagePending?.direction
@@ -252,14 +253,14 @@ class GBSubscriptionView extends GBSubscriptionCache
         
       when @pageCacheOffset == 0
         # TODO: we're already on the first page. What's up?
-        @state = GBSubscriptionViewState.CURRENT
+        @state = GBSubscriptionViewState.FIRST_PAGE
         
       else
         # Load page from cache
         @pageCacheOffset -= @viewSize
         @pageCacheOffset = 0 if @pageCacheOffset < 0
         @replaceItems @itemStore[@pageCacheOffset ... (@pageCacheOffset + @viewSize)] # exclude 'to' index
-        @state = if @pageCacheOffset > 0 then GBSubscriptionViewState.PAGED else GBSubscriptionViewState.CURRENT
+        @state = if @pageCacheOffset > 0 then GBSubscriptionViewState.PAGED else GBSubscriptionViewState.FIRST_PAGE
 
   pageFirst: ->
     @pagePending = undefined # cancel pagePending
