@@ -13,12 +13,12 @@ class GBSubscriptionCache
     @param cacheSize -   
     @param items -
   ###
-  constructor: ( @cacheSize, items) ->
+  constructor: ( @cacheSize, items, sortFn) ->
     @itemStore = []
     @itemIdMap = {}
     if( items)
       @itemStore = items[..]
-      @itemStore.sort( ( a, b) -> return b.time - a.time)
+      @itemStore.sort( sortFn) if sortFn?
       if @itemStore.length > @cacheSize
         @itemStore = @itemStore[0...@cacheSize] # 0 ... @cacheSize - 1
       for item in @itemStore
@@ -145,6 +145,3 @@ class GBSubscriptionCache
 
   getItemById: (id) ->
     @itemIdMap[id]
-
-#  sortByTime: ->
-#    @itemStore.sort( ( a, b) -> return b.time - a.time)

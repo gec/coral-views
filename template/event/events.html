@@ -7,11 +7,7 @@
             <alert type="info" ng-show="newItems" role="alert" style=" margin-bottom: 0;padding-top: 6px; padding-bottom: 6px;"><i class="fa fa-info-circle"></i> {{ newItems }}</alert>
         </div>
         <div class="col-md-4 text-right" style="padding-top: 20px">
-            <button type="button" class="btn btn-default" ng-click="pageFirst()" ng-show="pageState !== 0" style="margin-right: 1em;" popover="Go to current events" popover-trigger="mouseenter" popover-placement="bottom"><span style="font-weight: bolder">|</span><i class="fa fa-chevron-left" style="vertical-align: middle"></i></button>
-            <div class="btn-group" role="group" aria-label="...">
-                <button type="button" ng-class="pageState | pagePreviousClass" ng-click="pagePrevious()" popover="Previous page" popover-trigger="mouseenter" popover-placement="bottom"><i ng-class="pageState | pagingIcon: 'left'" style="vertical-align: middle"></i></button>
-                <button type="button" ng-class="pageState | pageNextClass: lastPage" ng-click="pageNext()" popover="Next page" popover-trigger="mouseenter" popover-placement="bottom"><i ng-class="pageState | pagingIcon: 'right'" style="vertical-align: middle"></i></button>
-            </div>
+            <gb-pager model="pageState" page-first="pageFirst()" page-previous="pagePrevious()" page-next="pageNext()"></gb-pager>
         </div>
     </div>
     <div class="row">

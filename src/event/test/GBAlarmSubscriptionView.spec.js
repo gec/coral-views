@@ -48,7 +48,7 @@ describe('GBSubscriptionView', function () {
   }));
 
   it('should limit items from construction', inject( function () {
-    var view = new GBSubscriptionView( 2, 2, items.slice(0,3))
+    var view = new GBSubscriptionView( 2, 2, items.slice(0,3), GreenbusViewsEventSortByTime)
     expect(view.viewSize).toEqual(2);
     expect(view.cacheSize).toEqual(2);
     expect(view.items.length).toEqual(2);
@@ -64,7 +64,7 @@ describe('GBSubscriptionView', function () {
 
   it('onMessage should add single items sorted by reverse time and limit total items', inject( function () {
     var removed,
-        view = new GBSubscriptionView( 3),
+        view = new GBSubscriptionView( 3, 3, undefined, GreenbusViewsEventSortByTime),
         i0 = {time: 0, id: 'id0'},
         i1 = {time: 10, id: 'id10'},
         i2 = {time: 20, id: 'id20'},
@@ -107,7 +107,7 @@ describe('GBSubscriptionView', function () {
   }));
   it('onMessage should trim items with view limit is less than cache limit', inject( function () {
     var removed,
-        view = new GBSubscriptionView( 2, 3),
+        view = new GBSubscriptionView( 2, 3, undefined, GreenbusViewsEventSortByTime),
         i0 = {time: 0, id: 'id0'},
         i1 = {time: 10, id: 'id10'},
         i2 = {time: 20, id: 'id20'},
@@ -151,7 +151,7 @@ describe('GBSubscriptionView', function () {
 
   it('pageNext get from cache, cache, then GET', inject( function () {
     var state,
-        view = new GBSubscriptionView( 2, 6, items),
+        view = new GBSubscriptionView( 2, 6, items, GreenbusViewsEventSortByTime),
         i6 = {time: 60, id: 'id60'},
         i7 = {time: 70, id: 'id70'}
 
@@ -185,7 +185,7 @@ describe('GBSubscriptionView', function () {
 
   it('pageNext should get partial from cache, then use GET  because paged. Store results in GBSubscriptionCache', inject( function () {
     var state,
-        view = new GBSubscriptionView( 2, 6, itemsSorted.slice(0,3))
+        view = new GBSubscriptionView( 2, 6, itemsSorted.slice(0,3), GreenbusViewsEventSortByTime)
 
     expect(view.items).toEqual( page1);
     expect(view.itemStore).toEqual( itemsSorted.slice(0,3));
@@ -223,7 +223,7 @@ describe('GBSubscriptionView', function () {
   
   it('pageNext with view at end of cache should use GET. No current results to store in GBSubscriptionCache', inject( function () {
     var state,
-        view = new GBSubscriptionView( 2, 2, itemsSorted.slice(0,2))
+        view = new GBSubscriptionView( 2, 2, itemsSorted.slice(0,2), GreenbusViewsEventSortByTime)
 
     expect(view.items).toEqual( page1);
     expect(view.itemStore).toEqual( page1);
@@ -245,7 +245,7 @@ describe('GBSubscriptionView', function () {
 
   it('when paged, onMessage before page should update pageCacheOffset so pageNext is in sync', inject( function () {
     var state, removed,
-        view = new GBSubscriptionView( 2, 7, items),
+        view = new GBSubscriptionView( 2, 7, items, GreenbusViewsEventSortByTime),
         i6 = {time: 60, id: 'id60'}
 
     expect(view.items).toEqual( page1);
@@ -272,7 +272,7 @@ describe('GBSubscriptionView', function () {
 
   it('when paged, onMessage inserted at pageCacheOffset, pageCacheOffset should be updated', inject( function () {
     var state, removed,
-        view = new GBSubscriptionView( 2, 7, items),
+        view = new GBSubscriptionView( 2, 7, items, GreenbusViewsEventSortByTime),
         i31 = {time: 31, id: 'id31'}
 
     expect(view.items).toEqual( page1);
@@ -299,7 +299,7 @@ describe('GBSubscriptionView', function () {
 
   it('when paged, onMessage within page should affect the current and next page', inject( function () {
     var state, removed,
-        view = new GBSubscriptionView( 2, 7, items),
+        view = new GBSubscriptionView( 2, 7, items, GreenbusViewsEventSortByTime),
         page35 = itemsSorted.slice(3,5),
         i25 = {time: 25, id: 'id25'}
 
@@ -328,7 +328,7 @@ describe('GBSubscriptionView', function () {
 
   it('when paged, onMessage after page should not affect the current page', inject( function () {
     var state, removed,
-        view = new GBSubscriptionView( 2, 7, items),// 0, 10, 20, 30, 40, 50
+        view = new GBSubscriptionView( 2, 7, items, GreenbusViewsEventSortByTime),// 0, 10, 20, 30, 40, 50
         i05 = {time: 5, id: 'id5'},
         page3 = [itemsSorted[4], i05] // 10, 5
 
@@ -356,7 +356,7 @@ describe('GBSubscriptionView', function () {
 
   it('should pageNext and pagePrevious from from cache', inject( function () {
     var state,
-        view = new GBSubscriptionView( 2, 6, items)
+        view = new GBSubscriptionView( 2, 6, items, GreenbusViewsEventSortByTime)
 
     expect(view.items).toEqual( page1);
     expect(view.itemStore).toEqual( itemsSorted.slice(0,6));
@@ -389,7 +389,7 @@ describe('GBSubscriptionView', function () {
   }));
   
   it('should pageNext past cache then pagePrevious back to cache', inject( function () {
-    var view = new GBSubscriptionView( 2, 6, items.slice(1,6)), // not t=0
+    var view = new GBSubscriptionView( 2, 6, items.slice(1,6), GreenbusViewsEventSortByTime), // not t=0
         i02 = {time: 2, id: 'id02'},
         i04 = {time: 2, id: 'id04'},
         i06 = {time: 2, id: 'id06'},

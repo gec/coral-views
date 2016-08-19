@@ -17,15 +17,16 @@ GBSubscriptionViewState =
   2     2
         1
 
-  @param _limit - Maximum number of alarms
-  @param _items - if supplied, this array will be update and sorted with onMessage calls.
-                  Each item needs a 'time' property which holds a Javascript Date.
+  @param viewSize - Maximum number of items in view (aka. page)
+  @param cacheSize - Maximum number of items in cache
+  @param items - if supplied, this array will be update and sorted with onMessage calls.
+  @param sortFn - Optional sorting function
   @constructor
 ###
 class GBSubscriptionView extends GBSubscriptionCache
-  constructor: ( @viewSize, @cacheSize, items) ->
+  constructor: ( @viewSize, @cacheSize, items, @sortFn) ->
     @cacheSize ?= @viewSize
-    super @cacheSize, items
+    super @cacheSize, items, @sortFn
     @items = @itemStore[0...@viewSize] # 0 to viewSize - 1
     # trim to viewSize
     if( @items.length > @viewSize)
@@ -112,24 +113,6 @@ class GBSubscriptionView extends GBSubscriptionCache
       @pageCacheOffset += 1
     undefined
 
-#  insert: (item) ->
-#    if( @items.length is 0 or item.time >= @items[0])
-#      @items.unshift( item)
-#    else
-#      i = 1
-#      loop
-#        if i >= @items.length
-#          @items[@items.length] = item
-#          break
-#        else if item.time >= @items[i]
-#          @items.splice( i, 0, item)
-#          break
-#        else
-#          i++
-#
-#  sortByTime: ->
-#    @items.sort( ( a, b) -> return b.time - a.time)
-    
   background: ->
     if not @backgrounded
       @backgrounded = true
@@ -140,10 +123,16 @@ class GBSubscriptionView extends GBSubscriptionCache
       @replaceItems @itemStore[0...@viewSize] # 0 to viewSize - 1
       @backgrounded = false
 
+  lastPageOrPaged: ->
+    if( @items.length < @viewSize)
+      GBSubscriptionViewState.LAST_PAGE
+    else
+      GBSubscriptionViewState.PAGED  # -1 or > 0
+
   updateState: ->
     @state = switch
       when @items.length == 0 then GBSubscriptionViewState.NO_ITEMS
-      when @pageCacheOffset != 0 then GBSubscriptionViewState.PAGED  # -1 or > 0
+      when @pageCacheOffset != 0 then @lastPageOrPaged()
       else GBSubscriptionViewState.FIRST_PAGE
 
   pageSuccess: (items) =>
@@ -154,26 +143,26 @@ class GBSubscriptionView extends GBSubscriptionCache
           items = @pagePending.cache.concat( items)
         @previousPageCache = @items[..]
         @replaceItems items
-        @items.sort( ( a, b) -> return b.time - a.time)
+        @items.sort( @sortFn) if @sortFn?
         # TODO: If the items can fit in the cache, we should set a valid pageCacheOffset
         @pageCacheOffset = -1
         # See if some of this will fit in the cache.
         @onMessage( items)
         @updateState()
-        @pagePending.notify( @state, @pageCacheOffset, items.length < @viewSize, @previousPageCache) if @pagePending?.notify
+        @pagePending.notify( @state, @previousPageCache) if @pagePending?.notify
         @pagePending = undefined
 
       when 'previous'
         #TODO: what if items is empty!
         oldItems = @items[..]
         @replaceItems items
-        @items.sort( ( a, b) -> return b.time - a.time)
+        @items.sort( @sortFn) if @sortFn?
         # See if some of this will fit in the cache.
         @onMessage( items)
         # see if we've paged previous enough so we're back in the cache.
         @pageCacheOffset = @indexOfId( @items[0].id)
         @updateState()
-        @pagePending.notify( @state, @pageCacheOffset, false, oldItems) if @pagePending?.notify
+        @pagePending.notify( @state, oldItems) if @pagePending?.notify
         @pagePending = undefined
 
       else

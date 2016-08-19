@@ -40,6 +40,8 @@ describe('gb-events', function () {
   beforeEach(module('greenbus.views.authentication'));
   beforeEach(module('greenbus.views.rest'));
   beforeEach(module('greenbus.views.subscription'));
+  beforeEach(module('greenbus.views.pager'));
+  beforeEach(module('greenbus.views.template/pager/pager.html'));
   beforeEach(module('greenbus.views.event'));
   beforeEach(module('greenbus.views.template/event/events.html'));
   beforeEach(module('greenbus.views.template/event/alarms.html'));
