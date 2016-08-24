@@ -1,5 +1,16 @@
 <div class="table-responsive" style="overflow-x: auto">
     <alert ng-repeat="alert in alerts" type="{{alert.type}}" close="closeAlert($index)">{{alert.message}}</alert>
+
+    <div class="row">
+        <div class="col-md-5 col-md-offset-3" style="margin-top: 1.2em;">
+            <input type="text"  class="form-control" placeholder="search any column" ng-model="searchText" style="height: 100%;">
+            <!--<button class="btn btn-info" ng-click="search()" style="height: 100%; width: 60px; margin-bottom: 10px;"><i class="glyphicon glyphicon-search icon-white"></i></button>-->
+        </div>
+        <div class="col-md-4 text-right" style="padding-top: 20px">
+            <gb-pager model="pageState" page-first="pageFirst()" page-previous="pagePrevious()" page-next="pageNext()"></gb-pager>
+        </div>
+    </div>
+
     <table class="table table-condensed">
         <thead>
         <tr>

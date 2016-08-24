@@ -13,12 +13,12 @@ class GBSubscriptionCache
     @param cacheSize -   
     @param items -
   ###
-  constructor: ( @cacheSize, items, sortFn) ->
+  constructor: ( @cacheSize, items, @sortFn) ->
     @itemStore = []
     @itemIdMap = {}
     if( items)
       @itemStore = items[..]
-      @itemStore.sort( sortFn) if sortFn?
+      @itemStore.sort( @sortFn) if @sortFn?
       if @itemStore.length > @cacheSize
         @itemStore = @itemStore[0...@cacheSize] # 0 ... @cacheSize - 1
       for item in @itemStore
@@ -107,8 +107,8 @@ class GBSubscriptionCache
       
   insert: (item) ->
     insertAt = -1
-    
-    if( @itemStore.length is 0 or item.time >= @itemStore[0].time)
+#    if( @itemStore.length is 0 or item.time >= @itemStore[0].time)
+    if( @itemStore.length is 0 or @sortFn?( item, @itemStore[0]) <= 0)
       @itemStore.unshift( item)
       insertAt = 0
     else
@@ -119,7 +119,8 @@ class GBSubscriptionCache
             @itemStore[@itemStore.length] = item
             insertAt = @itemStore.length - 1
           break
-        else if item.time >= @itemStore[i].time
+        #else if item.time >= @itemStore[i].time
+        else if @sortFn?( item, @itemStore[i]) <= 0
           @itemStore.splice( i, 0, item)
           insertAt = i
           break

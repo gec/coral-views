@@ -4,7 +4,7 @@ GBSubscriptionViewState =
   PAGING_NEXT:     'paging-next'      # Waiting on completion of pageNext.
   PAGING_PREVIOUS: 'paging-previous'  # Waiting on completion of pagePrevious.
   PAGED:           'paged'            # pageNext or pagePrevious was successful and not on first page (aka. current items)
-  LAST_PAGE:       'last-page'        # pageNext or pagePrevious was successful and not on first page (aka. current items)
+  LAST_PAGE:       'last-page'        # On the last page
 
 ###
 
@@ -146,8 +146,10 @@ class GBSubscriptionView extends GBSubscriptionCache
         @items.sort( @sortFn) if @sortFn?
         # TODO: If the items can fit in the cache, we should set a valid pageCacheOffset
         @pageCacheOffset = -1
-        # See if some of this will fit in the cache.
-        @onMessage( items)
+        if items.length > 0
+          # See if some of this will fit in the cache.
+          @onMessage( items, @pagePending.direction)
+          @pageCacheOffset = @indexOfId( @items[0].id)
         @updateState()
         @pagePending.notify( @state, @previousPageCache) if @pagePending?.notify
         @pagePending = undefined
@@ -157,10 +159,13 @@ class GBSubscriptionView extends GBSubscriptionCache
         oldItems = @items[..]
         @replaceItems items
         @items.sort( @sortFn) if @sortFn?
-        # See if some of this will fit in the cache.
-        @onMessage( items)
-        # see if we've paged previous enough so we're back in the cache.
-        @pageCacheOffset = @indexOfId( @items[0].id)
+        if items.length > 0
+          # See if some of this will fit in the cache.
+          @onMessage( items, @pagePending.direction)
+          # see if we've paged previous enough so we're back in the cache.
+          @pageCacheOffset = @indexOfId( @items[0].id)
+        else
+          @pageCacheOffset = -1
         @updateState()
         @pagePending.notify( @state, oldItems) if @pagePending?.notify
         @pagePending = undefined

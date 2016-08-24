@@ -20,7 +20,7 @@ describe('GBSubscriptionCache', function () {
 
   it('should add single items sorted by reverse time and limit total items', inject( function () {
     var actions, action,
-        cache = new GBSubscriptionCache( 3),
+        cache = new GBSubscriptionCache( 3, undefined, GreenbusViewsEventSortByTime),
         i0 = {time: 0, id: 'id0'},
         i1 = {time: 1, id: 'id1'},
         i2 = {time: 2, id: 'id2'},
@@ -94,7 +94,7 @@ describe('GBSubscriptionCache', function () {
 
   it('should add item arrays sorted by reverse time and limit total items', inject( function () {
     var actions, action,
-        cache = new GBSubscriptionCache( 3),
+        cache = new GBSubscriptionCache( 3, undefined, GreenbusViewsEventSortByTime),
         i0 = {time: 0, id: 'id0'},
         i1 = {time: 1, id: 'id1'},
         i2 = {time: 2, id: 'id2'},
@@ -171,7 +171,7 @@ describe('GBSubscriptionCache', function () {
 
   it('should manage item updates', inject( function () {
     var actions, action,
-        cache = new GBSubscriptionCache( 3),
+        cache = new GBSubscriptionCache( 3, undefined, GreenbusViewsEventSortByTime),
         i0 = {time: 0, id: 'id0'},
         i1 = {time: 1, id: 'id1'},
         i2 = {time: 2, id: 'id2'},

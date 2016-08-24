@@ -152,8 +152,8 @@ describe('GBSubscriptionView', function () {
   it('pageNext get from cache, cache, then GET', inject( function () {
     var state,
         view = new GBSubscriptionView( 2, 6, items, GreenbusViewsEventSortByTime),
-        i6 = {time: 60, id: 'id60'},
-        i7 = {time: 70, id: 'id70'}
+        i6 = {time: -60, id: 'id60'},
+        i7 = {time: -70, id: 'id70'}
 
 
     expect(view.items).toEqual( page1);
@@ -178,8 +178,8 @@ describe('GBSubscriptionView', function () {
     
     pageRest.nextSuccess( [i6, i7])
     expect(view.pagePending).not.toBeDefined();
-    expect(view.items).toEqual( [i7, i6]);
-    expect(view.itemStore).toEqual( [i7,i6].concat( itemsSorted.slice(0,4)));
+    expect(view.items).toEqual( [i6, i7]);
+    expect(view.itemStore).toEqual( itemsSorted);
 
   }));
 
@@ -210,7 +210,7 @@ describe('GBSubscriptionView', function () {
     state = view.pageNext( pageRest)
     expect(state).toBe(GBSubscriptionViewState.PAGING_NEXT);
     expect(view.pagePending.direction).toEqual( 'next');
-    expect(view.pagePending.cache).toBeUndefined();
+    expect(view.pagePending.cache).toEqual([]);
     expect(view.items).toEqual( page2); // not paged yet
     expect( pageRest.nextStartAfterId).toBe( itemsSorted[3].id)
 
@@ -406,17 +406,13 @@ describe('GBSubscriptionView', function () {
     expect(view.pagePending.direction).toBe('next');
     pageRest.nextSuccess( i08)
     expect(view.items).toEqual( page3);
-    expect(view.pageCacheOffset).toBe(-1);
+    expect(view.pageCacheOffset).toBe(4);
 
 
     state = view.pagePrevious( pageRest)
-    expect(state).toBe(GBSubscriptionViewState.PAGING_PREVIOUS);
-    expect(view.pagePending.direction).toBe('previous');
+    expect(state).toBe(GBSubscriptionViewState.PAGED);
+    expect(view.pagePending).toBeUndefined();
     expect(view.items.length).toEqual(2);
-    expect(view.items).toEqual( page3);
-    expect( pageRest.previousStartAfterId).toBe( page3[0].id)
-
-    pageRest.previousSuccess( page2)
     expect(view.items).toEqual( page2);
     expect(view.pageCacheOffset).toBe(2);
 

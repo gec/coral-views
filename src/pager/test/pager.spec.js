@@ -48,89 +48,89 @@ describe('gbPager', function () {
   }
 
   it('should start with state NO_ITEMS', inject( function () {
-    var buttons = findButtons()
+    var button = findButtons()
     expect( scope.model).toBe( GBSubscriptionViewState.NO_ITEMS)
-    expect( buttons.count).toEqual(3)
-    expect( buttons.first).toHaveClass( 'ng-hide')
-    expect( buttons.previous).toHaveClass( 'disabled')
-    expect( buttons.next).toHaveClass( 'disabled')
+    expect( button.count).toEqual(3)
+    expect( button.first).toHaveClass( 'ng-hide')
+    expect( button.previous).toHaveClass( 'disabled')
+    expect( button.next).toHaveClass( 'disabled')
   }))
 
   it('should transition to FIRST_PAGE', inject( function () {
-    var buttons = findButtons()
+    var button = findButtons()
     parentScope.pageState = GBSubscriptionViewState.FIRST_PAGE
     parentScope.$digest()
 
     expect( scope.model).toBe( GBSubscriptionViewState.FIRST_PAGE)
-    expect( buttons.first).toHaveClass( 'ng-hide')
-    expect( buttons.previous).toHaveClass( 'disabled')
-    expect( buttons.next).not.toHaveClass( 'disabled')
+    expect( button.first).toHaveClass( 'ng-hide')
+    expect( button.previous).toHaveClass( 'disabled')
+    expect( button.next).not.toHaveClass( 'disabled')
   }))
 
   it('should click pageNext and go to state PAGED', inject( function () {
-    var buttons = findButtons()
+    var button = findButtons()
     modelNextState = GBSubscriptionViewState.PAGED
-    buttons.next.trigger('click')
+    button.next.trigger('click')
     parentScope.$digest()
     expect( parentScope.pageNext).toHaveBeenCalled()
 
     expect( scope.model).toBe( GBSubscriptionViewState.PAGED)
     var bs = element.find('button')
-    expect( buttons.first).not.toHaveClass( 'ng-hide')
-    expect( buttons.previous).not.toHaveClass( 'disabled')
-    expect( buttons.next).not.toHaveClass( 'disabled')
+    expect( button.first).not.toHaveClass( 'ng-hide')
+    expect( button.previous).not.toHaveClass( 'disabled')
+    expect( button.next).not.toHaveClass( 'disabled')
   }))
 
   it('should click pageNext and go to state LAST_PAGE', inject( function () {
-    var buttons = findButtons()
+    var button = findButtons()
     modelNextState = GBSubscriptionViewState.LAST_PAGE
-    buttons.next.trigger('click')
+    button.next.trigger('click')
     parentScope.$digest()
     expect( parentScope.pageNext).toHaveBeenCalled()
 
     expect( scope.model).toBe( GBSubscriptionViewState.LAST_PAGE)
-    expect( buttons.first).not.toHaveClass( 'ng-hide')
-    expect( buttons.previous).not.toHaveClass( 'disabled')
-    expect( buttons.next).toHaveClass( 'disabled')
+    expect( button.first).not.toHaveClass( 'ng-hide')
+    expect( button.previous).not.toHaveClass( 'disabled')
+    expect( button.next).toHaveClass( 'disabled')
   }))
 
   it('should click pageNext, then pagePrevious and go to state PAGED', inject( function () {
     parentScope.pageState = GBSubscriptionViewState.FIRST_PAGE
     parentScope.$digest()
 
-    var buttons = findButtons()
+    var button = findButtons()
     modelNextState = GBSubscriptionViewState.PAGED
-    buttons.next.trigger('click')
+    button.next.trigger('click')
     parentScope.$digest()
     expect( parentScope.pageNext).toHaveBeenCalled()
 
     modelNextState = GBSubscriptionViewState.PAGED
-    buttons.previous.trigger('click')
+    button.previous.trigger('click')
     parentScope.$digest()
     expect( parentScope.pagePrevious).toHaveBeenCalled()
 
     expect( scope.model).toBe( GBSubscriptionViewState.PAGED)
-    expect( buttons.first).not.toHaveClass( 'ng-hide')
-    expect( buttons.previous).not.toHaveClass( 'disabled')
-    expect( buttons.next).not.toHaveClass( 'disabled')
+    expect( button.first).not.toHaveClass( 'ng-hide')
+    expect( button.previous).not.toHaveClass( 'disabled')
+    expect( button.next).not.toHaveClass( 'disabled')
   }))
 
   it('should spin pageNext in state PAGING_NEXT, then stop spin on transition to PAGED', inject( function () {
     parentScope.pageState = GBSubscriptionViewState.FIRST_PAGE
     parentScope.$digest()
 
-    var buttons = findButtons()
+    var button = findButtons()
     modelNextState = GBSubscriptionViewState.PAGING_NEXT
-    buttons.next.trigger('click')
+    button.next.trigger('click')
     parentScope.$digest()
     expect( parentScope.pageNext).toHaveBeenCalled()
 
     expect( scope.model).toBe( GBSubscriptionViewState.PAGING_NEXT)
-    expect( buttons.first).not.toHaveClass( 'ng-hide')
-    expect( buttons.previous).not.toHaveClass( 'disabled')
-    expect( buttons.next).toHaveClass( 'disabled')
+    expect( button.first).not.toHaveClass( 'ng-hide')
+    expect( button.previous).not.toHaveClass( 'disabled')
+    expect( button.next).toHaveClass( 'disabled')
 
-    var icon = findIcon(buttons.next)
+    var icon = findIcon(button.next)
     expect( icon).toHaveClass( 'fa-spin')
     expect( icon).toHaveClass( 'fa')
     expect( icon).toHaveClass( 'fa-chevron-right')
@@ -145,18 +145,18 @@ describe('gbPager', function () {
     parentScope.pageState = GBSubscriptionViewState.PAGED
     parentScope.$digest()
 
-    var buttons = findButtons()
+    var button = findButtons()
     modelNextState = GBSubscriptionViewState.PAGING_PREVIOUS
-    buttons.previous.trigger('click')
+    button.previous.trigger('click')
     parentScope.$digest()
     expect( parentScope.pagePrevious).toHaveBeenCalled()
 
     expect( scope.model).toBe( GBSubscriptionViewState.PAGING_PREVIOUS)
-    expect( buttons.first).not.toHaveClass( 'ng-hide')
-    expect( buttons.previous).toHaveClass( 'disabled')
-    expect( buttons.next).not.toHaveClass( 'disabled')
+    expect( button.first).not.toHaveClass( 'ng-hide')
+    expect( button.previous).toHaveClass( 'disabled')
+    expect( button.next).not.toHaveClass( 'disabled')
 
-    var icon = findIcon(buttons.previous)
+    var icon = findIcon(button.previous)
     expect( icon).toHaveClass( 'fa-spin')
     expect( icon).toHaveClass( 'fa')
     expect( icon).toHaveClass( 'fa-chevron-left')

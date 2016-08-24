@@ -47,7 +47,7 @@ describe('gb-measurements', function () {
   });
   beforeEach( inject(function( $injector) {
     $httpBackend = $injector.get('$httpBackend')
-    $httpBackend.whenGET( '/models/1/points?equipmentIds=' + equipmentId + '&depth=9999').respond( points)
+    $httpBackend.whenGET( '/models/1/points?equipmentIds=' + equipmentId + '&depth=9999&limit=100').respond( points)
   }))
   afterEach( function() {
     $httpBackend.verifyNoOutstandingExpectation();

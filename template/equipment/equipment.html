@@ -5,13 +5,13 @@
             <gb-equipment-schematic></gb-equipment-schematic>
         </tab>
         <tab heading="Measurements" ng-if="tabs.measurements">
-            <gb-measurements points-promise="pointsPromise"></gb-measurements>
+            <gb-measurements points-promise="pointsPromise" page-size="pageSize"></gb-measurements>
         </tab>
         <tab heading="Properties" ng-if="tabs.properties">
-            <gb-properties-table></gb-properties-table>
+            <gb-properties-table page-size="pageSize"></gb-properties-table>
         </tab>
         <tab heading="Points" ng-if="tabs.points">
-            <gb-points-table points-promise="pointsPromise"></gb-points-table>
+            <gb-points-table points-promise="pointsPromise" page-size="pageSize"></gb-points-table>
         </tab>
     </tabset>
 </div>

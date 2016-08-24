@@ -107,7 +107,7 @@ describe('GBSubscriptionView', function () {
   }));
   it('onMessage should trim items with view limit is less than cache limit', inject( function () {
     var removed,
-        view = new GBSubscriptionView( 2, 3),
+        view = new GBSubscriptionView( 2, 3, undefined, GreenbusViewsEventSortByTime),
         i0 = {time: 0, id: 'id0'},
         i1 = {time: 10, id: 'id10'},
         i2 = {time: 20, id: 'id20'},
@@ -152,8 +152,8 @@ describe('GBSubscriptionView', function () {
   it('pageNext get from cache, cache, then GET', inject( function () {
     var state,
         view = new GBSubscriptionView( 2, 6, items, GreenbusViewsEventSortByTime),
-        i6 = {time: 60, id: 'id60'},
-        i7 = {time: 70, id: 'id70'}
+        i6 = {time: -60, id: 'id60'},
+        i7 = {time: -70, id: 'id70'}
 
 
     expect(view.items).toEqual( page1);
@@ -178,8 +178,10 @@ describe('GBSubscriptionView', function () {
     
     pageRest.nextSuccess( [i6, i7])
     expect(view.pagePending).not.toBeDefined();
-    expect(view.items).toEqual( [i7, i6]);
-    expect(view.itemStore).toEqual( [i7,i6].concat( itemsSorted.slice(0,4)));
+    expect(view.items).toEqual( [i6, i7]);
+    //expect(view.itemStore).toEqual( [i7,i6].concat( itemsSorted.slice(0,4)));
+    expect(view.itemStore).toEqual( itemsSorted);
+
     expect(view.state).toBe(GBSubscriptionViewState.PAGED);
 
   }));
@@ -212,7 +214,7 @@ describe('GBSubscriptionView', function () {
     state = view.pageNext( pageRest)
     expect(state).toBe(GBSubscriptionViewState.PAGING_NEXT);
     expect(view.pagePending.direction).toEqual( 'next');
-    expect(view.pagePending.cache).toBeUndefined();
+    expect(view.pagePending.cache).toEqual([]);
     expect(view.items).toEqual( page2); // not paged yet
     expect( pageRest.nextStartAfterId).toBe( itemsSorted[3].id)
 
@@ -394,33 +396,29 @@ describe('GBSubscriptionView', function () {
   
   it('should pageNext past cache then pagePrevious back to cache', inject( function () {
     var view = new GBSubscriptionView( 2, 6, items.slice(1,6), GreenbusViewsEventSortByTime), // not t=0
-        i02 = {time: 2, id: 'id02'},
-        i04 = {time: 2, id: 'id04'},
-        i06 = {time: 2, id: 'id06'},
-        i08 = {time: 2, id: 'id08'},
+        i08 = {time: -2, id: 'id08'},
         page3 = [itemsSorted[4], i08]
 
     expect(view.items).toEqual( page1);
     expect(view.itemStore).toEqual( itemsSorted.slice(0,5));
 
-    // pageNext to get past cache
+    // pageNext to get past cache.
+    // We started with 5 items, so the 3rd pageNext is half off the cache;
+    // so we need to do a query to get the final item. After success, we're
+    // still cached.
     state = view.pageNext( pageRest)
     state = view.pageNext( pageRest)
     state = view.pageNext( pageRest)
     expect(view.pagePending.direction).toBe('next');
-    pageRest.nextSuccess( i08)
+    pageRest.nextSuccess( [i08])
     expect(view.items).toEqual( page3);
-    expect(view.pageCacheOffset).toBe(-1);
+    expect(view.pageCacheOffset).toBe(4);
 
 
     state = view.pagePrevious( pageRest)
-    expect(state).toBe(GBSubscriptionViewState.PAGING_PREVIOUS);
-    expect(view.pagePending.direction).toBe('previous');
+    expect(state).toBe(GBSubscriptionViewState.PAGED);
+    expect(view.pagePending).toBeUndefined();
     expect(view.items.length).toEqual(2);
-    expect(view.items).toEqual( page3);
-    expect( pageRest.previousStartAfterId).toBe( page3[0].id)
-
-    pageRest.previousSuccess( page2)
     expect(view.items).toEqual( page2);
     expect(view.pageCacheOffset).toBe(2);
 

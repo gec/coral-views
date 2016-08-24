@@ -49,10 +49,10 @@ angular.module('greenbus.views.equipment', [ 'ui.router', 'greenbus.views.rest']
 
     /**
      *
-     * @param collapsePointsToArray If true, poinrs will always be returned as a list.
+     * @param collapsePointsToArray If true, points will always be returned as a list.
      * @returns {Promise}
      */
-    function getCurrentPoints( collapsePointsToArray) {
+    function getPoints( collapsePointsToArray, limit, startAfterId, ascending) {
       var navigationElement = $stateParams.navigationElement
 
       // Initialized from URL or menu click or both
@@ -61,7 +61,8 @@ angular.module('greenbus.views.equipment', [ 'ui.router', 'greenbus.views.rest']
         return $q.when( [])
 
       var equipmentIdsQueryParams = getEquipmentIdsQueryParams( navigationElement),
-          depth = rest.queryParameterFromArrayOrString('depth', '9999')
+          depth = rest.queryParameterFromArrayOrString('depth', '9999'),
+          startAfter = rest.queryParameterFromArrayOrString('startAfterId', startAfterId)
 
 
       var delimeter = '?'
@@ -71,8 +72,16 @@ angular.module('greenbus.views.equipment', [ 'ui.router', 'greenbus.views.rest']
         url += delimeter + equipmentIdsQueryParams
         delimeter = '&'
       }
-      if( depth.length > 0 )
+      if( depth.length > 0 ) {
         url += delimeter + depth
+        delimeter = '&'
+      }
+      if( limit !== undefined && limit > 0)
+        url += delimeter + 'limit=' + limit
+      if( startAfter.length > 0 )
+        url += delimeter + startAfter
+      if( ascending === false) // don't add if undefined or null!
+        url += delimeter + 'ascending=false'
 
       return rest.get(url).then(
         function( response) {
@@ -103,7 +112,7 @@ angular.module('greenbus.views.equipment', [ 'ui.router', 'greenbus.views.rest']
      * Public API
      */
     return {
-      getCurrentPoints: getCurrentPoints
+      getPoints: getPoints
     }
   }]).
 
@@ -113,6 +122,7 @@ angular.module('greenbus.views.equipment', [ 'ui.router', 'greenbus.views.rest']
           microgridId       = $stateParams.microgridId,
           navigationElement = $stateParams.navigationElement
 
+      $scope.pageSize = Number( $scope.pageSize || 100)
       $scope.shortName = 'loading...'
       $scope.tabs = {
         measurements: false,
@@ -134,14 +144,16 @@ angular.module('greenbus.views.equipment', [ 'ui.router', 'greenbus.views.rest']
         points: true
       }
 
-      $scope.pointsPromise = equipment.getCurrentPoints( true)
+      $scope.pointsPromise = equipment.getPoints( true, $scope.pageSize)
     }
   ]).
 
   directive('gbEquipment', function() {
     return {
       restrict:    'E', // Element name
-      scope:       true,
+      scope: {
+        pageSize: '=?'
+      },
       templateUrl: 'greenbus.views.template/equipment/equipment.html',
       controller:  'gbEquipmentController'
     }

@@ -220,7 +220,7 @@ angular.module( 'greenbus.views.measurement',
       $scope.searchText = ''
       $scope.sortColumn = 'name'
       $scope.reverse = false
-
+      var pageSize = Number( $scope.pageSize || 100)
 
 
 
@@ -534,7 +534,7 @@ angular.module( 'greenbus.views.measurement',
 
       function getPointsAndSubscribeToMeasurements() {
 
-        var promise = $scope.pointsPromise || equipment.getCurrentPoints( true)
+        var promise = $scope.pointsPromise || equipment.getPoints( true, pageSize)
         promise.then(
           function( response) {
             $scope.points = response.data
@@ -548,7 +548,7 @@ angular.module( 'greenbus.views.measurement',
             return response // for the then() chain
           },
           function( error) {
-            console.error( 'gbPointsTableController. Error ' + error.statusText)
+            console.error( 'gbMeasurementsController. Error ' + error.statusText)
             $scope.alerts = [{ type: 'danger', message: error.statusText}]
             return error
           }
@@ -565,7 +565,8 @@ angular.module( 'greenbus.views.measurement',
       // The template HTML will replace the directive.
       replace:     true,
       scope:       {
-        pointsPromise: '=?'
+        pointsPromise: '=?',
+        pageSize: '=?'
       },
       templateUrl: 'greenbus.views.template/measurement/measurements.html',
       controller:  'gbMeasurementsController'

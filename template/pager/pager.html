@@ -1,4 +1,4 @@
-<div>
+<div class="gb-pager">
     <button type="button" class="btn btn-default" ng-click="pageFirst()" ng-show="model !== 'first-page' && model !== 'no-items' && model !== undefined" style="margin-right: 1em;" popover="Go to first page" popover-trigger="mouseenter" popover-placement="bottom"><span style="font-weight: bolder">|</span><i class="fa fa-chevron-left" style="vertical-align: middle"></i></button>
     <div class="btn-group" role="group" aria-label="...">
         <button type="button" ng-class="model | pagePreviousClass" ng-click="pagePrevious()" popover="Previous page" popover-trigger="mouseenter" popover-placement="bottom"><i ng-class="model | pagingIcon: 'left'" style="vertical-align: middle"></i></button>
