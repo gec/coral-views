@@ -3,7 +3,7 @@
 
     <div class="row">
         <div class="col-md-5 col-md-offset-3" style="margin-top: 1.2em;">
-            <input type="text"  class="form-control" placeholder="search any column" ng-model="searchText" style="height: 100%;">
+            <input type="text"  class="form-control" placeholder="search by name, unit, type, ..." ng-model="searchText" style="height: 100%;">
             <!--<button class="btn btn-info" ng-click="search()" style="height: 100%; width: 60px; margin-bottom: 10px;"><i class="glyphicon glyphicon-search icon-white"></i></button>-->
         </div>
         <div class="col-md-4 text-right" style="padding-top: 20px">
@@ -21,13 +21,13 @@
         </tr>
         </thead>
         <tbody>
-        <tr class="gb-point" ng-repeat="point in points">
+        <tr class="gb-point" ng-repeat="point in pointsFiltered = (points | filter:search)">
             <td>{{point.name}}</td>
             <td><img class="gb-icon" ng-src="{{ point.pointType | pointTypeImage: point.unit }}" width="14px" height="14px" title="{{ point.pointType | pointTypeText: point.unit }}"/>
                 {{point.pointType}}
             </td>
             <td>{{ point.unit }}</td>
-            <td>{{ point.types.join(', ') }}</td>
+            <td>{{ point.typesString }}</td>
         </tr>
         </tbody>
     </table>

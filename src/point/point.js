@@ -42,6 +42,7 @@ angular.module('greenbus.views.point', [ 'ui.router', 'greenbus.views.equipment'
       $scope.points = subscriptionView.items
       $scope.pageState = GBSubscriptionViewState.FIRST_PAGE
       $scope.alerts = []
+      $scope.searchText = ''
 
       var pageRest = {
         /**
@@ -97,13 +98,16 @@ angular.module('greenbus.views.point', [ 'ui.router', 'greenbus.views.equipment'
 
       }
 
+      function updatePageTypesStrings() {
+        $scope.points.forEach( function(p) {p.typesString = p.types.join( ', ')})
+
+      }
+
       // Paging functions
       //
-      function updatePageState( state) {
-        $scope.pageState = state
-      }
       function pageNotify( state, oldItems) {
         $scope.pageState = state
+        updatePageTypesStrings()
       }
       $scope.pageFirst = function() {
         $scope.pageState = subscriptionView.pageFirst()
@@ -129,6 +133,7 @@ angular.module('greenbus.views.point', [ 'ui.router', 'greenbus.views.equipment'
         function( response) {
           subscriptionView.onMessage( response.data)
           $scope.loading = false
+          updatePageTypesStrings()
           return response // for the then() chain
         },
         function( error) {
@@ -137,6 +142,19 @@ angular.module('greenbus.views.point', [ 'ui.router', 'greenbus.views.equipment'
           return error
         }
       )
+
+
+      $scope.search = function(point) {
+        var s = $scope.searchText.trim()
+        if( s === undefined || s === null || s.length === 0 )
+          return true
+        s = s.toLowerCase()
+
+        return point.name.toLowerCase().indexOf(s) !== -1 ||
+          point.unit.toLowerCase().indexOf(s) !== -1 ||
+          point.pointType.toLowerCase().indexOf(s) !== -1 ||
+          point.typesString.toLowerCase().indexOf(s) !== -1
+      }
 
     }
   ]).
