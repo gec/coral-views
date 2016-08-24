@@ -28,7 +28,8 @@ angular.module( 'greenbus.views.measurement',
     'greenbus.views.equipment',
     'greenbus.views.rest',
     'greenbus.views.request',
-    'greenbus.views.selection'
+    'greenbus.views.selection',
+    'greenbus.views.point'
   ]).
 
   factory('pointIdToMeasurementHistoryMap', function() {
@@ -208,39 +209,32 @@ angular.module( 'greenbus.views.measurement',
     }
   }]).
 
-  controller('gbMeasurementsController', ['$scope', '$stateParams', 'rest', 'navigation', 'subscription', 'measurement', 'equipment', 'request', '$timeout',
-    function($scope, $stateParams, rest, navigation, subscription, measurement, equipment, request, $timeout) {
-      var self = this
-      $scope.points = []
+  controller('gbMeasurementsController', ['$scope', '$stateParams', 'rest', 'navigation', 'measurement', 'equipment', 'pointPageRest', 'request', '$timeout',
+    function($scope, $stateParams, rest, navigation, measurement, equipment, pointPageRest, request, $timeout) {
+      var currentSubscriptionId,
+          self = this,
+          microgridId       = $stateParams.microgridId,
+          navigationElement = $stateParams.navigationElement,
+          pageSize = Number( $scope.pageSize || 100),
+          subscriptionView = new GBSubscriptionView( pageSize, pageSize * 4, undefined, GBNameSortAscending)
+
+      $scope.points = subscriptionView.items
       $scope.pointsFiltered = []
       $scope.selectAllState = 0
+      $scope.pageState = GBSubscriptionViewState.FIRST_PAGE
       $scope.alerts = []
 
       // Search
       $scope.searchText = ''
       $scope.sortColumn = 'name'
       $scope.reverse = false
-      var pageSize = Number( $scope.pageSize || 100)
 
 
-
-      var depth, equipmentIds, equipmentIdsQueryParams,
-          microgridId       = $stateParams.microgridId,
-          navigationElement = $stateParams.navigationElement
 
       // Initialized from URL or menu click or both
       //
       if( ! navigationElement)
         return
-
-      if( navigationElement.equipmentChildren.length > 0 ) {
-        equipmentIds = navigationElement.equipmentChildren.map( function( child) { return child.id })
-        equipmentIdsQueryParams = rest.queryParameterFromArrayOrString('equipmentIds', equipmentIds)
-      } else {
-        equipmentIdsQueryParams = rest.queryParameterFromArrayOrString('equipmentIds', navigationElement.id)
-      }
-      // Rest API /models/1/points?equipmentIds=... depth defaults to 1. If equipment is microgrid, we need deeper.
-      depth = rest.queryParameterFromArrayOrString('depth', '9999')
 
       function findPoint(id) {
         var index = findPointIndex(id)
@@ -337,9 +331,25 @@ angular.module( 'greenbus.views.measurement',
 
       }
 
+      // Paging functions
+      //
+      function pageNotify( state, oldItems) {
+        $scope.pageState = state
+        subscribeToMeasurementsAndCommands()
+      }
+      $scope.pageFirst = function() {
+        $scope.pageState = subscriptionView.pageFirst()
+      }
+      $scope.pageNext = function() {
+        $scope.pageState = subscriptionView.pageNext( pointPageRest, pageNotify)
+      }
+      $scope.pagePrevious = function() {
+        $scope.pageState = subscriptionView.pagePrevious( pointPageRest, pageNotify)
+      }
+
 
       $scope.search = function(point) {
-        var s = $scope.searchText
+        var s = $scope.searchText.trim()
         if( s === undefined || s === null || s.length === 0 )
           return true
         s = s.toLowerCase()
@@ -357,7 +367,11 @@ angular.module( 'greenbus.views.measurement',
 
 
       function subscribeToMeasurements(pointIds) {
-        measurement.subscribe($scope, pointIds, {}, self,
+        if( currentSubscriptionId) {
+          measurement.unsubscribe( currentSubscriptionId)
+          currentSubscriptionId = undefined
+        }
+        return measurement.subscribe($scope, pointIds, {}, self,
           function( measurements) {
             //console.log( 'onMeasurements ' + Date.now() + ' ' + measurements.map( function(pm) { return pm.point.id}).join())
             measurements.forEach(function(pm) {
@@ -377,52 +391,6 @@ angular.module( 'greenbus.views.measurement',
         )
       }
 
-
-      function nameFromTreeNode(treeNode) {
-        if( treeNode )
-          return treeNode.label
-        else
-          return '...'
-      }
-
-      //function getEquipmentIds(treeNode) {
-      //  var result = []
-      //  treeNode.children.forEach(function(node) {
-      //    if( node.containerType && node.containerType !== 'Sourced' )
-      //      result.push(node.id)
-      //  })
-      //  return result
-      //}
-      //
-      //function navIdListener(id, treeNode) {
-      //  $scope.equipmentName = nameFromTreeNode(treeNode) + ' '
-      //  var equipmentIds = getEquipmentIds(treeNode)
-      //  var equipmentIdsQueryParams = rest.queryParameterFromArrayOrString('equipmentIds', equipmentIds)
-      //
-      //  var delimeter = '?'
-      //  var url = '/models/1/points'
-      //  if( equipmentIdsQueryParams.length > 0 ) {
-      //    url += delimeter + equipmentIdsQueryParams
-      //    delimeter = '&'
-      //    $scope.equipmentName = nameFromTreeNode(treeNode) + ' '
-      //  }
-      //  if( depth.length > 0 )
-      //    url += delimeter + depth
-      //
-      //  rest.get(url, 'points', $scope, function(data) {
-      //    // data is either a array of points or a map of equipmentId -> points[]
-      //    // If it's an object, convert it to a list of points.
-      //    if( angular.isObject(data) ) {
-      //      $scope.points = []
-      //      for( var equipmentId in data ) {
-      //        $scope.points = $scope.points.concat(data[equipmentId])
-      //      }
-      //    }
-      //    var pointIds = processPointsAndReturnPointIds($scope.points)
-      //    subscribeToMeasurements(pointIds)
-      //    getPointsCommands(pointIds)
-      //  })
-      //}
 
       function processPointsAndReturnPointIds(points) {
         var pointIds           = [],
@@ -446,32 +414,6 @@ angular.module( 'greenbus.views.measurement',
         })
         return pointIds
       }
-
-      // Now getting name from NavTreeController.menuSelect and menuSelect waits until the name is loaded before calling us.
-      //
-      //function notifyWhenEquipmentNamesAreAvailable(equipmentId) {
-      //  $scope.equipmentName = nameFromEquipmentIds($stateParams.equipmentIds) + ' '
-      //}
-      //
-      //function nameFromEquipmentIds(equipmentIds) {
-      //  var result = ''
-      //  if( equipmentIds ) {
-      //
-      //    if( angular.isArray(equipmentIds) ) {
-      //      equipmentIds.forEach(function(equipmentId, index) {
-      //        var treeNode = navigation.getTreeNodeByEquipmentId(equipmentId, notifyWhenEquipmentNamesAreAvailable)
-      //        if( index === 0 )
-      //          result += nameFromTreeNode(treeNode)
-      //        else
-      //          result += ', ' + nameFromTreeNode(treeNode)
-      //      })
-      //    } else {
-      //      var treeNode = navigation.getTreeNodeByEquipmentId(equipmentIds, notifyWhenEquipmentNamesAreAvailable)
-      //      result = nameFromTreeNode(treeNode)
-      //    }
-      //  }
-      //  return result
-      //}
 
       // commandType: CONTROL, SETPOINT_INT, SETPOINT_DOUBLE, SETPOINT_STRING
       var exampleControls = [
@@ -532,19 +474,24 @@ angular.module( 'greenbus.views.measurement',
         return control && setpoint ? control + ',' + setpoint : control + setpoint
       }
 
+      function subscribeToMeasurementsAndCommands() {
+        if( $scope.points.length > 0) {
+          var pointIds = processPointsAndReturnPointIds($scope.points)
+          currentSubscriptionId = subscribeToMeasurements(pointIds)
+          getCommandsForPoints(pointIds)
+        } else {
+          $scope.alerts = [{ type: 'info', message: 'No points found.'}]
+        }
+      }
+
       function getPointsAndSubscribeToMeasurements() {
 
         var promise = $scope.pointsPromise || equipment.getPoints( true, pageSize)
         promise.then(
           function( response) {
-            $scope.points = response.data
-            if( $scope.points.length > 0) {
-              var pointIds = processPointsAndReturnPointIds($scope.points)
-              subscribeToMeasurements(pointIds)
-              getCommandsForPoints(pointIds)
-            } else {
-              $scope.alerts = [{ type: 'info', message: 'No points found.'}]
-            }
+            subscriptionView.onMessage( response.data)
+            //$scope.points = response.data
+            subscribeToMeasurementsAndCommands()
             return response // for the then() chain
           },
           function( error) {

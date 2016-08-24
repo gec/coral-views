@@ -31,8 +31,68 @@ function GBNameSortAscending( a, b) {
  */
 angular.module('greenbus.views.point', [ 'ui.router', 'greenbus.views.equipment', 'greenbus.views.pager']).
 
-  controller('gbPointsTableController', ['$scope', '$attrs', '$stateParams', 'equipment',
-    function($scope, $attrs, $stateParams, equipment) {
+  factory('pointPageRest', ['equipment', function( equipment) {
+
+    /**
+     * Get the next page after startAfterId (ordered by point name).
+     *
+     * @param ids Array of alarm IDs
+     * @param newState Examples; 'UNACK_SILENT','ACKNOWLEDGED'
+     */
+    function pageNext( startAfterId, limit, success, failure) {
+      return pageDo( startAfterId, limit, success, failure, true)
+    }
+
+    /**
+     * Get the previous page before startAfterId (ordered by point name).
+     *
+     * @param startAfterId
+     * @param limit Number of items to get
+     * @param success Success callback
+     * @param failure Failure callback
+     */
+    function pagePrevious( startAfterId, limit, success, failure) {
+      return pageDo( startAfterId, limit, success, failure, false)
+    }
+
+    /**
+     *
+     * @param startAfterId
+     * @param limit Number of items to get
+     * @param success Success callback
+     * @param failure Failure callback
+     * @param ascending boolean T: paging forwards by name, F: paging backwards.
+     */
+    function pageDo( startAfterId, limit, success, failure, ascending) {
+      var promise = equipment.getPoints( true, limit, startAfterId, ascending)
+      promise.then(
+        function( response) {
+          success( response.data)
+          return response // for the then() chain
+        },
+        function( error) {
+          console.error( 'gbPointsTableController.pageDo Error ' + error.statusText + ', startAfterId: ' + startAfterId + ', ascending:' + ascending)
+          $scope.alerts = [{ type: 'danger', message: error.statusText}]
+          failure( startAfterId, limit, error.data, error.status)
+          return error // for the then() chain
+        }
+      )
+
+      return promise
+    }
+
+    /**
+     * Public API
+     */
+    return {
+      pageNext: pageNext,
+      pagePrevious: pagePrevious
+    }
+  }]).
+
+
+  controller('gbPointsTableController', ['$scope', '$attrs', '$stateParams', 'equipment', 'pointPageRest',
+    function($scope, $attrs, $stateParams, equipment, pointPageRest) {
       var self = this,
           microgridId       = $stateParams.microgridId,
           navigationElement = $stateParams.navigationElement
@@ -44,79 +104,25 @@ angular.module('greenbus.views.point', [ 'ui.router', 'greenbus.views.equipment'
       $scope.alerts = []
       $scope.searchText = ''
 
-      var pageRest = {
-        /**
-         * Get the next page after startAfterId.
-         *
-         * @param startAfterId
-         * @param limit Number of items to get
-         * @param success Success callback
-         * @param failure Failure callback
-         */
-        pageNext: function( startAfterId, limit, success, failure) {
-          return pageRest.pageDo( startAfterId, limit, success, failure, true)
-        },
 
-        /**
-         * Get the previous page before startAfterId.
-         *
-         * @param startAfterId
-         * @param limit Number of items to get
-         * @param success Success callback
-         * @param failure Failure callback
-         */
-        pagePrevious: function( startAfterId, limit, success, failure) {
-          return pageRest.pageDo( startAfterId, limit, success, failure, false)
-        },
-
-        /**
-         *
-         * @param startAfterId
-         * @param limit Number of items to get
-         * @param success Success callback
-         * @param failure Failure callback
-         * @param latest boolean T: paging backwards in time, F: paging forwards in time.
-         */
-        pageDo: function( startAfterId, limit, success, failure, ascending) {
-
-          var promise = equipment.getPoints( true, limit, startAfterId, ascending)
-          promise.then(
-            function( response) {
-              success( response.data)
-              return response // for the then() chain
-            },
-            function( error) {
-              console.error( 'gbPointsTableController.pageDo Error ' + error.statusText + ', startAfterId: ' + startAfterId + ', ascending:' + ascending)
-              $scope.alerts = [{ type: 'danger', message: error.statusText}]
-              failure( startAfterId, limit, error.data, error.status)
-              return error // for the then() chain
-            }
-          )
-
-          return promise
-        }
-
-      }
-
-      function updatePageTypesStrings() {
+      function updatePointTypesStrings() {
         $scope.points.forEach( function(p) {p.typesString = p.types.join( ', ')})
-
       }
 
       // Paging functions
       //
       function pageNotify( state, oldItems) {
         $scope.pageState = state
-        updatePageTypesStrings()
+        updatePointTypesStrings()
       }
       $scope.pageFirst = function() {
         $scope.pageState = subscriptionView.pageFirst()
       }
       $scope.pageNext = function() {
-        $scope.pageState = subscriptionView.pageNext( pageRest, pageNotify)
+        $scope.pageState = subscriptionView.pageNext( pointPageRest, pageNotify)
       }
       $scope.pagePrevious = function() {
-        $scope.pageState = subscriptionView.pagePrevious( pageRest, pageNotify)
+        $scope.pageState = subscriptionView.pagePrevious( pointPageRest, pageNotify)
       }
 
       $scope.closeAlert = function(index) {
@@ -133,7 +139,7 @@ angular.module('greenbus.views.point', [ 'ui.router', 'greenbus.views.equipment'
         function( response) {
           subscriptionView.onMessage( response.data)
           $scope.loading = false
-          updatePageTypesStrings()
+          updatePointTypesStrings()
           return response // for the then() chain
         },
         function( error) {

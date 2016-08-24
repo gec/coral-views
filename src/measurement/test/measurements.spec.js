@@ -47,9 +47,11 @@ describe('gb-measurements', function () {
   beforeEach(module('greenbus.views.subscription'));
   beforeEach(module('greenbus.views.request'));
   beforeEach(module('greenbus.views.selection'));
+  beforeEach(module('greenbus.views.point'));
   beforeEach(module('greenbus.views.measurement'));
   beforeEach(module('greenbus.views.template/measurement/measurements.html'));
   beforeEach(module('greenbus.views.template/selection/selectAll.html'));
+  beforeEach(module('greenbus.views.template/pager/pager.html'));
 
   beforeEach(function () {
     subscribeInstance = {}
