@@ -1,5 +1,5 @@
 describe('gb-measurements', function () {
-  var parentScope, scope, $compile, _subscription, $httpBackend, pointsDefer
+  var parentScope, scope, $compile, $httpBackend, $q, pointsDefer, getPointsDefer,
       subscribeInstance = {};
   var element,
       measurements = [];
@@ -11,6 +11,13 @@ describe('gb-measurements', function () {
         {'name': 'MG1.Device2.kW_tot', 'id': 'Device2.kW_tot', 'pointType': 'ANALOG', 'types': ['Imported', 'DemandPower', 'Point'], 'unit': 'kW', 'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6' },
         {'name': 'MG1.Device3.Load', 'id': 'Device3.Load', 'pointType': 'ANALOG', 'types': ['Imported', 'LoadPower', 'Point'], 'unit': 'kW', 'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6'},
         {'name': 'MG1.Device4.DR', 'id': 'Device4.DR', 'pointType': 'COUNTER', 'types': ['Point', 'DemandResponseStage', 'Imported'], 'unit': 'Stage', 'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6'}
+      ],
+      points2 = [
+        {'name': 'MG1.Device11.Status', 'id': 'Device11.Status', 'pointType': 'STATUS', 'types': ['UtilityBreakerStatus', 'BreakerStatus', 'Point'], 'unit': 'status', 'endpoint': 'someEndpointUuid' },
+        {'name': 'MG1.Device10.Status', 'id': 'Device10.Status', 'pointType': 'STATUS', 'types': ['Imported', 'CustomerBreakerStatus', 'BreakerStatus', 'Point'], 'unit': 'status', 'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6'},
+        {'name': 'MG1.Device12.kW_tot', 'id': 'Device12.kW_tot', 'pointType': 'ANALOG', 'types': ['Imported', 'DemandPower', 'Point'], 'unit': 'kW', 'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6' },
+        {'name': 'MG1.Device13.Load', 'id': 'Device13.Load', 'pointType': 'ANALOG', 'types': ['Imported', 'LoadPower', 'Point'], 'unit': 'kW', 'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6'},
+        {'name': 'MG1.Device14.DR', 'id': 'Device14.DR', 'pointType': 'COUNTER', 'types': ['Point', 'DemandResponseStage', 'Imported'], 'unit': 'Stage', 'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6'}
       ],
       commands = {
         'Device0.Status': [  // for MG1.Device0.Status
@@ -37,6 +44,27 @@ describe('gb-measurements', function () {
     },
     request: {
       push: jasmine.createSpy('requestPush')
+    },
+    subscription: {
+      subscribe: function (request, subscriberScope, onMessage, onError) {
+        subscribeInstance = {
+          id: makeSubscriptionId( request, 1),
+          request: request,
+          scope: subscriberScope,
+          onMessage: onMessage,
+          onError: onError
+        }
+
+        return subscribeInstance.id;
+      },
+      unsubscribe: function( subscriptionId) { }
+    },
+    equipment: {
+      // Not used in current tests. Getting points form parentScope.pointsPromise below.
+      getPoints: function (collapsePointsToArray, limit, startAfterId, ascending) {
+        getPointsDefer = $q.defer()
+        return getPointsDefer.promise
+      }
     }
   }
 
@@ -55,25 +83,15 @@ describe('gb-measurements', function () {
 
   beforeEach(function () {
     subscribeInstance = {}
-    _subscription = {
-      subscribe: function (request, subscriberScope, onMessage, onError) {
-        subscribeInstance = {
-          id: makeSubscriptionId( request, 1),
-          request: request,
-          scope: subscriberScope,
-          onMessage: onMessage,
-          onError: onError
-        }
-
-        return subscribeInstance.id;
-      }
-    };
+    spyOn( mocks.subscription, 'subscribe').and.callThrough()
+    spyOn( mocks.subscription, 'unsubscribe').and.callThrough()
 
     _websocketFactory = {}
     module( function ($provide) {
       $provide.value('websocketFactory', _websocketFactory);
       $provide.value('authentication', mocks.authentication);
-      $provide.value('subscription', _subscription);
+      $provide.value('subscription', mocks.subscription);
+      $provide.value('equipment', mocks.equipment);
       $provide.value('request', mocks.request);
       $provide.value('navigation', {});
       //$provide.value('$routeParams', {}); // no $routeParams.navId, depth, or equipmentIds
@@ -97,15 +115,17 @@ describe('gb-measurements', function () {
   }))
 
 
-  beforeEach(inject(function ($rootScope, _$compile_, $q) {
+  beforeEach(inject(function ($rootScope, _$compile_, _$q_) {
 
     parentScope = $rootScope.$new();
     $compile = _$compile_;
+    $q = _$q_
 
+    // Mock equipment wrapper pointsPromise
     pointsDefer = $q.defer()
     parentScope.pointsPromise = pointsDefer.promise
 
-    element = angular.element( '<gb-measurements points-promise="pointsPromise"></gb-measurements>');
+    element = angular.element( '<gb-measurements points-promise="pointsPromise" page-size="5"></gb-measurements>');
     $compile(element)(parentScope);
     parentScope.$digest();
     // No isolateScope() until after parentScope.$digest(). Possibly because of points-promise parameter?
@@ -144,10 +164,20 @@ describe('gb-measurements', function () {
     return alerts.eq(index).find('span.ng-binding').text()
   }
 
+  function findPagerButtons() {
+    var pager = element.find('.gb-pager')
+    var buttons = pager.find('button')
+    return {
+      count: buttons.length,
+      first: buttons.eq(0),
+      previous: buttons.eq(1),
+      next: buttons.eq(2)
+    }
+  }
+
 
   it('should create multiple sorted points', inject( function () {
     pointsDefer.resolve( {data: points})
-    scope.$digest()
     $httpBackend.flush();
     parentScope.$digest();
 
@@ -310,6 +340,52 @@ describe('gb-measurements', function () {
 
   }));
 
+
+  it('should subscribe to points', inject( function (subscription) {
+    var subscriptionId
+
+    pointsDefer.resolve( {data: points})
+    $httpBackend.flush();
+    parentScope.$digest();
+
+    expect( subscription.subscribe.calls.count()).toEqual(1)
+    expect( subscription.unsubscribe).not.toHaveBeenCalled()
+    subscription.subscribe.calls.reset()
+    subscription.unsubscribe.calls.reset()
+    subscriptionId = subscribeInstance.id
+
+    var button = findPagerButtons()
+
+    button.next.trigger('click')
+    getPointsDefer.resolve( {data: points2})
+    scope.$digest()
+    expect( subscription.unsubscribe).toHaveBeenCalledWith(subscriptionId)
+    expect( subscription.subscribe).toHaveBeenCalled()
+    subscription.subscribe.calls.reset()
+    subscription.unsubscribe.calls.reset()
+    subscriptionId = subscribeInstance.id
+
+    button.previous.trigger('click')
+    getPointsDefer.resolve( {data: points2})
+    scope.$digest()
+    expect( subscription.unsubscribe).toHaveBeenCalledWith(subscriptionId)
+    expect( subscription.subscribe).toHaveBeenCalled()
+    subscription.subscribe.calls.reset()
+    subscription.unsubscribe.calls.reset()
+    subscriptionId = subscribeInstance.id
+
+    button.next.trigger('click')
+    expect( subscription.unsubscribe).toHaveBeenCalledWith(subscriptionId)
+    expect( subscription.subscribe).toHaveBeenCalled()
+    subscription.subscribe.calls.reset()
+    subscription.unsubscribe.calls.reset()
+    subscriptionId = subscribeInstance.id
+
+    button.first.trigger('click')
+    expect( subscription.unsubscribe).toHaveBeenCalledWith(subscriptionId)
+    expect( subscription.subscribe).toHaveBeenCalled()
+
+  }));
 
 
 //  it('should handle subscribe messages that are updates (single alarm)', inject( function () {

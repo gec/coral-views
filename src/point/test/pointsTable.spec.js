@@ -38,7 +38,8 @@ describe('gb-points-table', function () {
   beforeEach(function() {
 
     _equipment = {
-      // Not used in current tests. Getting points form parentScope.pointsPromise below.
+      // Not used for initial points - getting points from parentScope.pointsPromise below.
+      // Used for paging.
       getPoints: function (collapsePointsToArray, limit, startAfterId, ascending) {
         getPointsDefer = $q.defer()
         return getPointsDefer.promise
@@ -69,6 +70,7 @@ describe('gb-points-table', function () {
     $compile = _$compile_
     $q = _$q_
 
+    // Mock equipment wrapper pointsPromise
     pointsDefer = $q.defer()
     parentScope.pointsPromise = pointsDefer.promise
 
@@ -108,7 +110,6 @@ describe('gb-points-table', function () {
       previous: buttons.eq(1),
       next: buttons.eq(2)
     }
-
   }
 
 

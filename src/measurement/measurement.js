@@ -339,12 +339,20 @@ angular.module( 'greenbus.views.measurement',
       }
       $scope.pageFirst = function() {
         $scope.pageState = subscriptionView.pageFirst()
+        // Always updates from cache, so no pageNotify. Update subscriptions now!
+        subscribeToMeasurementsAndCommands()
       }
       $scope.pageNext = function() {
         $scope.pageState = subscriptionView.pageNext( pointPageRest, pageNotify)
+        // If paged from cache, we don't see a pageNotify. Update subscriptions now!
+        if( $scope.pageState !== GBSubscriptionViewState.PAGING_NEXT)
+          subscribeToMeasurementsAndCommands()
       }
       $scope.pagePrevious = function() {
         $scope.pageState = subscriptionView.pagePrevious( pointPageRest, pageNotify)
+        // If paged from cache, we don't see a pageNotify. Update subscriptions now!
+        if( $scope.pageState !== GBSubscriptionViewState.PAGING_PREVIOUS)
+          subscribeToMeasurementsAndCommands()
       }
 
 
