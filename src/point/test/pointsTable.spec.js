@@ -1,5 +1,5 @@
 describe('gb-points-table', function () {
-  var scope, $compile, _equipment, _$q, pointsDefer, getPointsDefer;
+  var scope, $compile, _equipment, $q, pointsDefer, getPointsDefer;
   var element,
       entityId = 'entity-1',
       pointCount = 3,
@@ -40,7 +40,7 @@ describe('gb-points-table', function () {
     _equipment = {
       // Not used in current tests. Getting points form parentScope.pointsPromise below.
       getPoints: function (collapsePointsToArray, limit, startAfterId, ascending) {
-        getPointsDefer = _$q.defer()
+        getPointsDefer = $q.defer()
         return getPointsDefer.promise
       }
     }
@@ -63,11 +63,11 @@ describe('gb-points-table', function () {
   
   });
   
-  beforeEach(inject(function ($rootScope, _$compile_, $q) {
+  beforeEach(inject(function ($rootScope, _$compile_, _$q_) {
   
     parentScope = $rootScope
     $compile = _$compile_
-    _$q = $q
+    $q = _$q_
 
     pointsDefer = $q.defer()
     parentScope.pointsPromise = pointsDefer.promise
