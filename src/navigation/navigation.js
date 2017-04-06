@@ -31,7 +31,29 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
  * NavigationElement, in turn, calls menuSelect when items are finished loading (to initialize
  * the controller).
  *
+ * When loading, what needs to be selected first? The ui.router state takes priority (the URL specifies what gets
+ * selected). If the URL doesn't specify an item, then select the first menu item (or perhaps let the menu query result
+ * specify what is selected). The menu may be loading, so the actual selection may need to wait.
+ *
+ * State #/microgrids/Zone1/equipments/ESS1 is different than state #/microgrids/Zone1/esses/ESS1 because a different
+ * part of the tree is selected (note: actual URLs contain UUIDs rather than names).
+ *
  * When menu item is selected, the NavTreeController needs to pass some information to the target controller.
+ *
+ *
+ * Sudo code:
+ *   Load NavTree menu
+ *   if state == 'loading' then
+ *     get default selection in menu, select it, call menuSelect to change state
+ *   else
+ *     select the menu item associated with the given state
+ *     When menuSelect is call, we don't change state.
+ *
+ * Time line: Loading without initial URL/state
+ * 1. State: loading
+ * 2. Load left menu
+ * 3. If
+ *
  *
  * Params:
  *
@@ -44,7 +66,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
  *   name:              Full entity name
  *   shortName:         Visible menu tree label
  *   equipmentChildren: Array of immediate children that are Equipment or EquipmentGroup.
-  *                     Each element is {id, name, shortName}
+ *                      Each element is {id, name, shortName}
  * }
  *
  * Usage Scenarios:
@@ -52,44 +74,81 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
  * navigation.getNavTree($attrs.href, 'navTree', $scope, $scope.menuSelect)
  *
  */
-  factory('navigation', ['rest', function(rest) {   // was navigation
+  factory('navigation', ['rest', '$q', function(rest, $q) {   // was navigation
 
-    function NotifyCache() {
-      this.cache = {}
-      this.listeners = {}
-    }
-
-    NotifyCache.prototype.put = function(key, value) {
-      this.cache[key] = value
-      var notifyList = this.listeners[key]
-      if( notifyList ) {
-        notifyList.forEach(function(notify) { notify(key, value)})
-        delete this.listeners[key];
-      }
-    }
-    NotifyCache.prototype.addListener = function(key, listener) {
-      var listenersForId = this.listeners[key]
-      if( listenersForId )
-        listenersForId.push(listener)
-      else
-        this.listeners[key] = [listener]
-    }
-    NotifyCache.prototype.get = function(key, listener) {
-      var value = this.cache[key]
-      if( !value && listener )
-        this.addListener(key, listener)
-      return value
-    }
-
-
-    var self                       = this,
+    var self = this,
         NavigationClass              = {
           MicroGrid:      'MicroGrid',
           EquipmentGroup: 'EquipmentGroup',
           EquipmentLeaf:  'EquipmentLeaf',
           Sourced:        'Sourced'   // Ex: 'All PVs'. Has sourceUrl, bit no data
         },
-        equipmentIdToTreeNodeCache = new NotifyCache()
+        exports = {
+          STATE_LOADING: 'loading',
+          NavigationClass: NavigationClass
+        }
+
+    function NotifyCache() {
+      this.cache = {}
+      this.deferredSetMapByKey = {} // deferredSet is {deferred: deferred, isReady: function(treeNode){}}
+    }
+
+    NotifyCache.prototype.put = function(key, value) {
+      this.cache[key] = value
+      this.notifyDo( key, value)
+    }
+    NotifyCache.prototype.notify = function(key) {
+      var value = this.cache[key]
+      this.notifyDo( key, value)
+    }
+    NotifyCache.prototype.notifyDo = function(key, value) {
+      if( value === undefined)
+        return
+      var deferredSets = this.deferredSetMapByKey[key]
+      if( deferredSets ) {
+        var i = deferredSets.length,
+            deferredSetsNotReady = []
+        // Delete the list before resolving deferredSets, just in case.
+        delete this.deferredSetMapByKey[key];
+        while( i--) {
+          var deferredSet = deferredSets[i]
+          if( deferredSet.isReady === undefined || deferredSet.isReady( value))
+            deferredSet.deferred.resolve(value)
+          else
+            deferredSetsNotReady[deferredSetsNotReady.length] = deferredSet
+        }
+        if( deferredSetsNotReady.length > 0)
+          this.deferredSetMapByKey[key] = deferredSetsNotReady
+      }
+    }
+    NotifyCache.prototype.addDeferredSet = function(key, deferred, isReady) {
+      var deferredSetsForId = this.deferredSetMapByKey[key],
+          deferredSet = {deferred: deferred, isReady: isReady}
+      if( deferredSetsForId )
+        deferredSetsForId.push(deferredSet)
+      else
+        this.deferredSetMapByKey[key] = [deferredSet]
+    }
+
+    /**
+     * Get the 
+     * @param key
+     * @param isReady
+     * @returns {*|promise|{then, catch, finally}|jQuery.promise|{then, always}}
+     */
+    NotifyCache.prototype.get = function(key, isReady) {
+      var deferred = $q.defer(),
+          value = this.cache[key]
+      if( value !== undefined && (isReady === undefined || isReady(value)))
+        deferred.resolve( value)
+      else
+        this.addDeferredSet(key, deferred, isReady)
+      return deferred.promise
+    }
+
+
+    var equipmentIdToTreeNodeCache = new NotifyCache(), // key is equipmentId
+        stateEquipmentIdToTreeNodeCache = new NotifyCache() // key is state + equipmentId
 
 
     function getNavigationClass(entity) {
@@ -200,7 +259,6 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
       entityWithChildrenList.forEach(function(entityWithChildren) {
         var treeNode = entityToTreeNode(entityWithChildren, parent)
         ra.push(treeNode)
-        equipmentIdToTreeNodeCache.put(treeNode.id, treeNode)
       })
       return ra
     }
@@ -214,6 +272,13 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
         var data = element.data;
         delete element.data;
         angular.extend(element, data)
+        // abn-tree-directive uses 'selected', but also stores current selection. If selected is true, the css will
+        // show the item as selected, but abn-tree-directive doesn't know it, so doesn't deselect it before selecting
+        // something else.
+        if( element.selected) {
+          element.gb_selected = element.selected
+          element.selected = false
+        }
         flattenNavigationElements(element.children)
       })
     }
@@ -235,7 +300,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
       // Breadth first search
       for( i = 0; i < navigationElements.length; i++ ) {
         node = navigationElements[i]
-        if( node.selected ) {
+        if( node.gb_selected ) {
           return node
         }
       }
@@ -253,17 +318,15 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
       return undefined
     }
 
-    function callMenuSelectOnFirstSelectedItem_or_callWhenLoaded( navigationElements, scope, menuSelect) {
+    function callMenuSelectOnFirstSelectedItem_or_callWhenLoaded( navigationElements, scope, onNavTreeLoaded) {
       var selected = findSelected(navigationElements)
-      if( selected) {
-        if( selected.sourceUrl) {
-          // @param menuItem  The selected item. The original (current scoped variable 'selected') could have been replaced.
-          selected.selectWhenLoaded = function( menuItem) {
-            menuSelect.call( scope, menuItem)
-          }
-        } else {
-          menuSelect.call( scope, selected)
+      if( selected && selected.sourceUrl) {
+        // @param menuItem  The selected item. The original (current scoped variable 'selected') could have been replaced.
+        selected.selectWhenLoaded = function( menuItem) {
+          onNavTreeLoaded.call( scope, menuItem)
         }
+      } else {
+        onNavTreeLoaded.call( scope, selected)
       }
     }
 
@@ -273,6 +336,20 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
       // Angular will generate a uid for this object on next digest.
       delete clone.uid;
       return clone
+    }
+
+    function fixInsertedChildrenWithAbnTreeUids( parent) {
+      var children = parent.children
+      if( !parent.uid)
+        parent.uid = '' + Math.random()
+      var i = children ? children.length : 0
+      while( i--) {
+        var child = children[i]
+        child.uid = '' + Math.random()
+        child.parent_uid = parent.uid
+        if( child.children && child.children.length > 0)
+          fixInsertedChildrenWithAbnTreeUids(child)
+      }
     }
 
     function insertTreeNodeChildren(parent, newChildren) {
@@ -285,7 +362,8 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
         parent.selectWhenLoaded( parent);
         delete parent.selectWhenLoaded;
       }
-
+      fixInsertedChildrenWithAbnTreeUids( parent)
+      stateEquipmentIdToTreeNodeCache.notify( getCacheKey(parent))
     }
 
     function getParentStatePrefix( parentState) {
@@ -384,6 +462,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
           delete oldParent.insertLocation;
           delete oldParent.sourceUrl;
           oldParent.loading = false
+          newParent = oldParent
         } else {
           // Insert after the oldParent
           parentTree.splice(index+1, 0, newParent)
@@ -409,10 +488,13 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
             if( sourceUrl ) {
               if( sourceUrl.indexOf('$parent') )
                 child.sourceUrl = sourceUrl.replace('$parent', newParent.id)
-              loadTreeNodesFromSource(newParent.children, newParent.children.length - 1, child, scope)
+              getTreeNodesForChildSourceUrlAndInsertInParentTree(newParent.children, newParent.children.length - 1, child, scope)
             }
           }
         }
+
+        fixInsertedChildrenWithAbnTreeUids( newParent)
+        stateEquipmentIdToTreeNodeCache.notify( getCacheKey(newParent))
 
         // If the oldParent was marked selected and waiting until it was loaded; now we're loaded and we
         // need to select one of these new menu items. We'll pick the first one (which is i === 0).
@@ -422,32 +504,58 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
           delete oldParent.selectWhenLoaded; // just in case
         }
 
+
+      }
+
+    }
+
+    function getCacheKey( node) {
+      return node.hasOwnProperty('id') ? node.state + '.' + node.id
+        : node.hasOwnProperty('microgridId') ? node.state + '.' + node.microgridId
+        : node.state
+    }
+
+    function cacheTreeNodeChildren( parent) {
+      var children = parent.children
+      var i = children ? children.length : 0
+      while( i--) {
+        var child = children[i]
+        // Some children are menu items and some are equipment entities with IDs.
+        if( child.id)
+          equipmentIdToTreeNodeCache.put(child.id, child)
+        stateEquipmentIdToTreeNodeCache.put( getCacheKey(child), child)
+
+        child.uid = '' + Math.random()
+        child.parent_uid = parent.uid
+        if( child.children && child.children.length > 0)
+          cacheTreeNodeChildren(child)
       }
     }
 
-    function loadTreeNodesFromSource(parentTree, index, child, scope) {
-      parentTree[index].loading = true
-      getTreeNodes(child.sourceUrl, scope, child, function(newTreeNodes) {
-        switch( child.insertLocation ) {
-          case 'CHILDREN':
-            // Insert the resultant children before any existing static children.
-            insertTreeNodeChildren(child, newTreeNodes)
-            break;
-          case 'REPLACE':
-            generateNewTreeNodesAtIndexAndPreserveChildren(parentTree, index, newTreeNodes, scope)
-            // original child was replaced.
-            child = parentTree[index]
-            break;
-          default:
-            console.error('navTreeController.loadTreeNodesFromSource.getTreeNodes Unknown insertLocation: ' + child.insertLocation)
-        }
-
-        //child.loading = false
-        //if( child.selectWhenLoaded) {
-        //  child.selectWhenLoaded( child);
-        //  delete child.selectWhenLoaded;
-        //}
-      })
+    function getTreeNodesForChildSourceUrlAndInsertInParentTree(parentTree, index, child, scope) {
+      child.loading = true
+      return getTreeNodes(child.sourceUrl, scope, child).then(
+          function(response) {
+            var newTreeNodes = response.data
+            switch( child.insertLocation ) {
+              case 'CHILDREN':
+                // Insert the resultant children before any existing static children.
+                insertTreeNodeChildren(child, newTreeNodes)
+                break;
+              case 'REPLACE':
+                generateNewTreeNodesAtIndexAndPreserveChildren(parentTree, index, newTreeNodes, scope)
+                // original child was replaced.
+                child = parentTree[index]
+                break;
+              default:
+                console.error('navTreeController.getTreeNodesForChildSourceUrlAndInsertInParentTree.getTreeNodes Unknown insertLocation: ' + child.insertLocation)
+            }
+            cacheTreeNodeChildren(parentTree[index])
+          },
+          function( error) {
+            return error
+          }
+        )
 
     }
 
@@ -463,66 +571,132 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
         entityWithChildrenList.sort( compareEntityWithChildrenByName)
     }
 
-    function getTreeNodes(sourceUrl, scope, parent, successListener) {
-      rest.get(sourceUrl, null, scope, function(entityWithChildrenList) {
-        sortEntityWithChildrenByName( entityWithChildrenList)
-        var treeNodes = entityChildrenListToTreeNodes(entityWithChildrenList, parent)
-        successListener(treeNodes)
-      })
+    /**
+     * Get TreeNodes for the sourceUrl and
+     * @param sourceUrl
+     * @param scope
+     * @param parent
+     * @returns {*}
+     */
+    function getTreeNodes(sourceUrl, scope, parent) {
+      return rest.get(sourceUrl, null, scope).then(
+          function(response) {
+            var entityWithChildrenList = response.data
+            sortEntityWithChildrenByName( entityWithChildrenList)
+            var treeNodes = entityChildrenListToTreeNodes(entityWithChildrenList, parent)
+            return {data: treeNodes}
+          },
+          function( error){
+            return error
+          }
+        )
     }
 
     /**
      * Public API
      */
-    return {
+    // exports.getTreeNodes = getTreeNodes
 
-      NavigationClass: NavigationClass,
+    exports.NotifyCache = function() { return new NotifyCache()}
 
-      /**
-       * Get the tree node by equipment Id. This returns immediately with the value
-       * or null if the menu item is not available yet. If not available,
-       * notifyWhenAvailable will be called when available.
-       *
-       * @param equipmentId
-       * @param notifyWhenAvailable
-       * @returns The current value or null if not available yet.
-       */
-      getTreeNodeByEquipmentId: function(equipmentId, notifyWhenAvailable) { return equipmentIdToTreeNodeCache.get(equipmentId, notifyWhenAvailable)},
+    /**
+     * Get the tree node by equipment Id. This returns immediately with the value
+     * or null if the menu item is not available yet. If not available,
+     * notifyWhenAvailable will be called when available.
+     *
+     * @param equipmentId
+     * @param notifyWhenAvailable
+     * @returns The current value or null if not available yet.
+     */
+    exports.getTreeNodeByEquipmentId = function(equipmentId) { return equipmentIdToTreeNodeCache.get(equipmentId)}
 
-      getTreeNodes: getTreeNodes,
+    /**
+     * Get the tree node by equipment Id and $state. One piece of equipment can be located under multiple different
+     * menus. Each submenu has it's own state, so $state + equipmentId is a unique menu item.
+     *
+     * This returns immediately with the value
+     * or null if the menu item is not available yet. If not available,
+     * notifyWhenAvailable will be called when available.
+     *
+     * @param state $state name
+     * @param equipmentId equipment ID
+     * @param isReady function returning true when TreeNode is ready. Promise resolution will wait for isReady test.
+     * @returns The current value or null if not available yet.
+     */
+    exports.getTreeNodeByStateEquipmentId = function(state, equipmentId, isReady) { return stateEquipmentIdToTreeNodeCache.get(state + (equipmentId? '.' + equipmentId : ''), isReady)}
 
-      /**
-       * Main call to get NavigationElements and populate the navTree menu. After retieving the NavigationElements,
-       * start retrieving the model entities referenced by NavigationElements (via sourceUrl).
-       *
-       * @param url URL for retrieving the NavigationElements.
-       * @param name Store the navTree on scope.name
-       * @param scope The controller scope
-       * @param menuSelect Notify method to call when the NavigationElement marked as selected is finished loading.
-       */
-      getNavTree: function(url, name, scope, menuSelect) {
-        return rest.get(url, name, scope).then(
-          function( response) {
-            var navigationElements = response.data
-            // example: [ {class:'NavigationItem', data: {label:Dashboard, state:dashboard, url:#/dashboard, selected:false, children:[]}}, ...]
-            flattenNavigationElements(navigationElements)
+    /**
+     * Main call to get NavigationElements and populate the navTree menu. After retrieving the NavigationElements,
+     * start retrieving the model entities referenced by NavigationElements (via sourceUrl).
+     *
+     * @param url URL for retrieving the NavigationElements.
+     * @param name Store the navTree on scope.name
+     * @param scope The controller scope
+     * @param onNavTreeLoaded Notify method to call when the NavigationElement marked as selected is finished loading.
+     */
+    exports.getNavTree = function(url, name, scope, onNavTreeLoaded) {
+      return rest.get(url, name, scope).then(
+        function( response) {
+          var navigationElements = response.data
+          // example: [ {class:'NavigationItem', data: {label:Dashboard, state:dashboard, url:#/dashboard, selected:false, children:[]}}, ...]
+          flattenNavigationElements(navigationElements)
 
-            callMenuSelectOnFirstSelectedItem_or_callWhenLoaded( navigationElements, scope, menuSelect)
+          // callMenuSelectOnFirstSelectedItem_or_callWhenLoaded( navigationElements, scope, onNavTreeLoaded)
 
-            navigationElements.forEach(function(node, index) {
-              if( node.sourceUrl )
-                loadTreeNodesFromSource(navigationElements, index, node, scope)
-            })
+          navigationElements.forEach(function(node, index) {
+            if( node.sourceUrl )
+              getTreeNodesForChildSourceUrlAndInsertInParentTree(navigationElements, index, node, scope)
+            else
+              stateEquipmentIdToTreeNodeCache.put(node.state, node)
+          })
 
-            return response
-          },
-          function( error) {
-            return error
-          }
+          return response
+        },
+        function( error) {
+          return error
+        }
 
-        )
+      )
+    }
+
+    /**
+     * Breadth-first search of first menu item where state.
+     * If none found, return undefined. This means the designer doesn't want a menu item selected at
+     * startup.
+     *
+     * @param navigationElements The array of Navigation Elements.
+     * @returns The first NavigationElement where selected is true; otherwise return undefined.
+     */
+    exports.findByStateParams = function (navigationElements) {
+      var i, node, selected
+
+      if( !navigationElements || navigationElements.children === 0 )
+        return undefined
+
+      // Breadth first search
+      for( i = 0; i < navigationElements.length; i++ ) {
+        node = navigationElements[i]
+        if( node.selected ) {
+          return node
+        }
       }
-    } // end return Public API
+
+      // Deep search
+      for( i = 0; i < navigationElements.length; i++ ) {
+        node = navigationElements[i]
+        if( node.children && node.children.length > 0 ) {
+          selected = findSelected(node.children)
+          if( selected )
+            return selected
+        }
+      }
+
+      return undefined
+    }
+
+
+
+  return exports // return Public API
 
   }]). // end factory 'navigation'
 
@@ -599,6 +773,8 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
 
     return rest.get($attrs.href, 'navItems', $scope)
   }]).
+
+
   directive('navList', function() {
     // <nav-list href='/coral/menus/admin'>
     return {
@@ -612,16 +788,16 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
     }
   }).
 
-  controller('NavTreeController', ['$rootScope', '$scope', '$attrs', '$location', '$state', '$cookies', 'rest', 'navigation', function( $rootScope, $scope, $attrs, $location, $state, $cookies, rest, navigation) {
+  controller('NavTreeController', ['$rootScope', '$scope', '$attrs', '$location', '$state', '$stateParams', '$cookies', 'rest', 'navigation', function( $rootScope, $scope, $attrs, $location, $state, $stateParams, $cookies, rest, navigation) {
 
     var currentBranch,
-        firstSelectedBranch,
+        firstSelectedBranch,  // branch selected with app is first loaded.
         treeControl = {}
     $scope.treeControl = treeControl  // filled in by <abn-tree tree-control = "treeControl"> (see: https://github.com/nickperkinslondon/angular-bootstrap-nav-tree)
     $scope.navTree = [
       {
         class:    'Loading',
-        state:    'loading',
+        state:    navigation.STATE_LOADING,
         loading:  true,
         label:    'loading..',
         children: [],
@@ -654,15 +830,15 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
     //  }
     //]
 
-    // When an operator clicks a menu item, the menu item highlighted and this function is called.
+    // When an operator clicks a menu item, the menu item is highlighted and this function is called.
     // This function is specified by the HTML attribute: on-select = "menuSelect(branch)"
     //
     $scope.menuSelect = function(branch) {
       console.log('NavTreeController.menuSelect ' + branch.label + ', state=' + branch.state + ', class=' + branch.class + ', microgridId=' + branch.microgridId)
 
       if( branch.loading ) {
-        console.errror('NavTreeController.menuSelect LOADING! ' + branch.label + ', state=' + branch.state + ', class=' + branch.class + ', microgridId=' + branch.microgridId)
-        $state.go('loading')
+        console.log('NavTreeController.menuSelect ' + branch.label + ' loading... state=' + branch.state + ', class=' + branch.class + ', microgridId=' + branch.microgridId)
+        //$state.go(navigation.STATE_LOADING)
         return
       }
 
@@ -696,14 +872,49 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
       $state.go(branch.state, params)
     }
 
-    function guiSelectMenu( branch) {
-      treeControl.select_branch( branch) // select menu item and call menuSelect
+    // var branchState = "microgrids.essesId",
+    //     sampleParams = {
+    //       id: "88616712-0b0b-4890-8fb1-8d52c3b536ff",
+    //       microgridId: "aafca59e-5f30-4e49-a6bd-5fde8c684b47",
+    //       navigationElement: {
+    //         class: "EquipmentLeaf",
+    //         equipmentChildren: [],
+    //         id: "88616712-0b0b-4890-8fb1-8d52c3b536ff",
+    //         name: "Zone1.ESS1",
+    //         shortName: "ESS1",
+    //         types: ["Zone1", "Generation", "Equipment", "ESS"]
+    //       }
+    //     }
+    /**
+     * The NavTree has bee completely loaded. Figure out what to select.
+     *
+     * @param selectedBranch
+     *
+     * params
+     */
+    function onNavTreeLoaded( selectedBranch) {
+      var microgridId, navigationElement
+
+      if( selectedBranch && $state.is(navigation.STATE_LOADING)) {
+        treeControl.select_branch( selectedBranch) // select menu item and call menuSelect
+      } else {
+        // var branch
+        // // Use $state and $stateParams to find branch and select it.
+        // if( $stateParams.hasOwnProperty('id'))
+        //   branch = navigation.getTreeNodeByStateEquipmentId( $state.current.name, $stateParams.id)
+        // else if( $stateParams.hasOwnProperty('microgridId'))
+        //   branch = navigation.getTreeNodeByStateEquipmentId( $state.current.name, $stateParams.microgridId)
+        // else
+        //   branch = navigation.getTreeNodeByStateEquipmentId( $state.current.name, '')
+        //
+        // treeControl.select_branch( branch) // select menu item and call menuSelect
+      }
     }
 
     $rootScope.$on('$stateChangeSuccess', function( event, toState, toParams, fromState, fromParams) {
 
       // Clicking 'GreenBus' on top menu goes to state 'loading'.
-      if( firstSelectedBranch && toState.name === 'loading') {
+      if( firstSelectedBranch && toState.name === navigation.STATE_LOADING) {
         // if treeControl is empty, abn-tree needs attribute tree-control = "treeControl"
         if( currentBranch !== firstSelectedBranch && angular.isFunction( treeControl.select_branch))
           treeControl.select_branch( firstSelectedBranch) // select menu item and call menuSelect
@@ -712,7 +923,33 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
       }
     })
 
-    return navigation.getNavTree($attrs.href, 'navTree', $scope, guiSelectMenu)
+    function getCacheIdFromStateParams( stateParams) {
+      return $stateParams.hasOwnProperty('id') ? $stateParams.id
+        : $stateParams.hasOwnProperty('microgridId') ? $stateParams.microgridId
+        : ''
+    }
+
+    function isReady( treeNode) {
+      return treeNode.loading !== true
+    }
+
+    // tree data is stored in navTree. abn-tree-directive watches this to build tree.
+    navigation.getNavTree($attrs.href, 'navTree', $scope, onNavTreeLoaded).then(
+      function(response) {
+        // response.data is the loaded NavTree without any sourceUrls loaded.
+
+        var id = getCacheIdFromStateParams( $stateParams)
+        navigation.getTreeNodeByStateEquipmentId( $state.current.name, id, isReady).then (
+          function( branch) {
+            if( branch)
+              treeControl.select_branch( branch) // select menu item and call menuSelect
+          }
+        )
+      },
+      function(error) {
+      }
+    )
+
   }]).
 
   directive('navTree', function() {
