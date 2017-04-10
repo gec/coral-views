@@ -1,5 +1,13 @@
 <div>
-    <h3>Endpoints</h3>
+    <div class="row">
+        <div class="col-md-11">
+            <h3>Endpoints</h3>
+        </div>
+        <div class="col-md-1">
+            <!-- Need display:inline-block for margin-top to work -->
+            <gb-popout style="margin-top: 1.2em; display: inline-block; float:right;"></gb-popout>
+        </div>
+    </div>
 
     <div class="table-responsive" style="overflow-x: auto">
         <alert ng-repeat="alert in alerts" type="{{alert.type}}" close="closeAlert($index)">{{alert.message}}</alert>

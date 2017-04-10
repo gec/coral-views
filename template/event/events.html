@@ -3,11 +3,15 @@
         <div class="col-md-4">
             <h3>Events</h3>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <alert type="info" ng-show="newItems" role="alert" style=" margin-bottom: 0;padding-top: 6px; padding-bottom: 6px;"><i class="fa fa-info-circle"></i> {{ newItems }}</alert>
         </div>
         <div class="col-md-4 text-right" style="padding-top: 20px">
             <gb-pager model="pageState" page-first="pageFirst()" page-previous="pagePrevious()" page-next="pageNext()"></gb-pager>
+        </div>
+        <div class="col-md-1" style="padding-top: 20px">
+            <!-- Need display:inline-block for margin-top to work -->
+            <gb-popout style="float:right;"></gb-popout>
         </div>
     </div>
     <div class="row">

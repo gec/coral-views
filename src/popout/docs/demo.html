@@ -1,0 +1,36 @@
+<div ng-controller="SelectionDemoCtrl">
+
+    <div style="margin-top: 1.2em; margin-bottom: 1.2em;">
+        <input type="text" class="form-control" placeholder="search any column" ng-model="searchText" style-="height: 100%;">
+    </div>
+
+    <div class="row">
+        <div class="col-md-1">
+            <gb-select-all model="items" notify="selectAllChanged(state)"></gb-select-all>
+        </div>
+        <div class="col-md-11">
+            <button class="btn btn-default" ng-show="selectAllState!==0">Something is selected</button>
+        </div>
+    </div>
+
+
+    <table class="table table-condensed gb-row-radius">
+        <thead>
+            <tr>
+                <th>Selected</th>
+                <th>Label</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="item in itemsFiltered = (items | filter:search | orderBy:sortColumn)">
+                <td>
+                    <div class="gb-checkbox-container" ng-click="selectItem(item)" role="checkbox" aria-labelledby=":2f" dir="ltr" aria-checked="true" tabindex="-1">
+                        <i ng-class="item._checked | selectItemClass"></i>
+                    </div>
+                </td>
+                <td>{{ item.label }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
