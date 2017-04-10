@@ -494,7 +494,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
         }
 
         fixInsertedChildrenWithAbnTreeUids( newParent)
-        stateEquipmentIdToTreeNodeCache.notify( getCacheKey(newParent))
+        stateEquipmentIdToTreeNodeCache.put( getCacheKey(newParent), newParent)
 
         // If the oldParent was marked selected and waiting until it was loaded; now we're loaded and we
         // need to select one of these new menu items. We'll pick the first one (which is i === 0).
@@ -550,7 +550,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
               default:
                 console.error('navTreeController.getTreeNodesForChildSourceUrlAndInsertInParentTree.getTreeNodes Unknown insertLocation: ' + child.insertLocation)
             }
-            cacheTreeNodeChildren(parentTree[index])
+            cacheTreeNodeChildren(child)
           },
           function( error) {
             return error
@@ -870,6 +870,15 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
       return treeNode.loading !== true
     }
 
+    function selectTreeNode( treeNode) {
+      // Is there a menu? Could be a popout with not menu.
+      if( angular.isFunction( treeControl.select_branch))
+        treeControl.select_branch( treeNode)  // select menu item and call menuSelect
+      else
+        $scope.menuSelect( treeNode)
+    }
+
+
     // tree data is stored in navTree. abn-tree-directive watches this to build tree.
     navigation.getNavTree($attrs.href, 'navTree', $scope).then(
       function(response) {
@@ -879,11 +888,11 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
           if( response.initialSelection.sourceUrl) {
             // Not loaded yet.
             response.initialSelection.selectWhenLoaded = function( treeNode) {
-              treeControl.select_branch( treeNode)
+              selectTreeNode( treeNode)
             }
           } else {
             // Loaded. Select it now.
-            treeControl.select_branch( response.initialSelection)
+            selectTreeNode( response.initialSelection)
           }
 
         } else {
@@ -895,7 +904,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
           navigation.getTreeNodeByStateEquipmentId( $state.current.name, id, isReady).then (
             function( branch) {
               if( branch)
-                treeControl.select_branch( branch) // select menu item and call menuSelect
+                selectTreeNode( branch) // select menu item and call menuSelect
             }
           )
         }
