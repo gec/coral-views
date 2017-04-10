@@ -1,3 +1,4 @@
-<button class="btn btn-default" ng-click="popout()">
-    <i class="glyphicon glyphicon-share-alt icon-white"></i>
+<button class="btn btn-default" ng-click="popoutOrIn()" popover="{{helpText}}" popover-trigger="mouseenter" popover-placement="bottom">
+    <!--<i class="glyphicon glyphicon-share-alt icon-white"></i>-->
+    <i ng-class="iconClass"></i>
 </button>

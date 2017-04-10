@@ -1,32 +1,17 @@
-## gb-select-all
-Three state checkbox for selecting multiple items. Each object in the model array is annotated with a `checked`
-property. The parent template needs to call `selectItem` when a checkbox is clicked. This directive calls
-`selectAllChanged(state)` when the selectAll state has changed.
+## gb-popout
+Popout the view in a new browser tab
 
 ### Attributes
-#### model
-The array of items that will be selected. This directive will add a `checked` property to each object.
+#### href
+Optional parameter to supply an href rather the the current href.
 
-#### notify
-Called when the selectAll state has changed. Ex: notify="selectAllChanged(state)"
+#### stateHref
+Optional parameter to supply an Angular router rather than the current route.
 
-#### select-item
-Name of function injected on parent controller. It needs to be called by each row in the parent's template.
-Defaults to `selectItem`. See **ng-click="selectItem(item)"** in following example. The parameter for `selectItem()`
-needs to be the variable in the ng-repeat.
+#### window-params
+Optional paramter to pass as the third argument to the window.open() function.
+Example: 'resizeable,top=100,left=100,height=400,width=600,location=no,toolbar=no'
 
-    <div class="gb-checkbox-container" ng-click="selectItem(item)" role="checkbox" aria-labelledby=":2f" dir="ltr" aria-checked="true" tabindex="-1">
-        <i ng-class="item.checked | selectItemClass"></i>
-    </div> 
-
-When delete model items. Call selectItem( item, 0) to make sure all items are deselected before deletion.
-
-### Filters
-#### selectItemClass
-Returns the checkbox icon class for the given checkbox state. Example:
-
-    <i ng-class="item.checked | selectItemClass"></i>
 
 ### Dependencies
-* greenbus-views-&lt;version&gt;.css
-* Font Awesome for checkboxes.
+* Font Awesome for expand and compress icons.

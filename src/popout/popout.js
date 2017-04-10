@@ -19,20 +19,48 @@
  * Author: Flint O'Brien
  */
 
+var gbPopout_endsWithPopout = /popout[/#!]*$/i
+var gbPopout_removePopoutFromHref = /([\d\w/_:])popout\/#([\d\w/_#!&=;?])/
 
 angular.module('greenbus.views.popout', []).
 
-  controller( 'gbPopoutController', ['$scope', '$state', '$stateParams', '$window',
-    function( $scope, $state, $stateParams, $window) {
+  controller( 'gbPopoutController', ['$scope', '$state', '$stateParams', '$window', '$location',
+    function( $scope, $state, $stateParams, $window, $location) {
+      var absUrl = $location.absUrl(),
+          basePath = getBasePath(absUrl),
+          path = $location.path(),
+          endsWithPopout = gbPopout_endsWithPopout.test( basePath)
 
-      $scope.popout = function() {
-        var stateHref = $scope.stateHref || $state.href($state.current.name, $stateParams),
-            href = $scope.href || 'popout/', // Relative to current app's href.
-            fullHref = href + stateHref
-        console.log( 'mmcMicrogridController.tabSetPopout() url=' + href)
-        $window.open(fullHref, '_blank', $scope.windowParams)
+      function getBasePath( path) {
+        var url = absUrl,
+            index = url.indexOf( '?')
+        if( index !== -1)
+          url = url.substring( 0, index)
+        index = url.indexOf( '#')
+        if( index !== -1)
+          url = url.substring( 0, index)
+        return url
       }
+
+      $scope.popoutOrIn = function() {
+
+        if( endsWithPopout) {
+          var newHref = absUrl.replace( gbPopout_removePopoutFromHref, '$1#$2')
+          // $location.path( newHref)
+          $window.location.assign( newHref)
+        } else {
+          var stateHref = $scope.stateHref || $state.href($state.current.name, $stateParams),
+              href = $scope.href || 'popout/', // Relative to current app's href.
+              fullHref = href + stateHref
+          console.log( 'mmcMicrogridController.tabSetPopout() url=' + href)
+          $window.open(fullHref, '_blank', $scope.windowParams)
+        }
+      }
+
+      $scope.iconClass = endsWithPopout ? 'fa fa-compress' : 'fa fa-expand'
+      $scope.helpText = endsWithPopout ? 'pop-in' : 'pop-out'
     }
+
   ]).
 
   /**
