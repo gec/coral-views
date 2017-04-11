@@ -294,7 +294,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
     function findInitialSelection(navigationElements) {
       var i, node, selected
 
-      if( !navigationElements || navigationElements.children === 0 )
+      if( !navigationElements || navigationElements.length === 0 )
         return undefined
 
       // Breadth first search
@@ -758,7 +758,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
   controller('NavTreeController', ['$rootScope', '$scope', '$attrs', '$location', '$state', '$stateParams', '$cookies', 'rest', 'navigation', function( $rootScope, $scope, $attrs, $location, $state, $stateParams, $cookies, rest, navigation) {
 
     var currentBranch,
-        firstSelectedBranch,  // branch selected with app is first loaded.
+        initialSelectionWhenStateLoading,  // branch selected when state is navigation.STATE_LOADING.
         treeControl = {}
 
     // tree-control -  Pass an empty object to the tree as "tree-control".
@@ -838,20 +838,20 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
         params.sourceUrl = branch.sourceUrl
 
       currentBranch = branch
-      if( ! firstSelectedBranch)
-        firstSelectedBranch = branch
+      if( ! initialSelectionWhenStateLoading)
+        initialSelectionWhenStateLoading = branch
       $state.go(branch.state, params)
     }
 
     $rootScope.$on('$stateChangeSuccess', function( event, toState, toParams, fromState, fromParams) {
 
       // Clicking 'GreenBus' on top menu goes to state 'loading'.
-      if( firstSelectedBranch && toState.name === navigation.STATE_LOADING) {
+      if( initialSelectionWhenStateLoading && toState.name === navigation.STATE_LOADING) {
         // if treeControl is empty, abn-tree needs attribute tree-control = "treeControl"
-        if( currentBranch !== firstSelectedBranch && angular.isFunction( treeControl.select_branch))
-          treeControl.select_branch( firstSelectedBranch) // select menu item and call menuSelect
+        if( currentBranch !== initialSelectionWhenStateLoading && angular.isFunction( treeControl.select_branch))
+          treeControl.select_branch( initialSelectionWhenStateLoading) // select menu item and call menuSelect
         else
-          $scope.menuSelect( firstSelectedBranch)
+          $scope.menuSelect( initialSelectionWhenStateLoading)
       }
     })
 
@@ -883,16 +883,16 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
     navigation.getNavTree($attrs.href, 'navTree', $scope).then(
       function(response) {
         // response.data is the loaded NavTree without any sourceUrls loaded.
-
-        if( $state.is(navigation.STATE_LOADING) && response.initialSelection) {
-          if( response.initialSelection.sourceUrl) {
+        initialSelectionWhenStateLoading = response.initialSelection
+        if( $state.is(navigation.STATE_LOADING) && initialSelectionWhenStateLoading) {
+          if( initialSelectionWhenStateLoading.sourceUrl) {
             // Not loaded yet.
-            response.initialSelection.selectWhenLoaded = function( treeNode) {
+            initialSelectionWhenStateLoading.selectWhenLoaded = function( treeNode) {
               selectTreeNode( treeNode)
             }
           } else {
             // Loaded. Select it now.
-            selectTreeNode( response.initialSelection)
+            selectTreeNode( initialSelectionWhenStateLoading)
           }
 
         } else {
