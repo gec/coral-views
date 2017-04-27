@@ -466,7 +466,6 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
               measurement.subscribe( $scope, pointIds, {}, self, onMeasurements, onError)
               getCommandsForPoints( pointIds)  // TODO: does nothing for now.
 
-              $scope.loading = false
               return response // for the then() chain
             },
             function( error) {
@@ -477,6 +476,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
             }
           )
         }
+        $scope.loading = false
       }
     })
 
