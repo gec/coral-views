@@ -86,7 +86,8 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
     var wsHanders = {
 
       onmessage: function (event) {
-        var message = JSON.parse(event.data)
+        var listener, exception,
+            message = JSON.parse(event.data)
 
         switch( message.type) {
           case 'ConnectionStatus':
@@ -95,9 +96,23 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
             break;
           case 'ExceptionMessage':
             console.error( 'ExceptionMessage: ' + JSON.stringify( message.data))
+            listener = getListenerForMessage( message)
+            if( listener && listener.error) {
+              exception = message.data === undefined ? 'unknown' :
+                message.data.exception === undefined ? 'unknown exception' :
+                  message.data.exception
+              listener.error( 'ExceptionMessage: ' + exception, message)
+            }
             break;
           case 'SubscriptionExceptionMessage':
             console.error( 'SubscriptionExceptionMessage: ' + JSON.stringify( message.data))
+            listener = getListenerForMessage( message)
+            if( listener && listener.error) {
+              exception = message.data === undefined ? 'unknown' :
+                message.data.exception === undefined ? 'unknown exception' :
+                message.data.exception
+              listener.error( 'SubscriptionExceptionMessage: ' + exception, message)
+            }
             break;
           case 'AllSubscriptionsCancelledMessage':
             console.error( 'AllSubscriptionsCancelledMessage: ' + JSON.stringify( message.data))
@@ -106,7 +121,7 @@ angular.module('greenbus.views.subscription', ['greenbus.views.authentication'])
 
           default:
             // console.debug( 'onMessage message.subscriptionId=' + message.subscriptionId + ', message.type=' + message.type)
-            var listener = getListenerForMessage( message)
+            listener = getListenerForMessage( message)
             if( listener)
               handleMessageWithListener( message, listener)
         }
