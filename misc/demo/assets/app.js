@@ -1,16 +1,37 @@
 
 document.cookie='coralAuthToken=auth1'
 
-angular.module('greenbus.views.demo', ['ui.bootstrap', 'greenbus.views','plunker', 'ngTouch', 'angularBootstrapNavTree', 'gbMock'], function($httpProvider){
+angular.module('greenbus.views.demo', ['ui.bootstrap', 'greenbus.views','plunker', 'ngTouch', 'angularBootstrapNavTree', 'gbMock', 'ui.router'], function($httpProvider){
   FastClick.attach(document.body);
   delete $httpProvider.defaults.headers.common['X-Requested-With'];
-}).run(['$location', function($location){
+}).
+
+// config([ '$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider) {
+//
+//   // For any unmatched url, redirect to ...
+//   $urlRouterProvider.otherwise("/loading")
+//
+//   $stateProvider
+//     .state('loading',                   { url: "/loading",     template: "<div>pick a module to demo...</div>"})
+//     .state('microgrids',                { url: "/microgrids",     template: "<div>state: microgrids</div>"})
+//     .state('microgrids.dashboard',      { url: "/dashboard",     template: "<div>state: microgrids/doashboard</div>"})
+//     .state('ess',      { url: "/ess",       params: {microgridId: null, navigationElement: null}, templateUrl: "moduledemos/ess/demo.html"})
+// }]).
+
+run(['$location', '$rootScope', function($location,$rootScope){
   //Allows us to navigate to the correct element on initialization
   if ($location.path() !== '' && $location.path() !== '/') {
     smoothScroll(document.getElementById($location.path().substring(1)), 500, function(el) {
       location.replace(el.id);
     });
   }
+
+  // Pretty print the Javascript Markdown after each view is loaded.
+  $rootScope.$on('$viewContentLoaded', function(event, viewConfig){
+    // works better with the delay. Still not completely without errors.
+    setTimeout( Rainbow.color, 1000)
+  })
+  // $rootScope.$on('stateChangeSuccess', Rainbow.color)
 }]);
 
 var builderUrl = "http://50.116.42.77:3001";

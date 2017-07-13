@@ -120,6 +120,18 @@ module.exports = function(grunt) {
           dest: 'dist/'
         }]
       },
+      moduleDocsAssets: {
+        files: [{
+          expand: true,
+          //Don't re-copy html files, we process those
+          src: ['*/docs/*', '!*/docs/*.md'],
+          cwd: 'src/',
+          dest: 'dist/moduledemos/',
+          rename: function (dest, src) {
+            return dest + src.replace('docs/','');
+          }
+        }]
+      },
       imageassets: {
         files: [{
           expand: true,
@@ -319,6 +331,37 @@ module.exports = function(grunt) {
     };
     module.dependencies.forEach(findModule);
     grunt.config('modules', grunt.config('modules').concat(module));
+
+    // output the html, md, and js to a single file to display when each component is selected.
+    var contents =
+          '<div class="row">\n' +
+          '  <div class="col-md-12">\n' +
+               module.docs.html + '\n' +
+          '    <hr>\n' +
+          '    <div class="row code">\n' +
+          '      <div class="col-md-12" ng-controller="PlunkerCtrl">\n' +
+          '        <div class="pull-right"><button class="btn btn-info" id="plunk-btn" ng-click="edit(\'<%= ngversion%>\', \'<%= bsversion %>\', \'<%= pkg.version%>\', \'<%= module.name %>\')"><i class="glyphicon glyphicon-edit"></i> Edit in plunker</button></div>\n' +
+          '        <tabset>\n' +
+          '          <tab heading="Markup">\n' +
+          '            <div plunker-content="markup"><pre ng-non-bindable><code data-language="html">\n' +
+                         module.docs.html + '\n' +
+          '            </code></pre></div>\n' +
+          '          </tab>\n' +
+          '          <tab heading="JavaScript">\n' +
+          '            <div plunker-content="javascript"> <pre ng-non-bindable><code data-language="javascript">\n' +
+                         module.docs.js + '\n' +
+          '             </code></pre></div>\n' +
+          '          </tab>\n' +
+          '          <tab heading="Docs">\n' +
+                        module.docs.md + '\n' +
+          '          </tab>\n' +
+          '        </tabset>\n' +
+          '      </div>\n' +
+          '    </div>\n' +
+          '  </div>\n' +
+          '</div>\n'
+
+    grunt.file.write('dist/moduledemos/'+module.name+'/content.html', contents)
   }
 
   function dependenciesForModule(name) {

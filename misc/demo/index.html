@@ -31,7 +31,12 @@
     <link rel="stylesheet" href="assets/d3-traits/d3-traits.css"/>
     <link rel="stylesheet" href="greenbus-views-<%= pkg.version%>.css"/>
     <link rel="stylesheet" href="assets/demo.css"/>
-</head>
+
+    <% demoModules.forEach(function(module) { %>
+      <script src="moduledemos/<%= module.name %>/demo.js"></script>
+    <% }); %>
+
+  </head>
 <body class="ng-cloak" ng-controller="MainCtrl">
 <header class="navbar navbar-default navbar-fixed-top">
     <div class="navbar-inner">
@@ -141,44 +146,22 @@
                     But in AngularJS adding empty <code>href</code> attributes to link tags will cause unwanted route changes. This is why we need to remove empty <code>href</code> attributes from directive templates and as a result styling is not applied correctly. The remedy is simple, just add the following styling to your application: <pre><code>.nav, .pagination, .carousel, .panel-title a { cursor: pointer; }</code></pre>
                     </p>
                 </section>
-                <% demoModules.forEach(function(module) { %>
-                    <section id="<%= module.name %>">
-                        <div class="page-header">
-                          <h1><%= module.displayName %><small>
-                              (<a target="_blank" href="https://github.com/angular-ui/bootstrap/tree/master/src/<%= module.name %>">greenbus.views.<%= module.name %></a>)
-                          </small></h1>
-                          </div>
-                          <div class="row">
-                            <div class="col-md-6 show-grid">
-                                <%= module.docs.html %>
-                            </div>
-                            <div class="col-md-6">
-                                <%= module.docs.md %>
-                            </div>
-                        </div>
-                        <hr>
-                        <div class="row code">
-                            <div class="col-md-12" ng-controller="PlunkerCtrl">
-                                <div class="pull-right">
-                                    <button class="btn btn-info" id="plunk-btn" ng-click="edit('<%= ngversion%>', '<%= bsversion %>', '<%= pkg.version%>', '<%= module.name %>')"><i class="glyphicon glyphicon-edit"></i> Edit in plunker</button>
-                                </div>
-                                <tabset>
-                                    <tab heading="Markup">
-                                        <div plunker-content="markup">
-                                            <pre ng-non-bindable><code data-language="html"><%- module.docs.html %></code></pre>
-                                        </div>
-                                    </tab>
-                                    <tab heading="JavaScript">
-                                        <div plunker-content="javascript">
-                                            <pre ng-non-bindable><code data-language="javascript"><%- module.docs.js %></code></pre>
-                                        </div>
-                                    </tab>
-                                </tabset>
-                            </div>
-                        </div>
+                <div class="row">
+                  <div class="col-md-10">
+                    <div ui-view></div>
+                  </div>
+                  <div class="col-md-2">
+                    <section class="bs-sidebar" id="directives">
+                      <ul class="nav bs-sidenav">
+                        <li><a href="#"><strong>Directives</strong></a></li>
+                        <% demoModules.forEach(function(module) {  %>
+                        <li><a ui-sref="<%= module.name %>"><%= module.displayName %></a></li>
+                        <% }); %>
+                      </ul>
                     </section>
-                    <script><%= module.docs.js %></script>
-                <% }); %>
+                  </div>
+                </div>
+
             </div>
         </div>
     </div><!-- /.container -->
@@ -286,5 +269,23 @@
 
 </script>
 <script src="assets/smoothscroll-angular-custom.js"></script>
+
+<script type="text/javascript">
+  angular.module('greenbus.views.demo').config([ '$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider) {
+
+    // For any unmatched url, redirect to ...
+    $urlRouterProvider.otherwise("/loading")
+
+    $stateProvider
+      .state('loading',                   { url: "/loading",     template: "<div>pick a module to demo...</div>"})
+      .state('microgrids',                { url: "/microgrids",     template: "<div>state: microgrids</div>"})
+      .state('microgrids.dashboard',      { url: "/dashboard",     template: "<div>state: microgrids/doashboard</div>"})
+    <% demoModules.forEach(function(module) { %>
+      .state('<%= module.name %>',      { url: "/<%= module.name %>",       params: {microgridId: null, navigationElement: null}, templateUrl: "moduledemos/<%= module.name %>/content.html"})
+    <% }); %>
+
+  }])
+</script>
+
 </body>
 </html>
