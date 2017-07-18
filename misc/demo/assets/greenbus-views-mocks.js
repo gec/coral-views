@@ -321,7 +321,7 @@ function makeRest($injector) {
         return;
       }
     }
-    throw new Error('gbMock.rest: No matching request found for ' + method + ' ' + url);
+    throw new Error('gbMock.rest: No matching request found for ' + method + ' ' + url + ', data: ' + JSON.stringify( data));
   }
 
   Rest.get = function(url, name, $scope, successListener, failureListener) {
