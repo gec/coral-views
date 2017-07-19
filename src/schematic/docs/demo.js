@@ -29,7 +29,15 @@ angular.module('greenbus.views.demo').controller('SchematicDemoCtrl', function (
           'pointType': 'STATUS',
           'types': ['Point'],
           'unit': 'status',
-          'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6'
+          'endpoint': 'brkr-2'
+        },
+        {
+          'name': 'BKR3.Status',
+          'id': 'bkr3-status-id',
+          'pointType': 'STATUS',
+          'types': ['Point'],
+          'unit': 'status',
+          'endpoint': 'brkr-3'
         }
       ],
       pointNames = points.map(function(p){return p.name}),
@@ -45,7 +53,7 @@ angular.module('greenbus.views.demo').controller('SchematicDemoCtrl', function (
     return value
   }
 
-  rest.whenGET( '/models/1/points?pnames=' + pointNames[0] + '&pnames=' + pointNames[1]).
+  rest.whenGET( '/models/1/points?pnames=' + pointNames[0] + '&pnames=' + pointNames[1] + '&pnames=' + pointNames[2]).
     respond(points)
   // rest.whenGET( '/models/1/points?pids=' + point.id).
   //   respond([
@@ -85,7 +93,7 @@ angular.module('greenbus.views.demo').controller('SchematicDemoCtrl', function (
         <text class="default" x="10" y="18">Schematic 1</text>\
       </g>\
       <g>\
-        <svg preserveAspectRatio="xMaxYMax" class="symbol clickable" tgs:schematic-type="equipment-symbol" x="5" y="25" tgs:point-name="' + points[0].name + '" tgs:symbol-type="circuitbreaker" tgs:action="command">\
+        <svg id="symbol1" preserveAspectRatio="xMaxYMax" class="symbol clickable" tgs:schematic-type="equipment-symbol" x="5" y="25" tgs:point-name="' + points[0].name + '" tgs:symbol-type="circuitbreaker" tgs:action="command">\
           <g tgs:state="Open" display="none"><rect x="2" y="2" width="30" height="30" style="fill:#00FF00"/></g>\
           <g tgs:state="Closed"><rect x="2" y="2" width="30" height="30" style="fill:#A40000"/></g>\
           <g tgs:state="Unknown">\
@@ -95,7 +103,7 @@ angular.module('greenbus.views.demo').controller('SchematicDemoCtrl', function (
         </svg>\
       </g>\
       <g>\
-        <svg preserveAspectRatio="xMaxYMax" class="symbol clickable" tgs:schematic-type="equipment-symbol" x="5" y="70" tgs:point-name="' + points[1].name + '" tgs:symbol-type="circuitbreaker" tgs:action="command">\
+        <svg id="symbol2" preserveAspectRatio="xMaxYMax" class="symbol clickable" tgs:schematic-type="equipment-symbol" x="5" y="70" tgs:point-name="' + points[1].name + '" tgs:symbol-type="circuitbreaker" tgs:action="command">\
           <g tgs:state="Open" display="none">\
             <ellipse fill="#00FF00" stroke="#FFFFFF" cx="50" cy="10" rx="10" ry="10"/>\
           </g>\
@@ -106,9 +114,34 @@ angular.module('greenbus.views.demo').controller('SchematicDemoCtrl', function (
             <ellipse fill="none" stroke="#FFFFFF" cx="15" cy="15" rx="10" ry="10"/>\
             <use class="quality-display" xlink:href="#quality_invalid" y="5" x="5"/>\
           </g>\
-          <g tgs:state="Unknown">\
-            <ellipse fill="none" stroke="#FFFFFF" cx="15" cy="15" rx="10" ry="10"/>\
-            <use class="quality-display" xlink:href="#quality_invalid" y="5" x="5"/>\
+        </svg>\
+      </g>\
+      <g>\
+        <svg id="symbol3" preserveAspectRatio="xMaxYMax" class="symbol clickable" tgs:schematic-type="equipment-symbol" x="100" y="115" tgs:point-name="' + points[2].name + '" tgs:symbol-type="circuitbreaker" tgs:action="command">\
+          <g tgs:control-select="select-open-left" tgs:control-name="Open" class="control-status-area">\
+            <g class="control-selected-area">\
+              <rect class="" x="32" y="1" width="77" height="30"></rect>\
+              <g tgs:control-execute class="control-execute-button button">\
+                <rect x="38" y="5.5" width="68" height="21"></rect>\
+                <text class="default" x="44" y="21">EXECUTE</text>\
+              </g>\
+            </g>\
+            <path d="M0,16 q0,16,16,16 l16,0 l0,-32 l-16,0 q-16,0,-16,16"/>\
+            \
+            <g tgs:state="Open">\
+               <ellipse fill="#00FF00" stroke="#666" cx="16" cy="16" rx="10" ry="10"></ellipse>\
+             </g>\
+             <g tgs:state="Closed">\
+              <ellipse fill="#e40000" stroke="#666" cx="16" cy="16" rx="10" ry="10"></ellipse>\
+            </g>\
+            <g tgs:state="Unknown">\
+              <ellipse fill="none" stroke="#666" cx="16" cy="16" rx="10" ry="10"></ellipse>\
+              <use class="quality-display" xlink:href="#quality_invalid" y="5" x="5"></use>\
+            </g>\
+          </g>\
+          <g class="control-label" tgs:control-select="select-open-left">\
+           <path  d="M35,0 l140,0 q4,0,4,4 l0,24 q0,4,-4,4 l-140,0 Z"/>\
+           <text class="control-label-" x="45" y="20">ANOTHER CONTROL</text>\
           </g>\
         </svg>\
       </g>\

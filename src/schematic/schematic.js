@@ -19,7 +19,7 @@
  * Author: Flint O'Brien
  */
 
-angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'greenbus.views.rest', 'greenbus.views.request']).
+angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'greenbus.views.rest', 'greenbus.views.request', 'greenbus.views.command']).
 
   /**
    * Schematic services.
@@ -145,12 +145,12 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
 
     /**
      *
-     *  <g schematic-type="point" name="LV.Line.kW_tot" tgs:point-name="LV.Line.kW_tot" id="LV.Line.kW_tot">
+     *  <g tgs:schematic-type="point" name="LV.Line.kW_tot" tgs:point-name="LV.Line.kW_tot" id="LV.Line.kW_tot">
      *    <use class="quality-display" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#quality_invalid" y="78" x="257" id="svg_550"></use>
      *    <text class="data-label" x="277" y="92" id="svg_551">48 kW</text>
      *  </g>
      *
-     *  <svg schematic-type="equipment-symbol"  symbol-type=“circuitbreaker" tgs:point-name="LV.CB_Main.Status"  class="symbol"  preserveAspectRatio=“xMaxYMax" id="svg_462" x="364" y="104">
+     *  <svg tgs:schematic-type="equipment-symbol"  symbol-type=“circuitbreaker" tgs:point-name="LV.CB_Main.Status"  class="symbol"  preserveAspectRatio=“xMaxYMax" id="svg_462" x="364" y="104">
      *    <g state="open" display="none" id="svg_465">
      *      <rect x="2" y="2" width="30" height="30" fill="#00FF00" id="svg_466"></rect>
      *    </g>
@@ -159,27 +159,36 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
      *    </g>
      *  </svg>
      *
-     *  <rect schematic-type="navigation-area" class="navigation-area clickable" uri="ModelNodeDetailPlace:?model_node_name=LV;tab=schematic" fill="#FFFFFF" stroke-width="0" stroke-dasharray="null" stroke-linejoin="null" stroke-linecap="null" x="210" y="10" width="460" height="480" id="svg_349"></rect>
+     *  <rect tgs:schematic-type="navigation-area" class="navigation-area clickable" uri="ModelNodeDetailPlace:?model_node_name=LV;tab=schematic" fill="#FFFFFF" stroke-width="0" stroke-dasharray="null" stroke-linejoin="null" stroke-linecap="null" x="210" y="10" width="460" height="480" id="svg_349"></rect>
+     *
+     *  <* tgs:schematic-type="control" direct-operate="true" class="control clickable" tgs:point-name="LV.CB_Main.Trip" control-name="Open">
+     *    <g class="control-spinner gb-executing">
+     *      <path opacity=".25" d="M16 0 A16 16 0 0 0 16 32 A16 16 0 0 0 16 0 M16 4 A12 12 0 0 1 16 28 A12 12 0 0 1 16 4"/>
+     *      <path d="M16 0 A16 16 0 0 1 32 16 L28 16 A12 12 0 0 0 16 4z">
+     *      </path>
+     *    </g>
+     *  </*>
      *
      *  @param rootElement
      */
     exports.parseElements = function( rootElement) {
-      var symbols = {},
+      var symbolElements = {},
           elements = rootElement.find( '[tgs\\:schematic-type]')
 
-      symbols.measurements = elements.filter( '[tgs\\:schematic-type=point]')
-      symbols.equipment = elements.filter( '[tgs\\:schematic-type=equipment-symbol]')
-      symbols.navigationAreas = elements.filter( '[tgs\\:schematic-type=navigation-area]')
-      symbols.navigationLabels = elements.filter( '[tgs\\:schematic-type=navigation-label]')
+      symbolElements.measurements = elements.filter( '[tgs\\:schematic-type=point]')
+      symbolElements.equipment = elements.filter( '[tgs\\:schematic-type=equipment-symbol]')
+      // symbolElements.controls = elements.filter( '[tgs\\:schematic-type=control]')
+      symbolElements.navigationAreas = elements.filter( '[tgs\\:schematic-type=navigation-area]')
+      symbolElements.navigationLabels = elements.filter( '[tgs\\:schematic-type=navigation-label]')
 
       var measurementDecimals = parseInt( rootElement.children('svg').attr('tgs:measurement-decimals'))
       if( isNaN( measurementDecimals))
         measurementDecimals = 1
 
-      symbols.options = {
+      symbolElements.options = {
         measurementDecimals: measurementDecimals
       }
-      return symbols
+      return symbolElements
     }
 
 
@@ -306,15 +315,23 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
         defs.append( makeSvgSymbol( SVG_QUALITY.QUESTIONABLE))
     }
 
-    exports.transformSymbols = function( symbols) {
-      var measurementPointNames, equipmentPointNames, pointNames
-      // Convert jQuery object to array of strings.
-      measurementPointNames  = symbols.measurements.map( exports.transformMeasurementAndReturnPointName).get()
-      equipmentPointNames  = symbols.equipment.map( exports.transformEquipmentAndReturnPointName).get()
+    exports.bindSymbols = function( symbolElements) {
+      var measurementPointNames, equipment, equipmentPointNames, controlPointNames, pointNames, symbols
+      // Convert jQuery object to array of strings. Final get() is to convert jQuery object list to simple array.
+      measurementPointNames  = symbolElements.measurements.map( exports.bindMeasurementSymbols).get()
+      equipment  = symbolElements.equipment.map( exports.bindEquipmentSymbols).get()
+      // controlPointNames  = symbolElements.controls.map( exports.transformControlAndReturnPointName).get()
 
-      pointNames = measurementPointNames.concat( equipmentPointNames).unique()
+      equipmentPointNames = equipment.map( function(eq){return eq.pointName})
+      pointNames = measurementPointNames.concat( equipmentPointNames /*, controlPointNames*/).unique()
+      pointNames = pointNames.filter( function(s) {return s !== undefined && s.length > 0})
 
-      return pointNames
+      symbols = {
+        pointNames: pointNames,
+        equipment: equipment,
+        options: symbolElements.options
+      }
+      return symbols
     }
 
     /**
@@ -326,7 +343,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
      *
      *  @param rootElement
      */
-    exports.transformMeasurementAndReturnPointName = function( ) {
+    exports.bindMeasurementSymbols = function( ) {
       var element = $(this),
           pointName = element.attr( 'tgs:point-name'),
           useQuality = element.find( 'use'),
@@ -353,42 +370,101 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       //useQuality.attr( 'xlink:href', '')  // ng-href will fill this in. See http://jsbin.com/sigoleya/1/edit?html,js,output
       useQuality.attr( 'xlink:href', '{{ pointNameMap[\'' + pointName + '\'].currentMeasurement.validity | schematicValidityToHref }} ')
 
-      element.attr( 'ng-click', 'equipmentClicked( pointNameMap[\'' + pointName + '\'])')
 
       return pointName
     }
 
     /**
+     * @typedef {Object} BoundEquipment
+     * @property {string} pointName The principal point name for this symbol. Shows the symbol's state based on measurement status.
+     * @property {string[]} symbolControlNames control names from symbol
+     * @property {string[]} symbolStateNames state names from symbol
+     */
+    /**
+     * Bind equipment symbol states to model so the correct state is displayed according to the current status measurement value.
+     * Bind select classes so user can select/deselect equipment.
      *
-     *  <svg preserveAspectRatio="xMaxYMax" class="symbol" tgs:schematic-type="equipment-symbol" id="svg_619" x="484" y="404" tgs:point-name="Zone1.PCC_cbr_cust.Status" tgs:symbol-type="circuitbreaker">
-     *    <g tgs:state="open" display="none" id="svg_622">
-     *      <rect x="2" y="2" width="30" height="30" fill="#00FF00" id="svg_623"/>
+     *  @param index
+     *  @return {BoundEquipment}
+     */
+    exports.bindEquipmentSymbols = function(index) {
+      var equipment, symbolStateNames, symbolControlNames,
+          element = $(this),
+          // id = element.id(),
+          states = element.find( '[tgs\\:state]'),
+          controlSelects = element.find( '[tgs\\:control-select]'),
+          controlNameElements = element.find( '[tgs\\:control-name]'),
+          pointName = element.attr( 'tgs:point-name')
+
+      if( !pointName || pointName.length === 0)
+        return {}
+
+      symbolStateNames = states.map( function() {
+        var stateElement = $(this),
+            stateName = stateElement.attr( 'tgs:state')
+        stateElement.attr( 'ng-show', 'pointNameMap[\'' + pointName + '\'].currentMeasurement.value === \'' + stateName + '\'')
+        stateElement.removeAttr( 'display')
+        return stateName
+      }).get() // convert JQuery elements to array of strings.
+
+      // Select one or more parts of the equipment symbol to expand to the selected state. Operator may be able to click on multiple
+      // parts of equipment symbol to open the commands to be selected. If there is only one command, then it is being selected when
+      // the equipment is opened.
+      // TODO: need to handle multiple commands at some point.
+      controlSelects.each(function() {
+        var selectElement = $(this),
+            selectClass = selectElement.attr('tgs:control-select')
+        selectElement.attr( 'ng-click', 'equipmentSelectToggle(symbols.equipment[' + index + '],\'' + selectClass + '\')')
+      })
+      symbolControlNames = controlNameElements.map(function() {
+        var controlNameElement = $(this),
+            controlName = controlNameElement.attr('tgs:control-name')
+
+        controlNameElement.attr( 'ng-class', 'symbols.equipment[' + index + '].classes')
+
+        var controlExecutes = controlNameElement.find( '[tgs\\:control-execute]')
+        controlExecutes.each(function() {
+          var executeElement = $(this)
+          executeElement.attr( 'ng-click', 'equipmentControlExecute(symbols.equipment[' + index + '],\'' + controlName + '\')')
+        })
+        return controlName
+      }).get() // convert JQuery elements to array of strings.
+
+      return {
+        pointName: pointName,
+        symbolControlNames: symbolControlNames.unique(),
+        symbolStateNames: symbolStateNames.unique()
+      }
+    }
+
+
+    /**
+     *
+     *  <* tgs:schematic-type="control" direct-operate="true" class="control clickable" tgs:point-name="LV.CB_Main.Trip" tgs:control-name="Open">
+     *    <g tgs:control-spinner>
+     *      <path opacity=".25" d="M16 0 A16 16 0 0 0 16 32 A16 16 0 0 0 16 0 M16 4 A12 12 0 0 1 16 28 A12 12 0 0 1 16 4"/>
+     *      <path d="M16 0 A16 16 0 0 1 32 16 L28 16 A12 12 0 0 0 16 4z">
+     *      </path>
      *    </g>
-     *    <g tgs:state="closed" id="svg_620">
-     *     <rect x="2" y="2" width="30" height="30" fill="#A40000" id="svg_621"/>
-     *    </g>
-     *  </svg>
+     *  </*>
      *
      *  @param rootElement
      */
-    exports.transformEquipmentAndReturnPointName = function( ) {
-      var element = $(this),
-          states = element.find( '[tgs\\:state]'),
-          pointName = element.attr( 'tgs:point-name')
-
-      if( pointName && pointName.length > 0) {
-        states.map( function() {
-          var stateElement = $(this),
-              stateName = stateElement.attr( 'tgs:state')
-          stateElement.attr( 'ng-show', 'pointNameMap[\'' + pointName + '\'].currentMeasurement.value === \'' + stateName + '\'')
-          stateElement.removeAttr( 'display')
-          return stateName
-        })
-      }
-
-      return pointName
-    }
-
+    // exports.transformControlAndReturnPointName = function( ) {
+    //   var element = $(this),
+    //       pointName = element.attr( 'tgs:point-name'),
+    //       controlName = element.attr( 'tgs:control-name'),
+    //       controlSpinners = element.find( '[tgs\\:control-spinner]')
+    //
+    //   element.attr( 'ng-click', 'controlClicked( pointNameMap[\'' + pointName + '\'],\'' + controlName + '\')')
+    //   if( controlSpinners.length >=1) {
+    //     var controlSpinner = controlSpinners[0]
+    //     controlSpinner.removeAttr( 'class')
+    //     controlSpinner.attr( 'ng-class', 'pointNameMap[\'' + pointName + '\'].controls[\'' + controlName + '\'].executing | schematicControlExecutingClasses)')
+    //   }
+    //
+    //   return pointName
+    // }
 
     return exports
 
@@ -400,7 +476,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
   /**
    * Controller for a single schematic (like inside the pop-out window).
    */
-  controller( 'gbSchematicController', ['$scope', '$window', '$state', '$stateParams', 'measurement', 'rest', 'schematic', function( $scope, $window, $state, $stateParams, measurement, rest, schematic) {
+  controller( 'gbSchematicController', ['$scope', '$window', '$state', '$stateParams', 'measurement', 'rest', 'schematic', 'gbCommandRest', function( $scope, $window, $state, $stateParams, measurement, rest, schematic, gbCommandRest) {
 
     var  self = this,
          microgridId       = $stateParams.microgridId,
@@ -415,7 +491,6 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
     $scope.loading = true
     $scope.svgSource = undefined
     $scope.symbols = undefined
-    $scope.pointNames = []
     $scope.pointNameMap = {} // points by point name. {id, name:, currentMeasurement:}
     $scope.alerts = []
 
@@ -425,7 +500,69 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
         $scope.alerts.splice(index, 1)
     }
 
-    $scope.equipmentClicked = function( point) {
+    function findControl(point, controlName) {
+      if( !point)
+        return undefined
+
+      var control,
+          n = point.controls.length,
+          name = controlName.toLowerCase()
+      while(--n) {
+        control = point.controls[n]
+        if( control.name.toLowerCase() === name)
+          return control
+      }
+      return undefined
+    }
+
+    function getMessageFromException( ex) {
+      if( ! ex)
+        return undefined
+      var message = ex.message
+      if( message === undefined || message === '')
+        message = ex.exception
+      return message
+    }
+
+    $scope.controlClicked = function( point, controlName) {
+      var msg,
+          control = findControl(point, controlName)
+
+      if(!point){
+        msg = 'No point found'
+        $scope.alerts = [{ type: 'danger', message: msg}]
+        return
+      } else if (!control){
+        msg = 'Control "' + controlName + '" not found on point ' + point.name
+        $scope.alerts = [{ type: 'danger', message: msg}]
+        return
+      } else if(control.commandType !== 'CONTROL'){
+        msg = 'Command "' + controlName + '" on point ' + point.name + ' is not a control. Type is ' + control.commandType
+        $scope.alerts = [{ type: 'danger', message: msg}]
+        return
+      }
+
+      control.executing = true
+      gbCommandRest.select('ALLOWED', [control.id]).then(
+        function(lock) {
+          gbCommandRest.execute(control.id, {commandLockId: lock.id}).then(
+            function (commandResult) {
+              control.executing = false
+            },
+            function (ex, statusCode, headers, config) {
+              console.log('gbSchematci.controlClicked:execute ' + JSON.stringify(ex))
+              control.executing = false
+              msg = 'Execute failed for control "' + controlName + '" on point ' + point.name + ' - ' + getMessageFromException(ex)
+              $scope.alerts = [{ type: 'danger', message: msg}]
+            }
+          )
+        },
+        function(ex, statusCode, headers, config) {
+          control.executing = false
+          msg = 'Failed to auto-select control "' + controlName + '" on point ' + point.name + ' - ' + getMessageFromException(ex)
+          $scope.alerts = [{ type: 'danger', message: msg}]
+        }
+      )
     }
 
     /**
@@ -440,21 +577,19 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
     $window.addEventListener( 'unload', function( event) {
     })
 
-    $scope.$watch('symbols', function(newValue) {
-      if( newValue !== undefined) {
-        console.log( 'gbSchematicController: got symbols pointNames.length: ' + $scope.symbols.measurements.length)
-        measurementDecimals = newValue.options.measurementDecimals
-      }
-    })
-
-    // Directive sets pointNames after getting SVG content.
+    // Directive sets symbols after getting SVG content.
     //
-    $scope.$watch('pointNames', function(newValue) {
+    $scope.$watch('symbols', function(newValue) {
+      var pointNames
+
       if( newValue !== undefined) {
-        console.log( 'gbSchematicController: got pointNames.length: ' + $scope.pointNames.length)
+        measurementDecimals = newValue.options.measurementDecimals
+        pointNames = newValue.pointNames
+
+        console.log( 'gbSchematicController: got pointNames.length: ' + pointNames.length)
         // TODO: unsubscribe from previous schematic's points. Could optimize for large overlaps in points when schematic changes.
-        if( $scope.pointNames.length > 0) {
-          schematic.getPointsByName( $scope.pointNames).then(
+        if( pointNames.length > 0) {
+          schematic.getPointsByName( pointNames).then(
             function( response) {
               // We get the points that exist. If some points don't exist, the values remain as XXXX and invalid quality.
               $scope.points = response.data
@@ -479,6 +614,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
         $scope.loading = false
       }
     })
+
 
     function processMeasurement( measurement) {
       measurement = angular.copy( measurement)
@@ -509,6 +645,8 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
           //    unit: "V"
           // }
 
+          // TODO: if status measurement, check if not one of the symbol's states, then display Unknown state.
+          // TODO: if status measurement is invalid quality, show invalid 'X' over center of symbol. Also for questionable quality.
           point.currentMeasurement = processMeasurement( pm.measurement)
 
         } else {
@@ -539,30 +677,31 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
           console.error('------------- point: ' + point.name + ' point.pointType "' + point.pointType + '" is empty or null.')
         if( typeof point.unit !== 'string' )
           point.unit = ''
+        if( point.pointType === 'STATUS')
+          point.currentMeasurement.value = 'Unknown'
 
       })
       return idMap
     }
 
     function getCommandsForPoints(pointIds) {
-      // TODO: see measurement.getCommandsForPoints when schematic implements commands.
-      //measurement.getCommandsForPoints( pointIds).then(
-      //  function( response) {
-      //    var point,
-      //        data = response.data
-      //    // data is map of pointId -> commands[]
-      //    for( var pointId in data ) {
-      //      point = pointIdMap[pointId]
-      //      if( point ) {
-      //        // TODO: see measurement.getCommandsForPoints
-      //        point.commands = data[pointId]
-      //      }
-      //      else
-      //        console.error( 'gbSchematicController.getCommandsForPoints Unknown point ID ' + pointId)
-      //    }
-      //
-      //  }
-      //)
+      measurement.getCommandsForPoints( pointIds).then(
+       function( response) {
+         var point,
+             data = response.data
+         // data is map of pointId -> commands[]
+         for( var pointId in data ) {
+           point = pointIdMap[pointId]
+           if( point ) {
+             // TODO: see measurement.getCommandsForPoints
+             point.commands = data[pointId]
+           }
+           else
+             console.error( 'gbSchematicController.getCommandsForPoints Unknown point ID ' + pointId)
+         }
+
+       }
+      )
     }
 
 
@@ -572,7 +711,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
 
       return schematic.subscribe( equipmentId, $scope,
         function( subscriptionId, content, eventType) {
-          $scope.svgSource = content  // directive is watching this and will parse SVG and set $scope.pointNames.
+          $scope.svgSource = content  // directive is watching this and will parse SVG and set $scope.symbols.
           $scope.$digest()
         },
         function( error, message) {
@@ -595,24 +734,23 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       controller: 'gbSchematicController',
       templateUrl: 'greenbus.views.template/schematic/equipmentSchematic.html',
       link: function (scope, elem, attrs) {
-        var symbols
+        var symbolElements
 
         // The controller does the subscription and we add the SVG schematic to the DOM.
         scope.$watch('svgSource', function(newValue) {
           if( newValue !== undefined) {
-            var elemChild, svg
+            var elemChild, svg, symbols, pointNames
 
             elemChild = elem.find('.gb-equipment-schematic')
             svg = $.parseHTML( newValue)
             schematic.updateSvgElementAttributesToScaleToFitParentDiv( svg)
             schematic.ensureQualitySymbolsInDefs( svg)
             elemChild.prepend(svg)
-            symbols = schematic.parseElements( elemChild)
-            symbols.pointNames = schematic.transformSymbols( symbols)
+            symbolElements = schematic.parseElements( elemChild)
+            symbols = schematic.bindSymbols( symbolElements)
 
             $compile(svg)(scope);
             scope.symbols = symbols
-            scope.pointNames = symbols.pointNames
           }
         })
 
@@ -629,6 +767,15 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
         default:
           return '#quality_invalid';
       }
+    };
+  }).
+
+  filter('schematicControlExecutingClasses', function() {
+    return function(executing) {
+      if( executing)
+        return 'control-spinner gb-executing'
+      else
+        return 'control-spinner ng-hide'
     };
   })//.
 
