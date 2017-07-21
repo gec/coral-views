@@ -48,10 +48,10 @@ describe('schematic', function () {
         '<svg' + svgNamespaces + 'style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
           '<g id="svgContent">' +
             '<svg preserveAspectRatio="xMaxYMax" class="symbol" tgs:schematic-type="equipment-symbol" id="svg_619" x="484" y="404" tgs:point-name="' + points[1].name + '" tgs:symbol-type="circuitbreaker">' +
-              '<g tgs:state="OPEN" display="none" id="svg_622">' +
+              '<g tgs:state="Open" display="none" id="svg_622">' +
               ' <rect x="2" y="2" width="30" height="30" fill="#00FF00" id="svg_623"/>' +
               '</g>' +
-              '<g tgs:state="CLOSED" id="svg_620">' +
+              '<g tgs:state="Closed" id="svg_620">' +
                 '<rect x="2" y="2" width="30" height="30" fill="#A40000" id="svg_621"/>' +
               '</g>' +
             '</svg>' +
@@ -354,8 +354,8 @@ describe('schematic', function () {
       }
       scope.$digest()
 
-      expect(stateElements.eq(0).attr('ng-show')).toEqual('pointNameMap[\'' + points[1].name + '\'].currentMeasurement.value === \'OPEN\'')
-      expect(stateElements.eq(1).attr('ng-show')).toEqual('pointNameMap[\'' + points[1].name + '\'].currentMeasurement.value === \'CLOSED\'')
+      expect(stateElements.eq(0).attr('ng-show')).toEqual('pointNameMap[\'' + points[1].name + '\'].currentMeasurement.value === \'Open\'')
+      expect(stateElements.eq(1).attr('ng-show')).toEqual('pointNameMap[\'' + points[1].name + '\'].currentMeasurement.value === \'Closed\'')
 
       // Flush getPoints.
       $httpBackend.flush()
@@ -364,7 +364,7 @@ describe('schematic', function () {
         {
           'point': {'id': points[1].id},
           'measurement': {
-            'value': 'CLOSED',
+            'value': 'Closed',
             'type': 'STRING',
             'unit': 'Status',
             'time': 1442261552564,
@@ -375,6 +375,7 @@ describe('schematic', function () {
         }
       ]
       subscribeInstance.onMessage(subscribeInstance.id, 'measurements', measurements)
+      scope.$digest()
       expect(stateElements.eq(0).attr('class')).toEqual('ng-hide')
       expect(stateElements.eq(1).attr('class')).toEqual('')
 
@@ -382,7 +383,7 @@ describe('schematic', function () {
         {
           'point': {'id': points[1].id},
           'measurement': {
-            'value': 'OPEN',
+            'value': 'Open',
             'type': 'STRING',
             'unit': 'Status',
             'time': 1442261552564,

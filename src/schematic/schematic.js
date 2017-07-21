@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015 Green Energy Corp.
+ * Copyright 2014-2017 Green Energy Corp.
  *
  * Licensed to Green Energy Corp (www.greenenergycorp.com) under one or more
  * contributor license agreements. See the NOTICE file distributed with this
@@ -320,10 +320,9 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       // Convert jQuery object to array of strings. Final get() is to convert jQuery object list to simple array.
       measurementPointNames  = symbolElements.measurements.map( exports.bindMeasurementSymbols).get()
       equipment  = symbolElements.equipment.map( exports.bindEquipmentSymbols).get()
-      // controlPointNames  = symbolElements.controls.map( exports.transformControlAndReturnPointName).get()
 
       equipmentPointNames = equipment.map( function(eq){return eq.pointName})
-      pointNames = measurementPointNames.concat( equipmentPointNames /*, controlPointNames*/).unique()
+      pointNames = measurementPointNames.concat( equipmentPointNames).unique()
       pointNames = pointNames.filter( function(s) {return s !== undefined && s.length > 0})
 
       symbols = {
@@ -376,33 +375,45 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
 
     /**
      * @typedef {Object} BoundEquipment
+     * @property {number} index The index in the symbol.equipment array
      * @property {string} pointName The principal point name for this symbol. Shows the symbol's state based on measurement status.
-     * @property {string[]} symbolControlNames control names from symbol
+     * @property {string[]} controlNames control names from symbol
      * @property {string[]} symbolStateNames state names from symbol
      */
     /**
      * Bind equipment symbol states to model so the correct state is displayed according to the current status measurement value.
      * Bind select classes so user can select/deselect equipment.
      *
+     * Bindings:
+     *   symbols.equipment[index])
+     *   NOTE any more! pointNameMap[pointName].currentMeasurement.value
+     *
      *  @param index
      *  @return {BoundEquipment}
      */
     exports.bindEquipmentSymbols = function(index) {
-      var equipment, symbolStateNames, symbolControlNames,
+      var equipment, stateNames,
           element = $(this),
           // id = element.id(),
           states = element.find( '[tgs\\:state]'),
           controlSelects = element.find( '[tgs\\:control-select]'),
-          controlNameElements = element.find( '[tgs\\:control-name]'),
-          pointName = element.attr( 'tgs:point-name')
+          controlSelectees = element.find( '[tgs\\:control-selectee]'),
+          pointName = element.attr( 'tgs:point-name'),
+          controlName = element.attr( 'tgs:control-name')
 
       if( !pointName || pointName.length === 0)
         return {}
+      // element.attr( 'gb-equipment-symbol', '') // without value, it's a getter!
+      // element.attr( 'point-name', pointName)
+      // element.attr( 'control-name', controlName)
+      // element.attr( 'model', 'symbols.equipment[' + index + ']')
+      // element.attr( 'alerts', 'alerts')
 
-      symbolStateNames = states.map( function() {
+      stateNames = states.map( function() {
         var stateElement = $(this),
             stateName = stateElement.attr( 'tgs:state')
         stateElement.attr( 'ng-show', 'pointNameMap[\'' + pointName + '\'].currentMeasurement.value === \'' + stateName + '\'')
+        // stateElement.attr( 'ng-show', 'symbols.equipment[' + index + '].currentMeasurement.value === \'' + stateName + '\'')
         stateElement.removeAttr( 'display')
         return stateName
       }).get() // convert JQuery elements to array of strings.
@@ -413,58 +424,33 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       // TODO: need to handle multiple commands at some point.
       controlSelects.each(function() {
         var selectElement = $(this),
-            selectClass = selectElement.attr('tgs:control-select')
-        selectElement.attr( 'ng-click', 'equipmentSelectToggle(symbols.equipment[' + index + '],\'' + selectClass + '\')')
+            selectClass = selectElement.attr('tgs:control-select'),
+            deselectClass = selectElement.attr('tgs:control-deselect') | '.deselect',
+            controlName =selectElement.attr('tgs:control-name')
+
+        selectElement.attr( 'ng-click', 'equipmentSelectToggle(' + index + ',\'' + controlName + '\',\'' + selectClass + '\',\'' + deselectClass + '\')')
       })
-      symbolControlNames = controlNameElements.map(function() {
-        var controlNameElement = $(this),
-            controlName = controlNameElement.attr('tgs:control-name')
+      controlSelectees.map(function() {
+        var controlSelectee = $(this)
+        controlSelectee.attr( 'ng-class', 'model.classes')
 
-        controlNameElement.attr( 'ng-class', 'symbols.equipment[' + index + '].classes')
-
-        var controlExecutes = controlNameElement.find( '[tgs\\:control-execute]')
+        var controlExecutes = controlSelectee.find( '[tgs\\:control-execute]')
         controlExecutes.each(function() {
           var executeElement = $(this)
-          executeElement.attr( 'ng-click', 'equipmentControlExecute(symbols.equipment[' + index + '],\'' + controlName + '\')')
+          // executeElement.attr( 'ng-click', 'equipmentControlExecute(symbols.equipment[' + index + '],\'' + controlName + '\')')
+          executeElement.attr( 'ng-click', 'equipmentControlExecute(' +  index + ',\'' + controlName + '\')')
         })
         return controlName
       }).get() // convert JQuery elements to array of strings.
 
       return {
+        index: index,
         pointName: pointName,
-        symbolControlNames: symbolControlNames.unique(),
-        symbolStateNames: symbolStateNames.unique()
+        controlNames: [controlName],
+        stateNames: stateNames.unique(),
+        currentMeasurement: {value: 'Unknown'}
       }
     }
-
-
-    /**
-     *
-     *  <* tgs:schematic-type="control" direct-operate="true" class="control clickable" tgs:point-name="LV.CB_Main.Trip" tgs:control-name="Open">
-     *    <g tgs:control-spinner>
-     *      <path opacity=".25" d="M16 0 A16 16 0 0 0 16 32 A16 16 0 0 0 16 0 M16 4 A12 12 0 0 1 16 28 A12 12 0 0 1 16 4"/>
-     *      <path d="M16 0 A16 16 0 0 1 32 16 L28 16 A12 12 0 0 0 16 4z">
-     *      </path>
-     *    </g>
-     *  </*>
-     *
-     *  @param rootElement
-     */
-    // exports.transformControlAndReturnPointName = function( ) {
-    //   var element = $(this),
-    //       pointName = element.attr( 'tgs:point-name'),
-    //       controlName = element.attr( 'tgs:control-name'),
-    //       controlSpinners = element.find( '[tgs\\:control-spinner]')
-    //
-    //   element.attr( 'ng-click', 'controlClicked( pointNameMap[\'' + pointName + '\'],\'' + controlName + '\')')
-    //   if( controlSpinners.length >=1) {
-    //     var controlSpinner = controlSpinners[0]
-    //     controlSpinner.removeAttr( 'class')
-    //     controlSpinner.attr( 'ng-class', 'pointNameMap[\'' + pointName + '\'].controls[\'' + controlName + '\'].executing | schematicControlExecutingClasses)')
-    //   }
-    //
-    //   return pointName
-    // }
 
     return exports
 
@@ -476,256 +462,228 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
   /**
    * Controller for a single schematic (like inside the pop-out window).
    */
-  controller( 'gbSchematicController', ['$scope', '$window', '$state', '$stateParams', 'measurement', 'rest', 'schematic', 'gbCommandRest', function( $scope, $window, $state, $stateParams, measurement, rest, schematic, gbCommandRest) {
+  controller( 'gbSchematicController', ['$scope', '$window', '$state', '$stateParams', '$timeout', 'measurement', 'rest', 'schematic', 'gbCommandRest', 'gbCommandEnums',
+    function( $scope, $window, $state, $stateParams, $timeout, measurement, rest, schematic, gbCommandRest, gbCommandEnums) {
 
-    var  self = this,
-         microgridId       = $stateParams.microgridId,
-         equipmentId       = $stateParams.id,// id string if equipment navigation element, else undefined
-         navigationElement = $stateParams.navigationElement,  // {id:, name:, shortName:, types:, equipmentChildren:, class:}
-         pointIdMap = {}, // points by point id. {id, name:, currentMeasurement:}
-         measurementDecimals = 1 // number of significant decimals for DOUBLE measurements.
+      var  self = this,
+           States = gbCommandEnums.States,
+           microgridId       = $stateParams.microgridId,
+           equipmentId       = $stateParams.id,// id string if equipment navigation element, else undefined
+           navigationElement = $stateParams.navigationElement,  // {id:, name:, shortName:, types:, equipmentChildren:, class:}
+           pointIdMap = {}, // point ID -> {point:, equipmentSymbols: [GbEquipmentSymbol]}
+           pointNameToEquipmentSymbolsMap = {}, // pointName -> [GbEquipmentSymbol, GbEquipmentSymbol, ...]
+           measurementDecimals = 1, // number of significant decimals for DOUBLE measurements.
+           equipmentSymbols = []
 
-    if( !equipmentId && $state.is( 'microgrids.dashboard') )
-      equipmentId = microgridId
+      if( !equipmentId && $state.is( 'microgrids.dashboard') )
+        equipmentId = microgridId
 
-    $scope.loading = true
-    $scope.svgSource = undefined
-    $scope.symbols = undefined
-    $scope.pointNameMap = {} // points by point name. {id, name:, currentMeasurement:}
-    $scope.alerts = []
+      $scope.loading = true
+      $scope.svgSource = undefined
+      $scope.symbols = undefined
+      $scope.pointNameMap = {} // points by point name. {id, name:, currentMeasurement:}
+      $scope.alerts = []
 
-
-    $scope.closeAlert = function(index) {
-      if( index < $scope.alerts.length)
-        $scope.alerts.splice(index, 1)
-    }
-
-    function findControl(point, controlName) {
-      if( !point)
-        return undefined
-
-      var control,
-          n = point.controls.length,
-          name = controlName.toLowerCase()
-      while(--n) {
-        control = point.controls[n]
-        if( control.name.toLowerCase() === name)
-          return control
+      function postAlert( alert) {
+        $scope.alerts[$scope.alerts.length] = alert
       }
-      return undefined
-    }
-
-    function getMessageFromException( ex) {
-      if( ! ex)
-        return undefined
-      var message = ex.message
-      if( message === undefined || message === '')
-        message = ex.exception
-      return message
-    }
-
-    $scope.controlClicked = function( point, controlName) {
-      var msg,
-          control = findControl(point, controlName)
-
-      if(!point){
-        msg = 'No point found'
-        $scope.alerts = [{ type: 'danger', message: msg}]
-        return
-      } else if (!control){
-        msg = 'Control "' + controlName + '" not found on point ' + point.name
-        $scope.alerts = [{ type: 'danger', message: msg}]
-        return
-      } else if(control.commandType !== 'CONTROL'){
-        msg = 'Command "' + controlName + '" on point ' + point.name + ' is not a control. Type is ' + control.commandType
-        $scope.alerts = [{ type: 'danger', message: msg}]
-        return
+      $scope.closeAlert = function(index) {
+        if( index < $scope.alerts.length)
+          $scope.alerts.splice(index, 1)
       }
 
-      control.executing = true
-      gbCommandRest.select('ALLOWED', [control.id]).then(
-        function(lock) {
-          gbCommandRest.execute(control.id, {commandLockId: lock.id}).then(
-            function (commandResult) {
-              control.executing = false
-            },
-            function (ex, statusCode, headers, config) {
-              console.log('gbSchematci.controlClicked:execute ' + JSON.stringify(ex))
-              control.executing = false
-              msg = 'Execute failed for control "' + controlName + '" on point ' + point.name + ' - ' + getMessageFromException(ex)
-              $scope.alerts = [{ type: 'danger', message: msg}]
-            }
-          )
-        },
-        function(ex, statusCode, headers, config) {
-          control.executing = false
-          msg = 'Failed to auto-select control "' + controlName + '" on point ' + point.name + ' - ' + getMessageFromException(ex)
-          $scope.alerts = [{ type: 'danger', message: msg}]
-        }
-      )
-    }
+      $scope.equipmentSelectToggle = function(equipmentSymbolIndex, controlName, selectClass, deselectClass) {
 
-    /**
-     * One of our points was dragged away from us.
-     * @param uuid
-     * @param schematic
-     */
-    $scope.onDragSuccess = function( uuid, schematic) {
-      console.log( 'onDragSuccess schematic=' + schematic.name + ' uuid=' + uuid)
-    }
-
-    $window.addEventListener( 'unload', function( event) {
-    })
-
-    // Directive sets symbols after getting SVG content.
-    //
-    $scope.$watch('symbols', function(newValue) {
-      var pointNames
-
-      if( newValue !== undefined) {
-        measurementDecimals = newValue.options.measurementDecimals
-        pointNames = newValue.pointNames
-
-        console.log( 'gbSchematicController: got pointNames.length: ' + pointNames.length)
-        // TODO: unsubscribe from previous schematic's points. Could optimize for large overlaps in points when schematic changes.
-        if( pointNames.length > 0) {
-          schematic.getPointsByName( pointNames).then(
-            function( response) {
-              // We get the points that exist. If some points don't exist, the values remain as XXXX and invalid quality.
-              $scope.points = response.data
-              pointIdMap = processPointsAndReturnPointIdMap($scope.points)
-              // TODO: what about the old names in the map?
-              $scope.points.forEach( function( p) { $scope.pointNameMap[p.name] = p})
-              var pointIds = Object.keys(pointIdMap)
-
-              measurement.subscribe( $scope, pointIds, {}, self, onMeasurements, onError)
-              getCommandsForPoints( pointIds)  // TODO: does nothing for now.
-
-              $scope.loading = false
-              return response // for the then() chain
-            },
-            function( error) {
-              var message = 'Error getting points by name - status: ' + error.status + ', statusText: ' + error.statusText
-              console.error( 'gbSchematicController: ' + message)
-              $scope.alerts = [{ type: 'danger', message: message}]
-              return error
-            }
-          )
-        }
       }
-    })
+      $scope.equipmentControlExecute = function(equipmentSymbolIndex, controlName) {
 
-
-    function processMeasurement( measurement) {
-      measurement = angular.copy( measurement)
-      if( measurement.type === 'DOUBLE') {
-        measurement.value = parseFloat( measurement.value).toFixed( measurementDecimals)
       }
-      return measurement
-    }
+      /**
+       * One of our points was dragged away from us.
+       * @param uuid
+       * @param schematic
+       */
+      $scope.onDragSuccess = function( uuid, schematic) {
+        console.log( 'onDragSuccess schematic=' + schematic.name + ' uuid=' + uuid)
+      }
 
-    function onMeasurements(measurements) {
-      measurements.forEach(function(pm) {
-        var point = pointIdMap[pm.point.id]
-        if( point ) {
-          // point: {
-          //    currentMeasurement: {
-          //      longQuality: "Good"
-          //      shortQuality: ""
-          //      time: 1450763927002
-          //      type: "DOUBLE"
-          //      validity: "GOOD"
-          //      value: "277.128"
-          //    }
-          //    endpoint: "cebd7d00-00fa-4e36-ad37-acf2a7508aba"
-          //    id: "c06f795c-2a7e-4a98-a395-1b410cbebfca"
-          //    name: "Zone1.Load1.Voltage"
-          //    pointType: "ANALOG"
-          //    types: Array[3]
-          //    unit: "V"
-          // }
-
-          // TODO: if status measurement, check if not one of the symbol's states, then display Unknown state.
-          // TODO: if status measurement is invalid quality, show invalid 'X' over center of symbol. Also for questionable quality.
-          point.currentMeasurement = processMeasurement( pm.measurement)
-
-        } else {
-          console.error('gbSchematicController.onMeasurements could not find point.id = ' + pm.point.id)
-        }
+      $window.addEventListener( 'unload', function( event) {
       })
-    }
-    function onError(error, message) {
-      console.error( 'gbSchematicController.subscribe.onError: ' + error + ', message = ' + JSON.stringify( message))
-      $scope.alerts = [{ type: 'danger', message: error}]
-    }
 
-    function processPointsAndReturnPointIdMap(points) {
-      var idMap           = {},
-          currentMeasurement = {
-            value:        'XXXXXXXX', // start with XXX in case point ID is wrong.
-            time:         null,
-            shortQuality: '',
-            longQuality:  '',
-            validity:     'INVALID', // start as invalid in case point ID is wrong.
-            expandRow:    false,
-            commandSet:   undefined
+      // Directive sets symbols after getting SVG content.
+      //
+      $scope.$watch('symbols', function(newValue) {
+        var pointNames
+
+        if( newValue !== undefined) {
+          measurementDecimals = newValue.options.measurementDecimals
+          pointNames = newValue.pointNames
+
+          console.log( 'gbSchematicController: got pointNames.length: ' + pointNames.length)
+          // TODO: unsubscribe from previous schematic's points. Could optimize for large overlaps in points when schematic changes.
+          if( pointNames.length > 0) {
+            equipmentSymbols = newValue.equipment.map( function(symbol) { return gbEquipmentSymbol( symbol.pointName, symbol, States, $timeout, postAlert)})
+            pointNameToEquipmentSymbolsMap = getPointNameToEquipmentSymbolsMap(equipmentSymbols)
+            schematic.getPointsByName( pointNames).then(
+              function( response) {
+                // We get the points that exist. If some points don't exist, the values remain as XXXX and invalid quality.
+                $scope.points = response.data
+                pointIdMap = processPointsAndReturnPointIdMap($scope.points, pointNameToEquipmentSymbolsMap)
+                // TODO: what about the old names in the map?
+                $scope.points.forEach( function( p) { $scope.pointNameMap[p.name] = p})
+                var pointIds = Object.keys(pointIdMap)
+
+                measurement.subscribe( $scope, pointIds, {}, self, onMeasurements, onError)
+                getCommandsForPoints( pointIds)
+
+                $scope.loading = false
+                return response // for the then() chain
+              },
+              function( error) {
+                var message = 'Error getting points by name - status: ' + error.status + ', statusText: ' + error.statusText
+                console.error( 'gbSchematicController: ' + message)
+                $scope.alerts = [{ type: 'danger', message: message}]
+                return error
+              }
+            )
           }
-      points.forEach(function(point) {
-        point.currentMeasurement = angular.extend({}, currentMeasurement)
-        idMap[point.id] = point
-        if( typeof point.pointType !== 'string' )
-          console.error('------------- point: ' + point.name + ' point.pointType "' + point.pointType + '" is empty or null.')
-        if( typeof point.unit !== 'string' )
-          point.unit = ''
-        if( point.pointType === 'STATUS')
-          point.currentMeasurement.value = 'Unknown'
-
-      })
-      return idMap
-    }
-
-    function getCommandsForPoints(pointIds) {
-      measurement.getCommandsForPoints( pointIds).then(
-       function( response) {
-         var point,
-             data = response.data
-         // data is map of pointId -> commands[]
-         for( var pointId in data ) {
-           point = pointIdMap[pointId]
-           if( point ) {
-             // TODO: see measurement.getCommandsForPoints
-             point.commands = data[pointId]
-           }
-           else
-             console.error( 'gbSchematicController.getCommandsForPoints Unknown point ID ' + pointId)
-         }
-
-       }
-      )
-    }
-
-
-    function subscribe() {
-      if( !equipmentId)
-        return
-
-      return schematic.subscribe( equipmentId, $scope,
-        function( subscriptionId, content, eventType) {
-          $scope.svgSource = content  // directive is watching this and will parse SVG and set $scope.symbols.
-          $scope.$digest()
-        },
-        function( error, message) {
-          $scope.alerts = [{ type: 'danger', message: error}]
-          $scope.loading = false
-          $scope.$digest()
         }
-      )
-    }
-
-    subscribe()
+      })
 
 
-  }]).
+      function processMeasurement( measurement) {
+        measurement = angular.copy( measurement)
+        if( measurement.type === 'DOUBLE') {
+          measurement.value = parseFloat( measurement.value).toFixed( measurementDecimals)
+        }
+        return measurement
+      }
+
+      function onMeasurements(measurements) {
+        measurements.forEach(function(pm) {
+          var currentMeasurement,
+              pointNSymbols = pointIdMap[pm.point.id]
+          if( pointNSymbols ) {
+            // point: {
+            //    currentMeasurement: {
+            //      longQuality: "Good"
+            //      shortQuality: ""
+            //      time: 1450763927002
+            //      type: "DOUBLE"
+            //      validity: "GOOD"
+            //      value: "277.128"
+            //    }
+            //    endpoint: "cebd7d00-00fa-4e36-ad37-acf2a7508aba"
+            //    id: "c06f795c-2a7e-4a98-a395-1b410cbebfca"
+            //    name: "Zone1.Load1.Voltage"
+            //    pointType: "ANALOG"
+            //    types: Array[3]
+            //    unit: "V"
+            // }
+
+            // TODO: if status measurement, check if not one of the symbol's states, then display Unknown state.
+            // TODO: if status measurement is invalid quality, show invalid 'X' over center of symbol. Also for questionable quality.
+            currentMeasurement = processMeasurement( pm.measurement)
+            pointNSymbols.point.currentMeasurement = currentMeasurement
+            pointNSymbols.equipmentSymbols.forEach(function(symbol) {symbol.currentMeasurement = currentMeasurement})
+          } else {
+            console.error('gbSchematicController.onMeasurements could not find point.id = ' + pm.point.id)
+          }
+        })
+      }
+      function onError(error, message) {
+        console.error( 'gbSchematicController.subscribe.onError: ' + error + ', message = ' + JSON.stringify( message))
+        $scope.alerts = [{ type: 'danger', message: error}]
+      }
+
+      function processPointsAndReturnPointIdMap(points, pointNameToSymbolsMap) {
+        var idMap           = {},
+            currentMeasurement = {
+              value:        'XXXXXXXX', // start with XXX in case point ID is wrong.
+              time:         null,
+              shortQuality: '',
+              longQuality:  '',
+              validity:     'INVALID', // start as invalid in case point ID is wrong.
+              expandRow:    false,
+              commandSet:   undefined
+            }
+        points.forEach(function(point) {
+          point.currentMeasurement = angular.extend({}, currentMeasurement)
+          idMap[point.id] = {
+            point: point,
+            equipmentSymbols: pointNameToSymbolsMap[point.name] || []
+          }
+          if( typeof point.pointType !== 'string' )
+            console.error('------------- point: ' + point.name + ' point.pointType "' + point.pointType + '" is empty or null.')
+          if( typeof point.unit !== 'string' )
+            point.unit = ''
+          if( point.pointType === 'STATUS')
+            point.currentMeasurement.value = 'Unknown'
+
+        })
+        return idMap
+      }
+
+      function getPointNameToEquipmentSymbolsMap( equipmentSymbols) {
+        var map = {}
+        equipmentSymbols.forEach( function( symbol) {
+          var list = map[symbol.pointName]
+          if( !list) {
+            list = []
+            map[symbol.pointName] = list
+          }
+          list[list.length] = symbol
+        })
+        return map
+      }
+
+      function applyCommands( equipmentSymbols, commands) {
+        equipmentSymbols.forEach(function(es){es.setCommands(commands)})
+      }
+      function getCommandsForPoints(pointIds) {
+        measurement.getCommandsForPoints( pointIds).then(
+         function( response) {
+           var pointNSymbols, commands,
+               data = response.data
+           // data is map of pointId -> commands[]
+           for( var pointId in data ) {
+             pointNSymbols = pointIdMap[pointId]
+             if( pointNSymbols ) {
+               commands = data[pointId]
+               pointNSymbols.point.commands = commands // I don't think anyone is useing this variable now.
+               applyCommands(pointNSymbols.equipmentSymbols, commands)
+             }
+             else
+               console.error( 'gbSchematicController.getCommandsForPoints Unknown point ID ' + pointId)
+           }
+
+         }
+        )
+      }
+
+
+      function subscribe() {
+        if( !equipmentId)
+          return
+
+        return schematic.subscribe( equipmentId, $scope,
+          function( subscriptionId, content, eventType) {
+            $scope.svgSource = content  // directive is watching this and will parse SVG and set $scope.symbols.
+            $scope.$digest()
+          },
+          function( error, message) {
+            $scope.alerts = [{ type: 'danger', message: error}]
+            $scope.loading = false
+            $scope.$digest()
+          }
+        )
+      }
+
+      subscribe()
+
+
+    } // end of controller function argument
+  ]). // end of controller
 
   directive('gbEquipmentSchematic', [ '$compile', 'schematic', function( $compile, schematic) {
     return {
@@ -777,19 +735,184 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       else
         return 'control-spinner ng-hide'
     };
-  })//.
-
-  // Was being used for modal with list of issues.
-  //filter('schematicIssueIcon', function() {
-  //  return function(validity) {
-  //    switch( validity ) {
-  //      case 'error':         return 'fa fa-times-circle gb-icon-error';
-  //      case 'warning': return 'fa fa-exclamation-triangle gb-icon-warn';
-  //      case 'information':    return 'fa fa-info-circle gb-icon-ok'
-  //      default:
-  //        return 'fa fa-exclamation-triangle';
-  //    }
-  //  };
-  //})
+   })//.
+  //
+  //
+  // /**
+  //  * Controller for a single equipment symbol
+  //  */
+  // controller( 'gbEquipmentSymbolController', ['$scope', 'measurement', 'gbCommandRest', 'gbCommandEnums', '$timeout',
+  //   function( $scope, measurement, gbCommandRest, gbCommandEnums, $timeout) {
+  //
+  //     var  selectTimer, lock,
+  //          self = this,
+  //          States = gbCommandEnums.States
+  //
+  //     $scope.state = States.NotSelected
+  //
+  //     // model: index, pointName, value, quality, commands
+  //
+  //     function cancelSelectTimer() {
+  //       if( selectTimer) {
+  //         $timeout.cancel( selectTimer)
+  //         selectTimer = undefined
+  //       }
+  //     }
+  //
+  //     function findCommand(controlName) {
+  //       var command,
+  //           commands = $scope.model.commands,
+  //           n = commands.length,
+  //           name = controlName.toLowerCase()
+  //       while(--n) {
+  //         command = commands[n]
+  //         if( command.name.toLowerCase() === name)
+  //           return command
+  //       }
+  //       return undefined
+  //     }
+  //
+  //     $scope.selectToggle = function( controlName, selectClass, deselectClass) {
+  //       switch( $scope.model.state) {
+  //         case States.NotSelected: select(controlName, selectClass, deselectClass); break;
+  //         case States.Selecting:   break;
+  //         case States.Selected:    deselect(controlName, deselectClass); break;
+  //         case States.Deselecting: break;
+  //         case States.Executing:   break;
+  //       }
+  //     }
+  //
+  //     function select( controlName, selectClass, deselectClass) {
+  //       if( selectTimer)
+  //         return
+  //       $scope.state = States.Selecting
+  //       $scope.model.classes = selectClass
+  //
+  //       var command = findCommand(controlName)
+  //       gbCommandRest.select( 'ALLOWED', [command.id],
+  //         function( data) {
+  //           lock = data
+  //           if( lock.expireTime) {
+  //             $scope.state = States.Selected
+  //
+  //             var delay = lock.expireTime - Date.now()
+  //             console.log( 'commandLock delay: ' + delay)
+  //             // It the clock for client vs server is off, we'll use a minimum delay.
+  //             delay = Math.max( delay, 10)
+  //             selectTimer = $timeout(function () {
+  //               lock = undefined
+  //               selectTimer = undefined
+  //               if( $scope.state === States.Selected || $scope.state === States.Deselecting || $scope.state === States.Executing) {
+  //                 $scope.state = States.NotSelected
+  //                 $scope.model.classes = deselectClass
+  //               }
+  //             }, delay)
+  //           } else {
+  //             lock = undefined
+  //             $scope.state = States.NotSelected
+  //             alertDanger( 'Select failed. ' + data)
+  //           }
+  //         },
+  //         function( ex, statusCode, headers, config) {
+  //           console.log( 'gbCommandController.select ' + JSON.stringify( ex))
+  //           alertException( ex, statusCode)
+  //           $scope.state = States.NotSelected
+  //         })
+  //     }
+  //
+  //     function deselect( controlName, deselectClass) {
+  //       $scope.model.classes = deselectClass
+  //       if( !selectTimer)
+  //         return
+  //       $timeout.cancel( selectTimer)
+  //       selectTimer = undefined
+  //       $scope.state = States.NotSelected
+  //     }
+  //
+  //     $scope.controlExecute = function( controlName) {
+  //       if( $scope.state !== States.Selected) {
+  //         console.error( 'gbEquipmentSymbolController.controlExecute invalid state: ' + $scope.state)
+  //         return
+  //       }
+  //       var command = findCommand(controlName)
+  //       if( ! command) {
+  //         var message = 'Can\'t find command: \'' + controlName + '\' to execute'
+  //         $scope.alerts.push({ type: 'danger', message: message})
+  //         return
+  //       }
+  //
+  //       var args = {
+  //         commandLockId: lock.id
+  //       }
+  //
+  //       $scope.state = States.Executing
+  //       gbCommandRest.execute(command.id, args,
+  //         function (commandResult) {
+  //           cancelSelectTimer()
+  //           alertCommandResult(commandResult)
+  //           $scope.state = States.NotSelected
+  //         },
+  //         function (ex, statusCode, headers, config) {
+  //           console.log('gbCommandController.execute ' + JSON.stringify(ex))
+  //           cancelSelectTimer()
+  //           $scope.state = States.NotSelected
+  //           alertException(ex, statusCode)
+  //         })
+  //     }
+  //
+  //     function alertCommandResult( result) {
+  //       console.log( 'gbCommandController.alertCommandResult: result.status "' + result.status + '"')
+  //       if( result.status !== 'SUCCESS') {
+  //         console.log( 'gbCommandController.alertCommandResult: result.error "' + result.error + '"')
+  //         var message = result.status
+  //         if( result.error)
+  //           message += ':  ' + result.error
+  //         $scope.alerts.push({ type: 'danger', message: message})
+  //       }
+  //     }
+  //
+  //     function getMessageFromException( ex) {
+  //       if( ! ex)
+  //         return undefined
+  //       var message = ex.message
+  //       if( message === undefined || message === '')
+  //         message = ex.exception
+  //       return message
+  //     }
+  //
+  //     function alertException( ex, statusCode) {
+  //       console.log( 'gbEquipmentSymbolController.alertException statusCode: ' + statusCode + ', exception: ' + JSON.stringify( ex))
+  //       var message = getMessageFromException( ex)
+  //       $scope.alerts.push({ type: 'danger', message: message})
+  //     }
+  //
+  //     function alertDanger( message) {
+  //       console.log( 'alertDanger message: ' + JSON.stringify( message))
+  //       $scope.alerts.push({ type: 'danger', message: message})
+  //     }
+  //
+  //
+  //     $scope.$on( '$destroy', function( event ) {
+  //       cancelSelectTimer()
+  //     })
+  //
+  //   } // end of controller function argument
+  // ]). // end of controller
+  //
+  // directive('gbEquipmentSymbol', [ '$compile', function( $compile) {
+  //   return {
+  //     restrict: 'A',
+  //     replace: false, // Not template
+  //     scope: {
+  //       model : '=',
+  //       alerts: '=?',
+  //       pointName: '=',
+  //       controlName: '='
+  //     },
+  //     controller: 'gbEquipmentSymbolController'//,
+  //     // link: function (scope, elem, attrs) {
+  //     // }
+  //   };
+  // }])
 
 
