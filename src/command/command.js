@@ -119,6 +119,7 @@ angular.module('greenbus.views.command', []).
         case States.NotSelected: $scope.select(); break;
         case States.Selecting:   break;
         case States.Selected:    $scope.deselect(); break;
+        case States.Deselecting: break;
         case States.Executing:   break;
       }
     }
@@ -133,7 +134,7 @@ angular.module('greenbus.views.command', []).
 
       if( state === States.NotSelected && $scope.isSetpointType && $scope.pattern && !$scope.pattern.test( $scope.setpoint.value)) {
         // If the setpoint value is not visible, but is invalid, there will be a red box around the whole form
-        // and the operator won't see anything wrong. Clear the setpoint value to prevent this.
+        // and the operator won't be able to tell what's wrong. Clear the setpoint value to prevent this.
         $scope.setpoint.value = ''
       }
     }
@@ -163,7 +164,7 @@ angular.module('greenbus.views.command', []).
             var delay = lock.expireTime - Date.now()
             console.log( 'commandLock delay: ' + delay)
             // It the clock for client vs server is off, we'll use a minimum delay.
-            delay = Math.max( delay, 10)
+            delay = Math.max( delay, 10000) // 10 seconds
             selectTimer = $timeout(function () {
               lock = undefined
               selectTimer = undefined

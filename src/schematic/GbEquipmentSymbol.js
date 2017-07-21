@@ -37,13 +37,13 @@
  * @param postAlert
  * @constructor
  */
-function gbEquipmentSymbol(pointName, symbol, States, $timeout, postAlert) {
+function gbEquipmentSymbol(pointName, symbol, States, $timeout, postAlert, gbCommandRest) {
   // Exports will be on $scope in the parent controller.
   var exports = {
     pointName: pointName,
-    classes: ''
+    classes: '' // on schematic $scope via equipmentSymbols[index].classes
   }
-  var selectTimer, lock, commands,
+  var selectTimer, lock, commands, deselectCurrentSelection,
       state = States.NotSelected
   
   exports.setCommands = function( _commands) {
@@ -80,14 +80,24 @@ function gbEquipmentSymbol(pointName, symbol, States, $timeout, postAlert) {
     state = States.Executing
     gbCommandRest.execute(command.id, args,
       function (commandResult) {
-        cancelSelectTimer()
+        if( deselectCurrentSelection)
+          deselectCurrentSelection()
+        else {
+          // just in case
+          cancelSelectTimer()
+          state = States.NotSelected
+        }
         alertCommandResult(commandResult)
-        state = States.NotSelected
       },
       function (ex, statusCode, headers, config) {
         console.log('gbEquipmentSymbol.controlExecute ' + JSON.stringify(ex))
-        cancelSelectTimer()
-        state = States.NotSelected
+        if( deselectCurrentSelection)
+          deselectCurrentSelection()
+        else {
+          // just in case
+          cancelSelectTimer()
+          state = States.NotSelected
+        }
         alertException(ex, statusCode)
       })
   }
@@ -116,7 +126,7 @@ function gbEquipmentSymbol(pointName, symbol, States, $timeout, postAlert) {
         name = controlName.toLowerCase()
     while(--n >= 0) {
       command = commands[n]
-      if( command.name.toLowerCase() === name)
+      if( command.name.toLowerCase() === name || command.displayName.toLowerCase() === name)
         return command
     }
     console.error( 'gbEquipmentSymbol.findCommand: no command with name "' + controlName + '" found for symbol with pointName ' + pointName)
@@ -128,48 +138,55 @@ function gbEquipmentSymbol(pointName, symbol, States, $timeout, postAlert) {
     if( selectTimer)
       return
     state = States.Selecting
-    exports.classes = selectClass
 
     var command = findCommand(controlName)
-    gbCommandRest.select( 'ALLOWED', [command.id],
-      function( data) {
-        lock = data
-        if( lock.expireTime) {
-          state = States.Selected
+    if( command) {
+      exports.classes = selectClass
+      gbCommandRest.select( 'ALLOWED', [command.id],
+        function( data) {
+          lock = data
+          if( lock.expireTime) {
+            state = States.Selected
 
-          var delay = lock.expireTime - Date.now()
-          console.log( 'commandLock delay: ' + delay)
-          // It the clock for client vs server is off, we'll use a minimum delay.
-          delay = Math.max( delay, 10)
-          selectTimer = $timeout(function () {
-            lock = undefined
-            selectTimer = undefined
-            if( state === States.Selected || state === States.Deselecting || state === States.Executing) {
-              state = States.NotSelected
-              exports.classes = deselectClass
+            var delay = lock.expireTime - Date.now()
+            console.log( 'commandLock delay: ' + delay)
+            // It the clock for client vs server is off, we'll use a minimum delay.
+            delay = Math.max( delay, 10000) // 10 seconds
+            deselectCurrentSelection = function() {
+              deselectCurrentSelection = undefined
+              deselect( controlName, deselectClass)
             }
-          }, delay)
-        } else {
-          lock = undefined
-          state = States.NotSelected
-          alertDanger( 'Select failed. ' + data)
-        }
-      },
-      function( ex, statusCode, headers, config) {
-        console.log( 'gbEquipmentSymbol.select ' + JSON.stringify( ex))
-        alertException( ex, statusCode)
-        state = States.NotSelected
-      })
+            selectTimer = $timeout(function () {
+              lock = undefined
+              selectTimer = undefined
+              if( state === States.Selected || state === States.Deselecting || state === States.Executing) {
+                deselectCurrentSelection = undefined
+                deselect(controlName, deselectClass)
+              }
+            }, delay)
+          } else {
+            lock = undefined
+            deselect( controlName, deselectClass)
+            alertDanger( 'Select failed. No expireTime in select reply. ' + JSON.stringify(data))
+          }
+        },
+        function( ex, statusCode, headers, config) {
+          console.log( 'gbEquipmentSymbol.select ' + JSON.stringify( ex))
+          deselect(controlName, deselectClass)
+          alertException( ex, statusCode)
+        })
+    }
+
   }
 
   function deselect( controlName, deselectClass) {
     exports.classes = deselectClass
     lock = undefined
+    state = States.NotSelected
     if( !selectTimer)
       return
     $timeout.cancel( selectTimer)
     selectTimer = undefined
-    state = States.NotSelected
   }
 
 

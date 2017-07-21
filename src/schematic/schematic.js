@@ -425,14 +425,13 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       controlSelects.each(function() {
         var selectElement = $(this),
             selectClass = selectElement.attr('tgs:control-select'),
-            deselectClass = selectElement.attr('tgs:control-deselect') | '.deselect',
-            controlName =selectElement.attr('tgs:control-name')
+            deselectClass = selectElement.attr('tgs:control-deselect') || '.deselect'
 
         selectElement.attr( 'ng-click', 'equipmentSelectToggle(' + index + ',\'' + controlName + '\',\'' + selectClass + '\',\'' + deselectClass + '\')')
       })
       controlSelectees.map(function() {
         var controlSelectee = $(this)
-        controlSelectee.attr( 'ng-class', 'model.classes')
+        controlSelectee.attr( 'ng-class', 'equipmentSymbols['+index+'].classes')
 
         var controlExecutes = controlSelectee.find( '[tgs\\:control-execute]')
         controlExecutes.each(function() {
@@ -472,8 +471,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
            navigationElement = $stateParams.navigationElement,  // {id:, name:, shortName:, types:, equipmentChildren:, class:}
            pointIdMap = {}, // point ID -> {point:, equipmentSymbols: [GbEquipmentSymbol]}
            pointNameToEquipmentSymbolsMap = {}, // pointName -> [GbEquipmentSymbol, GbEquipmentSymbol, ...]
-           measurementDecimals = 1, // number of significant decimals for DOUBLE measurements.
-           equipmentSymbols = []
+           measurementDecimals = 1 // number of significant decimals for DOUBLE measurements.
 
       if( !equipmentId && $state.is( 'microgrids.dashboard') )
         equipmentId = microgridId
@@ -482,6 +480,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
       $scope.svgSource = undefined
       $scope.symbols = undefined
       $scope.pointNameMap = {} // points by point name. {id, name:, currentMeasurement:}
+      $scope.equipmentSymbols = []
       $scope.alerts = []
 
       function postAlert( alert) {
@@ -492,11 +491,11 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
           $scope.alerts.splice(index, 1)
       }
 
-      $scope.equipmentSelectToggle = function(equipmentSymbolIndex, controlName, selectClass, deselectClass) {
-
+      $scope.equipmentSelectToggle = function(index, controlName, selectClass, deselectClass) {
+        $scope.equipmentSymbols[index].selectToggle(controlName, selectClass, deselectClass)
       }
-      $scope.equipmentControlExecute = function(equipmentSymbolIndex, controlName) {
-
+      $scope.equipmentControlExecute = function(index, controlName) {
+        $scope.equipmentSymbols[index].controlExecute(controlName)
       }
       /**
        * One of our points was dragged away from us.
@@ -522,8 +521,8 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
           console.log( 'gbSchematicController: got pointNames.length: ' + pointNames.length)
           // TODO: unsubscribe from previous schematic's points. Could optimize for large overlaps in points when schematic changes.
           if( pointNames.length > 0) {
-            equipmentSymbols = newValue.equipment.map( function(symbol) { return gbEquipmentSymbol( symbol.pointName, symbol, States, $timeout, postAlert)})
-            pointNameToEquipmentSymbolsMap = getPointNameToEquipmentSymbolsMap(equipmentSymbols)
+            $scope.equipmentSymbols = newValue.equipment.map( function(symbol) { return gbEquipmentSymbol( symbol.pointName, symbol, States, $timeout, postAlert, gbCommandRest)})
+            pointNameToEquipmentSymbolsMap = getPointNameToEquipmentSymbolsMap($scope.equipmentSymbols)
             schematic.getPointsByName( pointNames).then(
               function( response) {
                 // We get the points that exist. If some points don't exist, the values remain as XXXX and invalid quality.

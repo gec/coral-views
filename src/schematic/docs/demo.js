@@ -38,12 +38,23 @@ angular.module('greenbus.views.demo').controller('SchematicDemoCtrl', function (
           'types': ['Point'],
           'unit': 'status',
           'endpoint': 'brkr-3'
+        },
+        {
+          'name': 'BKR4.Status',
+          'id': 'bkr4-status-id',
+          'pointType': 'STATUS',
+          'types': ['Point'],
+          'unit': 'status',
+          'endpoint': 'brkr-4'
         }
       ],
       pointNames = points.map(function(p){return p.name}),
-      pointIds = points.map(function(p){return p.id})
+      pointIds = points.map(function(p){return p.id}),
+      pointsCommandsReply = {},
+      accessMode = 'ALLOWED'
 
-  // $location.search( 'pids', point.id)
+
+      // $location.search( 'pids', point.id)
 
   function getScopeValue( domSelector) {
     var element, scope, value
@@ -53,7 +64,7 @@ angular.module('greenbus.views.demo').controller('SchematicDemoCtrl', function (
     return value
   }
 
-  rest.whenGET( '/models/1/points?pnames=' + pointNames[0] + '&pnames=' + pointNames[1] + '&pnames=' + pointNames[2]).
+  rest.whenGET( '/models/1/points?pnames=' + pointNames[0] + '&pnames=' + pointNames[1] + '&pnames=' + pointNames[2] + '&pnames=' + pointNames[3]).
     respond(points)
   // rest.whenGET( '/models/1/points?pids=' + point.id).
   //   respond([
@@ -93,7 +104,7 @@ angular.module('greenbus.views.demo').controller('SchematicDemoCtrl', function (
         <text class="default" x="10" y="18">Schematic 1</text>\
       </g>\
       <g>\
-        <svg id="symbol1" preserveAspectRatio="xMaxYMax" class="symbol clickable" tgs:schematic-type="equipment-symbol" x="5" y="25" tgs:point-name="' + points[0].name + '" tgs:symbol-type="circuitbreaker" tgs:action="command">\
+        <svg preserveAspectRatio="xMaxYMax" class="symbol clickable" tgs:schematic-type="equipment-symbol" x="5" y="25" tgs:point-name="' + points[0].name + '" tgs:symbol-type="circuitbreaker" tgs:action="command">\
           <g tgs:state="Open" display="none"><rect x="2" y="2" width="30" height="30" style="fill:#00FF00"/></g>\
           <g tgs:state="Closed"><rect x="2" y="2" width="30" height="30" style="fill:#A40000"/></g>\
           <g tgs:state="Unknown">\
@@ -103,7 +114,7 @@ angular.module('greenbus.views.demo').controller('SchematicDemoCtrl', function (
         </svg>\
       </g>\
       <g>\
-        <svg id="symbol2" preserveAspectRatio="xMaxYMax" class="symbol clickable" tgs:schematic-type="equipment-symbol" x="5" y="70" tgs:point-name="' + points[1].name + '" tgs:symbol-type="circuitbreaker" tgs:action="command">\
+        <svg preserveAspectRatio="xMaxYMax" class="symbol clickable" tgs:schematic-type="equipment-symbol" x="5" y="70" tgs:point-name="' + points[1].name + '" tgs:symbol-type="circuitbreaker" tgs:action="command">\
           <g tgs:state="Open" display="none">\
             <ellipse fill="#00FF00" stroke="#FFFFFF" cx="50" cy="10" rx="10" ry="10"/>\
           </g>\
@@ -117,8 +128,8 @@ angular.module('greenbus.views.demo').controller('SchematicDemoCtrl', function (
         </svg>\
       </g>\
       <g>\
-        <svg id="symbol3" preserveAspectRatio="xMaxYMax" class="symbol clickable" tgs:schematic-type="equipment-symbol" x="100" y="115" tgs:point-name="' + points[2].name + '" tgs:symbol-type="circuitbreaker" tgs:action="command">\
-          <g tgs:control-select="select-open-left" tgs:control-name="Open" class="control-status-area">\
+        <svg preserveAspectRatio="xMaxYMax" class="symbol clickable" tgs:schematic-type="equipment-symbol" x="100" y="115" tgs:point-name="' + points[2].name + '" tgs:control-name="Open" tgs:symbol-type="circuitbreaker" tgs:action="command">\
+          <g tgs:control-select="select-open-left" tgs:control-deselect="deselect" tgs:control-selectee class="control-status-area">\
             <g class="control-selected-area">\
               <rect class="" x="32" y="1" width="77" height="30"></rect>\
               <g tgs:control-execute class="control-execute-button button">\
@@ -139,9 +150,38 @@ angular.module('greenbus.views.demo').controller('SchematicDemoCtrl', function (
               <use class="quality-display" xlink:href="#quality_invalid" y="5" x="5"></use>\
             </g>\
           </g>\
-          <g class="control-label" tgs:control-select="select-open-left">\
+          <g class="control-label" tgs:control-select="select-open-left" tgs:control-deselect="deselect">\
            <path  d="M35,0 l140,0 q4,0,4,4 l0,24 q0,4,-4,4 l-140,0 Z"/>\
            <text class="control-label-" x="45" y="20">ANOTHER CONTROL</text>\
+          </g>\
+        </svg>\
+      </g>\
+      <g>\
+        <svg preserveAspectRatio="xMaxYMax" class="symbol clickable" tgs:schematic-type="equipment-symbol" x="100" y="160" tgs:point-name="' + points[3].name + '" tgs:control-name="Open" tgs:symbol-type="circuitbreaker" tgs:action="command">\
+          <g tgs:control-select="select-open-left" tgs:control-deselect="deselect" tgs:control-selectee class="control-status-area">\
+            <g class="control-selected-area">\
+              <rect class="" x="32" y="1" width="77" height="30"></rect>\
+              <g tgs:control-execute class="control-execute-button button">\
+                <rect x="38" y="5.5" width="68" height="21"></rect>\
+                <text class="default" x="44" y="21">EXECUTE</text>\
+              </g>\
+            </g>\
+            <path d="M0,16 q0,16,16,16 l16,0 l0,-32 l-16,0 q-16,0,-16,16"/>\
+            \
+            <g tgs:state="Open">\
+               <ellipse fill="#00FF00" stroke="#666" cx="16" cy="16" rx="10" ry="10"></ellipse>\
+             </g>\
+             <g tgs:state="Closed">\
+              <ellipse fill="#e40000" stroke="#666" cx="16" cy="16" rx="10" ry="10"></ellipse>\
+            </g>\
+            <g tgs:state="Unknown">\
+              <ellipse fill="none" stroke="#666" cx="16" cy="16" rx="10" ry="10"></ellipse>\
+              <use class="quality-display" xlink:href="#quality_invalid" y="5" x="5"></use>\
+            </g>\
+          </g>\
+          <g class="control-label" tgs:control-select="select-open-left" tgs:control-deselect="deselect">\
+           <path  d="M35,0 l140,0 q4,0,4,4 l0,24 q0,4,-4,4 l-140,0 Z"/>\
+           <text class="control-label-" x="45" y="20">SELECT ERROR</text>\
           </g>\
         </svg>\
       </g>\
@@ -212,8 +252,45 @@ angular.module('greenbus.views.demo').controller('SchematicDemoCtrl', function (
     {'name': 'Eugene.Building.Load', 'id': 'a98ec09b-a584-42d9-bea5-dde5f071273f', 'pointType': 'ANALOG', 'types': ['Imported', 'LoadPower', 'Point'], 'unit': 'kW', 'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6'},
     {'name': 'Eugene.Building.DemandResponseStage', 'id': '04db3bc6-9053-4785-9c6e-638c397f2850', 'pointType': 'COUNTER', 'types': ['Point', 'DemandResponseStage', 'Imported'], 'unit': 'Stage', 'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6'}
   ])
-  rest.whenPOST( '/models/1/points/commands', pointIds).
-  respond({
+
+  pointsCommandsReply[points[0].id] = makePointsCommandsReply(points[0], [{name: 'Open', commandType:'CONTROL'}, {name: 'Closed', commandType:'CONTROL'}])
+  pointsCommandsReply[points[1].id] = makePointsCommandsReply(points[1], [{name: 'Open', commandType:'CONTROL'}, {name: 'Closed', commandType:'CONTROL'}])
+  pointsCommandsReply[points[2].id] = makePointsCommandsReply(points[2], [{name: 'Open', commandType:'CONTROL'}, {name: 'Closed', commandType:'CONTROL'}])
+  pointsCommandsReply[points[3].id] = makePointsCommandsReply(points[3], [{name: 'Open', commandType:'CONTROL'}, {name: 'Closed', commandType:'CONTROL'}])
+  rest.whenPOST( '/models/1/points/commands', pointIds).respond(pointsCommandsReply)
+
+  var commandId = pointsCommandsReply[points[2].id][0].id
+  rest.whenPOST('/models/1/commandlock', {accessMode:'ALLOWED',commandIds:[commandId]})
+    .respond( {
+      'id': '85',
+      'accessMode': accessMode,
+      'expireTime': Date.now() + 10 * 1000,
+      'commandIds': [commandId]
+    })
+  rest.whenPOST('/models/1/commands/' + commandId, {commandLockId:'85'})
+    .respond( {status: 'SUCCESS'})
+
+  commandId = pointsCommandsReply[points[3].id][0].id
+  rest.whenPOST('/models/1/commandlock', {accessMode:'ALLOWED',commandIds:[commandId]})
+    .respond( 403, {
+      'exception':'LockedException',
+      'message':'Commands already locked'
+    })
+
+
+  function makePointsCommandsReply( point, commands){
+    return commands.map(function(c, index) {
+      return {
+        name: point.name + '_' + c.name,
+        id: point.id + '-command-' + c.name,
+        commandType: c.commandType,
+        displayName: c.name,
+        endpoint: 'some-endpoint-id'
+      }
+    })
+  }
+
+  var sample_points_command_reply = {
     'be2489c8-9b08-4822-8c7a-187180fb9460': [
       {'name': 'Eugene.PCC_Cust.Close0', 'id': 'a1b8f486-f476-4095-8700-f25719ce41cd', 'commandType': 'CONTROL', 'displayName': 'Close0', 'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6'},
       {'name': 'Eugene.PCC_Cust.Trip0', 'id': '11aaf3b1-9777-4617-841f-564308752822', 'commandType': 'CONTROL', 'displayName': 'Trip0', 'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6'}
@@ -230,8 +307,5 @@ angular.module('greenbus.views.demo').controller('SchematicDemoCtrl', function (
     ], '3ad4f01a-9609-4752-864e-a865c71b7616': [
       {'name': 'Eugene.CHP.SetOutputTarget', 'id': '5c5303e8-ae27-485c-a6e0-eb3009870be4', 'commandType': 'SETPOINT_DOUBLE', 'displayName': 'SetOutputTarget', 'endpoint': '9c99715b-1739-4dda-adb1-eb8ca1a82db6'}
     ]
-  })
-
-
-
+  }
 });

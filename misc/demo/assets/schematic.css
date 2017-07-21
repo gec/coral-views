@@ -33,6 +33,7 @@ text {
 text.default {
 	fill:white;
 	font-size:12px;
+	stroke:none;
 }
 text.data-label {
 	font-size:11px;
@@ -114,10 +115,10 @@ p.equipment-label {
 	-webkit-transform: translate(0px, 0px); /* Safari */
 	transform: translate(0px, 0px);
 
-	-webkit-transition: all 0.1s ease-in;
-	-moz-transition: all 0.1s ease-in;
-	-o-transition: all 0.1s ease-in;
-	transition: all 0.1s ease-in;
+	-webkit-transition: all 0.2s ease-in;
+	-moz-transition: all 0.2s ease-in;
+	-o-transition: all 0.2s ease-in;
+	transition: all 0.2s ease-in;
 }
 
 
