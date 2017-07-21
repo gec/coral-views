@@ -1,11 +1,11 @@
-angular.module('greenbus.views.demo').controller('PropertiesTableDemoCtrl', function ($scope, $stateParams, $q) {
+angular.module('greenbus.views.demo').controller('PointsTableDemoCtrl', function ($scope, $stateParams, $q) {
   var microgridId1 = 'microgrid-id-1'
 
   $stateParams.microgridId = microgridId1
   $stateParams.navigationElement = {
     id: microgridId1,
     name: 'MicgroGrid1',      // full entity name
-    shortName: 'Microgrid1',
+    shortName: 'Microgrid1-points-table-demo',
     equipmentChildren: []
   }
 

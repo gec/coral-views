@@ -456,7 +456,6 @@ angular.module( 'greenbus.views.measurement',
               if( point ) {
                 point.commands = data[pointId]
                 point.commandTypes = getCommandTypes( point.commands).toLowerCase()
-                console.log('commandTypes: ' + point.commandTypes)
               }
             }
 
