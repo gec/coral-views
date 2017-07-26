@@ -542,9 +542,13 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
                 var message = 'Error getting points by name - status: ' + error.status + ', statusText: ' + error.statusText
                 console.error( 'gbSchematicController: ' + message)
                 $scope.alerts = [{ type: 'danger', message: message}]
+                $scope.loading = false
                 return error
               }
             )
+          } else {
+            // No points, just an SVG document
+            $scope.loading = false
           }
         }
       })

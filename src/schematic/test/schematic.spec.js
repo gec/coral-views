@@ -23,6 +23,13 @@ describe('schematic', function () {
       }
 
   var svgNamespaces = ' xmlns="http://www.w3.org/2000/svg" xmlns:tgs="http://www.totalgrid.org" xmlns:xlink="http://www.w3.org/1999/xlink" ',
+      svgNoMeasurements  =
+        '<?xml version="1.0"?>' +
+        '<svg' + svgNamespaces + 'style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
+          '<g id="svgContent">' +
+            '<text x="20" y="20">Some content</text>' +
+          '</g>' +
+        '</svg>',
       svgOneMeasurement  =
         '<?xml version="1.0"?>' +
         '<svg' + svgNamespaces + 'style="background-color:black;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1500.0 587.5">' +
@@ -216,6 +223,21 @@ describe('schematic', function () {
 
     }));
 
+    it('should disable loading spinner after loading schematic without measurements', inject(function (schematic) {
+      var measElems, measElem, measValue, measurements,
+          onSchematic = jasmine.createSpy('onSchematic'),
+          svgContent  = svgNoMeasurements
+
+      var properties = [
+        {key: 'schematic', value: svgContent}
+      ]
+
+      expect(subscribeInstance.onMessage).toBeDefined()
+      subscribeInstance.onMessage(subscribeInstance.id, 'properties', properties)
+      expect(scope.loading).toBeFalse()
+
+    }));
+
     it('should transform measurements', inject(function (schematic) {
       var measElems, measElem, measValue, measurements,
           onSchematic = jasmine.createSpy('onSchematic'),
@@ -232,21 +254,6 @@ describe('schematic', function () {
       expect(measElems.length).toBe(1)
       measValue = getMeasurementValue(measElems, 0)
       expect(measValue).toEqual(' ')
-
-      scope.pointNameMap                 = {}
-      scope.pointNameMap[points[0].name] = {
-        name: points[0].name,
-        unit: 'someUnit',
-        currentMeasurement: {
-          value: 'someValue',
-          validity: 'GOOD'
-        }
-      }
-      scope.$digest()
-
-      measValue = getMeasurementValue(measElems, 0)
-      expect(measValue).toEqual('someValue someUnit')
-
 
       // Flush getPoints.
       $httpBackend.flush()
@@ -269,6 +276,7 @@ describe('schematic', function () {
       measValue = getMeasurementValue(measElems, 0)
       expect(measValue).toEqual('248.0 kW')
 
+      expect(scope.loading).toBeFalse()
     }));
 
     it('should transform measurements based on measurement-decimal', inject(function (schematic) {
