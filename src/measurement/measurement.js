@@ -387,6 +387,11 @@ angular.module( 'greenbus.views.measurement',
               if( point ) {
                 //pm.measurement.value = formatMeasurementValue( pm.measurement.value )
                 point.currentMeasurement = pm.measurement
+                var stringValue = point.currentMeasurement.value.toString
+                if(point.integerLabels && point.integerLabels(stringValue)) {
+                    point.currentMeasurement.valueBeforeApplyingLabel = point.currentMeasurement.value
+                    point.currentMeasurement.value = point.integerLabels(stringValue)
+                }
               } else {
                 console.error('MeasurementsController.onMeasurements could not find point.id = ' + pm.point.id)
               }
@@ -456,6 +461,7 @@ angular.module( 'greenbus.views.measurement',
               if( point ) {
                 point.commands = data[pointId]
                 point.commandTypes = getCommandTypes( point.commands).toLowerCase()
+                console.log('commandTypes: ' + point.commandTypes)
               }
             }
 
