@@ -107,6 +107,12 @@ angular.module('greenbus.views.command', []).
           break
       }
 
+      if( $scope.model.hasOwnProperty('metadata')  && $scope.model.metadata.hasOwnProperty('integerLabels') && angular.isObject($scope.model.metadata.integerLabels)) {
+        var integerLabels = $scope.model.metadata.integerLabels
+        var keys = Object.keys(integerLabels)
+        $scope.enumeratedValues = keys.map(function(key){return {id: key, label: integerLabels[key]}})
+        $scope.selectedEnumeratedValue = {label: 'choose value...'}
+      }
     }
 
     /**
@@ -213,6 +219,11 @@ angular.module('greenbus.views.command', []).
         })
     }
 
+    $scope.selectEnumeratedValue = function( value) {
+      $scope.setpoint.value = value.id
+      $scope.selectedEnumeratedValue = value
+    }
+
     $scope.execute = function() {
       console.log( 'gbCommandController.execute state: ' + $scope.state)
       $scope.replyError = undefined
@@ -227,23 +238,29 @@ angular.module('greenbus.views.command', []).
       }
 
       if( $scope.isSetpointType) {
-
-        if ($scope.setpoint.value === undefined || ($scope.pattern && !$scope.pattern.test($scope.setpoint.value))) {
-          console.log('gbCommandController.execute ERROR: setpoint value is invalid "' + $scope.setpoint.value + '"')
-          switch ($scope.model.commandType) {
-            case 'SETPOINT_INT':
-              alertDanger('Setpoint needs to be an integer value.');
-              return;
-            case 'SETPOINT_DOUBLE':
-              alertDanger('Setpoint needs to be a decimal value.');
-              return;
-            case 'SETPOINT_STRING':
-              alertDanger('Setpoint needs to have a text value.');
-              return;
-            default:
-              alertDanger('Setpoint value "' + $scope.setpoint.value + '" is invalid. Unknown setpoint command type: "' + $scope.model.commandType + '".')
-              console.error('Setpoint has unknown error, "' + $scope.setpoint.value + '" for command type ' + $scope.model.commandType)
-              return
+        if( $scope.enumeratedValues) {
+          if( $scope.setpoint.value === undefined || $scope.setpoint.value === '') {
+            alertDanger('Setpoint value needs to be selected.')
+            return
+          }
+        } else {
+          if ($scope.setpoint.value === undefined || ($scope.pattern && !$scope.pattern.test($scope.setpoint.value))) {
+            console.log('gbCommandController.execute ERROR: setpoint value is invalid "' + $scope.setpoint.value + '"')
+            switch ($scope.model.commandType) {
+              case 'SETPOINT_INT':
+                alertDanger('Setpoint needs to be an integer value.');
+                return;
+              case 'SETPOINT_DOUBLE':
+                alertDanger('Setpoint needs to be a decimal value.');
+                return;
+              case 'SETPOINT_STRING':
+                alertDanger('Setpoint needs to have a text value.');
+                return;
+              default:
+                alertDanger('Setpoint value "' + $scope.setpoint.value + '" is invalid. Unknown setpoint command type: "' + $scope.model.commandType + '".')
+                console.error('Setpoint has unknown error, "' + $scope.setpoint.value + '" for command type ' + $scope.model.commandType)
+                return
+            }
           }
         }
 
