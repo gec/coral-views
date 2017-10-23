@@ -387,10 +387,13 @@ angular.module( 'greenbus.views.measurement',
               if( point ) {
                 //pm.measurement.value = formatMeasurementValue( pm.measurement.value )
                 point.currentMeasurement = pm.measurement
-                var stringValue = point.currentMeasurement.value.toString
-                if(point.integerLabels && point.integerLabels(stringValue)) {
-                    point.currentMeasurement.valueBeforeApplyingLabel = point.currentMeasurement.value
-                    point.currentMeasurement.value = point.integerLabels(stringValue)
+                var stringValue = point.currentMeasurement.value.toString()
+                if( point.hasOwnProperty('metadata')  && point.metadata.hasOwnProperty('integerLabels') && angular.isObject(point.metadata.integerLabels)) {
+                  var integerLabels = point.metadata.integerLabels
+                  if(integerLabels.hasOwnProperty(stringValue)) {
+                      point.currentMeasurement.valueBeforeApplyingLabel = point.currentMeasurement.value
+                      point.currentMeasurement.value = integerLabels[stringValue]
+                  }
                 }
               } else {
                 console.error('MeasurementsController.onMeasurements could not find point.id = ' + pm.point.id)
