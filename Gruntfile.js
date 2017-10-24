@@ -18,7 +18,7 @@ module.exports = function(grunt) {
   grunt.util.linefeed = '\n';
 
   grunt.initConfig({
-    ngversion: '1.2.16',
+    ngversion: '1.2.32',
     bsversion: '3.1.1',
     uibsversion: '0.11.0',
     modules: [],//to be filled in by build task

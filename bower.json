@@ -12,9 +12,9 @@
   },
   "devDependencies": {
     "jquery": "~2.1.1",
-    "angular": "~1.2.26",
-    "angular-cookies": "~1.2.26",
-    "angular-mocks": "~1.2.26",
+    "angular": "~1.2.32",
+    "angular-cookies": "~1.2.32",
+    "angular-mocks": "~1.2.32",
     "angular-bootstrap": "~0.12.0",
     "angular-ui-utils": "0.1.1",
     "angular-ui-router": "~0.2.13",
