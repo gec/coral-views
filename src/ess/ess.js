@@ -350,7 +350,7 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
       // The template HTML will replace the directive.
       replace: true,
       transclude: true,
-      scope: true,
+      scope: {}, // isolated scope!
       templateUrl: 'greenbus.views.template/ess/essesTable.html',
       controller: 'gbEssesController'
     }

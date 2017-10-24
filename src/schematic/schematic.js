@@ -691,7 +691,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
   directive('gbEquipmentSchematic', [ '$compile', 'schematic', function( $compile, schematic) {
     return {
       restrict: 'E',
-      scope:    true,
+      scope: {},  // isolated scope!
       controller: 'gbSchematicController',
       templateUrl: 'greenbus.views.template/schematic/equipmentSchematic.html',
       link: function (scope, elem, attrs) {
