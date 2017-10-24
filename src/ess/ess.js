@@ -101,7 +101,7 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
           value = formatNumberNoDecimal( value);
           break;
         case PT.Power:
-          value = formatNumberValue( value) + ' ' + info.unit;
+          value = formatNumberValue( value);
           break;
         default:
       }
@@ -118,7 +118,7 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
         // It's a string value + space + unit.
         if( ess.power.indexOf('-') === 0) // has minus sign, so it's charging
           return 'charging';
-        else if( ess.power.indexOf('0 ') === 0)
+        else if( ess.power === 0 || ess.power === '0')
           return 'standby';
         else
           return 'discharging'

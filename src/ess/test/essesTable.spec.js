@@ -284,13 +284,13 @@ describe('gb-properties-table', function () {
 
     expect( findEssName( rows, 0)).toEqual( equipmentChildren[0].name)
     expect( findEssPercentSoc( rows, 0)).toEqual( Number(subscribeToMeasurementsResponse[1].measurement.value).toFixed(0) + '%')
-    expect( findEssPower( rows, 0)).toEqual( Number(subscribeToMeasurementsResponse[2].measurement.value).toFixed(0) + ' ' + pointIdMap['uuid-1-power'].unit)
+    expect( findEssPower( rows, 0)).toEqual( Number(subscribeToMeasurementsResponse[2].measurement.value).toFixed(0))
     expect( findEssCapacityPower( rows, 0)).toEqual( Number(subscribeToPropertiesResponse[0].value.capacity.power).toFixed(0))
     expect( findEssCapacityEnergy( rows, 0)).toEqual( Number(subscribeToPropertiesResponse[0].value.capacity.energy).toFixed(0))
 
     expect( findEssName( rows, 1)).toEqual( equipmentChildren[1].name)
     expect( findEssPercentSoc( rows, 1)).toEqual( Number(subscribeToMeasurementsResponse[1+3].measurement.value).toFixed(0) + '%')
-    expect( findEssPower( rows, 1)).toEqual( Number(subscribeToMeasurementsResponse[2+3].measurement.value).toFixed(0) + ' ' + pointIdMap['uuid-2-power'].unit)
+    expect( findEssPower( rows, 1)).toEqual( Number(subscribeToMeasurementsResponse[2+3].measurement.value).toFixed(0))
     expect( findEssCapacityPower( rows, 1)).toEqual( Number(subscribeToPropertiesResponse[1].value.capacity.power).toFixed(0))
     expect( findEssCapacityEnergy( rows, 1)).toEqual( Number(subscribeToPropertiesResponse[1].value.capacity.energy).toFixed(0))
   }));

@@ -19,13 +19,13 @@
             <thead>
             <tr>
                 <th></th>
-                <th>Charge / Discharge</th>
+                <th></th>
                 <th colspan="3"></th>
                 <th colspan="2" class="gb-cell-highlight gb-cell-highlight-top">Nameplate Capacity</a></th>
             </tr>
             <tr>
-                <th><a href="" ng-click="sortColumn = 'name'; reverse=!reverse">Device Name</a></th>
-                <th>Rate</th>
+                <th><a href="" ng-click="sortColumn = 'name'; reverse=!reverse">Device</a></th>
+                <th style="text-align: right;"><a href="" ng-click="sortColumn = 'power'; reverse=!reverse">Power (kW)</a></th>
                 <th><a href="" ng-click="sortColumn = 'state'; reverse=!reverse">State</a></th>
                 <th title="State of Charge %" style="text-align: center">SOC %</th>
                 <th></th>
@@ -36,7 +36,7 @@
             <tbody>
             <tr ng-repeat="ces in ceses | filter:searchText | orderBy:sortColumn:reverse">
                 <td>{{ces.name}}</td>
-                <td>{{ces.power}}</td>
+                <td class="gb-value">{{ces.power}}</td>
                 <td><img class="ces-state-icon" ng-src="{{ces.state | essStateIcon}}" title="{{ces.state | essStateDescription}}" style="margin-top:2px"/></td>
                 <td style="width: 60px">
                     <div class="battery-wrapper" title="{{ces.state | essStateDescription}}" >
