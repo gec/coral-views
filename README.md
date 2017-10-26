@@ -31,3 +31,7 @@ grunt test --coverage
 * [Bootstrap](http://getbootstrap.com/) v3
 * [Angular UI](http://angular-ui.github.io/) components: [UI Bootstrap](http://angular-ui.github.io/bootstrap/), [UI Utils](http://angular-ui.github.io/ui-utils/)
 * [Font Awesome](http://fortawesome.github.io/Font-Awesome/)
+
+## License
+
+This software is under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
