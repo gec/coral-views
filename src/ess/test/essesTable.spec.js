@@ -43,6 +43,14 @@ describe('gb-properties-table', function () {
         'types': ['OutputPower', 'Point'],
         'unit': 'Watts',
         'endpoint': 'uuid-endpoint'
+      },
+      {
+        'name': 'Microgrid1.Inverter1.Status',
+        'id': 'uuid-1-status',
+        'pointType': 'STATUS',
+        'types': ['Status', 'Point'],
+        'unit': 'status',
+        'endpoint': 'uuid-endpoint'
       }
     ],
     'uuid-2': [
@@ -68,6 +76,14 @@ describe('gb-properties-table', function () {
         'pointType': 'ANALOG',
         'types': ['OutputPower', 'Point'],
         'unit': 'Watts',
+        'endpoint': 'uuid-endpoint'
+      },
+      {
+        'name': 'Microgrid1.Inverter2.Status',
+        'id': 'uuid-2-status',
+        'pointType': 'STATUS',
+        'types': ['Status', 'Point'],
+        'unit': 'status',
         'endpoint': 'uuid-endpoint'
       }
     ]
@@ -214,7 +230,7 @@ describe('gb-properties-table', function () {
     $httpBackend = $injector.get('$httpBackend')
     var uuids = Object.keys( equipmentPoints),
         equipmentQuery = 'equipmentIds=' + uuids[0] + '&equipmentIds=' + uuids[1],
-        typesQuery = 'pointTypes=%25SOC&pointTypes=OutputPower&pointTypes=Standby'
+        typesQuery = 'pointTypes=%25SOC&pointTypes=OutputPower&pointTypes=Status'
     $httpBackend.whenGET( '/models/1/points?' + equipmentQuery + '&' + typesQuery).respond( equipmentPoints)
   }))
 

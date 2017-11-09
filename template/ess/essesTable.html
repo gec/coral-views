@@ -26,23 +26,24 @@
             <tr>
                 <th><a href="" ng-click="sortColumn = 'name'; reverse=!reverse">Device</a></th>
                 <th style="text-align: right;"><a href="" ng-click="sortColumn = 'power'; reverse=!reverse">Power (kW)</a></th>
-                <th><a href="" ng-click="sortColumn = 'state'; reverse=!reverse">State</a></th>
-                <th title="State of Charge %" style="text-align: center">SOC %</th>
+                <th style="padding-left: 1em;"><a href="" ng-click="sortColumn = 'status'; reverse=!reverse">Status</a></th>
+                <th title="State of Charge %" style="text-align: center"><a href="" ng-click="sortColumn = 'percentSoc'; reverse=!reverse">SOC %</a></th>
                 <th></th>
-                <th class="gb-cell-highlight gb-cell-highlight-left"><a href="" ng-click="sortColumn = 'powerCapacity'; reverse=!reverse">Power (kW)</a></th>
-                <th class="gb-cell-highlight gb-cell-highlight-right"><a href="" ng-click="sortColumn = 'energyCapacity'; reverse=!reverse">Energy (kWh)</a></th>
+                <th class="gb-cell-highlight gb-cell-highlight-left"><a href="" ng-click="sortColumn = 'capacity.power'; reverse=!reverse">Power (kW)</a></th>
+                <th class="gb-cell-highlight gb-cell-highlight-right"><a href="" ng-click="sortColumn = 'capacity.energy'; reverse=!reverse">Energy (kWh)</a></th>
             </tr>
             </thead>
             <tbody>
             <tr ng-repeat="ces in ceses | filter:searchText | orderBy:sortColumn:reverse">
                 <td>{{ces.name}}</td>
                 <td class="gb-value">{{ces.power}}</td>
-                <td><img class="ces-state-icon" ng-src="{{ces.state | essStateIcon}}" title="{{ces.state | essStateDescription}}" style="margin-top:2px"/></td>
+                <td style="padding-left: 1em;"><i ng-class="ces.status | essStatusIconClass" title="{{ces.statusLabel}}" aria-hidden="true"></i>{{ ces.statusLabel }}</td>
                 <td style="width: 60px">
-                    <div class="battery-wrapper" title="{{ces.state | essStateDescription}}" >
-                        <div class="{{ces.percentSoc | essBatterySocChargedClass: ces.state}}" style="width:{{ces.percentSocMax100}}%"></div>
-                        <div class="{{ces.percentSoc | essBatterySocUnchargedClass: ces.state}}" style="width:{{100-ces.percentSocMax100}}%"></div>
+                    <div class="battery-wrapper" title="{{ces.statusLabel}}" >
+                        <div class="{{ces.percentSoc | essBatterySocChargedClass: ces.status}}" style="width:{{ces.percentSocMax100}}%"></div>
+                        <div class="{{ces.percentSoc | essBatterySocUnchargedClass: ces.status}}" style="width:{{100-ces.percentSocMax100}}%"></div>
                         <div class="battery-overlay"></div>
+                        <!--<i ng-show="ces.status === 1" ng-class="ces.status | essStatusIconClass: 'battery-overlay-icon'" title="{{ces.statusLabel}}" aria-hidden="true"></i>-->
                     </div>
                 </td>
                 <td>{{ces.percentSoc}}%</td>

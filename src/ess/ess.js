@@ -20,20 +20,64 @@
  */
 
 angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.views.navigation', 'greenbus.views.rest', 'greenbus.views.subscription']).
-  
-  controller( 'gbEssesController', ['$scope', '$filter', '$stateParams', 'rest', 'measurement', 'subscription', '$location', function( $scope, $filter, $stateParams, rest, measurement, subscription, $location) {
+
+  factory('gbEssesConstants', function() {
+    return {
+      Status: {                  // label,          managed
+        Initializing: 0,         // 'Initializing', false
+        EVDisconnected: 1,       // 'EVDisconnected', false
+        Standby: 2,              // 'Standby', true
+        Idle: 3,                 // 'Idle', true
+        Charging: 4,             // 'Charging', true
+        Discharging: 5,          // 'Discharging', true
+        TrickleCharging: 6,      // 'TrickleCharging', true
+        Busy: 7,                 // 'Busy', true
+        Fault: 8,                // 'Fault', true
+        Unknown: 9,              // 'Unknown', false
+        IdleUnmanaged: 10,       // 'IdleUnmanaged', false
+        ChargingUnmanaged: 11,   // 'ChargingUnmanaged', false
+        DischargingUnmanaged: 12 // 'DischargingUnmanaged', false
+      },
+      StatusLabels: [
+        'Initializing',
+        'EVDisconnected',
+        'Standby',
+        'Idle',
+        'Charging',
+        'Discharging',
+        'TrickleCharging',
+        'Busy',
+        'Fault',
+        'Unknown',
+        'IdleUnmanaged',
+        'ChargingUnmanaged',
+        'DischargingUnmanaged'
+      ],
+      Models: {
+        PP_CA_30: 'CA-30',
+        GEC_AGGREGATED_ESS_01:'AggregatedEss-01'
+      }
+    }
+  }).
+
+  controller( 'gbEssesController', ['$scope', '$filter', '$stateParams', 'rest', 'measurement', 'subscription', '$location', 'gbEssesConstants', function( $scope, $filter, $stateParams, rest, measurement, subscription, $location, constants) {
     var nameplateSubscriptionId,
         PT = {
           Point: 'Point',
           Power: 'OutputPower',
+          PowerTarget: 'ChargeRateTarget',
           PercentSoc: '%SOC',
-          Standby: 'Standby'
+          Status: 'Status'//,
+          //Standby: 'Standby'
         },
         TypeToVarMap = {
           OutputPower: 'power',
           '%SOC': 'percentSoc',
-          Standby: 'standby'
-        }
+          Status: 'status'//,
+          //Standby: 'standby'
+        },
+        POINT_TYPES =  [PT.PercentSoc, PT.Power, /*PT.Standby,*/ PT.Status]
+
 
     $scope.ceses = []     // our mappings of data from the server
     $scope.searchText = ''
@@ -103,29 +147,30 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
         case PT.Power:
           value = formatNumberValue( value);
           break;
+        case PT.Status:
+          value = Number( value);
+          break;
         default:
       }
       return value
     }
 
     // Return standby, charging, or discharging
-    function getState( ess) {
-      if( ess.standby.toLowerCase() === 'disabled' || ess.standby === 'OffAvailable' || ess.standby === 'true')
-        return 'standby';
-      else if( typeof ess.power == 'boolean')
-        return ess.power ? 'charging' : 'discharging';
-      else if( typeof ess.power.indexOf === 'function') {
-        // It's a string value + space + unit.
-        if( ess.power.indexOf('-') === 0) // has minus sign, so it's charging
-          return 'charging';
-        else if( ess.power === 0 || ess.power === '0')
-          return 'standby';
-        else
-          return 'discharging'
-      }
-
-      return ''
-    }
+    // function getState( ess) {
+    //   if( ess.standby.toLowerCase() === 'disabled' || ess.standby === 'OffAvailable' || ess.standby === 'true')
+    //     return 'standby';
+    //   else if( typeof ess.power.indexOf === 'function') {
+    //     // It's a string value + space + unit.
+    //     if( ess.power.indexOf('-') === 0) // has minus sign, so it's charging
+    //       return 'charging';
+    //     else if( ess.power === 0 || ess.power === '0')
+    //       return 'standby';
+    //     else
+    //       return 'discharging'
+    //   }
+    //
+    //   return ''
+    // }
 
     //function makeCes( eq, capacityUnit) {
     function makeCes( eq) {
@@ -133,25 +178,26 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
         name: eq.name,
         energyCapacity: '',
         powerCapacity: '',
-        standby: '',
+        //standby: '',
         power: '',
         percentSoc: '',
         percentSocMax100: 0, // Used by batter symbol
-        standbyOrOnline: '', // 'Standby', 'Online'
-        state: 's'    // 'standby', 'charging', 'discharging'
+        state: '-',    // 'standby', 'charging', 'discharging'
+        status: 0,
+        statusLabel: '-',
       }
     }
 
-    var POINT_TYPES =  [PT.PercentSoc, PT.Power, PT.Standby]
     function getInterestingType( types) {
       for( var index = types.length-1; index >= 0; index--) {
         var typ = types[index]
         switch( typ) {
           case PT.PercentSoc:
           case PT.Power:
-          case PT.Standby:
-          case PT.PowerCapacity: // kW
-          case PT.EnergyCapacity: // kWh
+          //case PT.Standby:
+          case PT.Status:
+          // case PT.PowerCapacity: // kW
+          // case PT.EnergyCapacity: // kWh
             return typ
           default:
         }
@@ -167,22 +213,57 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
       return null
     }
 
+    function uniformStatusFromPower( power) {
+      return isNaN(power) || power === 0 ? constants.Status.Idle
+          : power > 0 ? constants.Status.Discharging
+          : constants.Status.Charging
+    }
+
+    function uniformStatusFromPPCA30Status( status, power) {
+      switch( status) {
+        case 0: return constants.Status.Idle;
+        case 6: return constants.Status.Busy;
+        case 7: return uniformStatusFromPower(power)
+        case 8: return constants.Status.Fault;
+        case 9: return constants.Status.Busy;
+        default: return constants.Status.Unknown
+      }
+    }
+
+    function statusLabel(info, status) {
+      var stringValue = status.toString()
+      if( info.statusMetadata) {
+        var integerLabels = info.statusMetadata.integerLabels
+        return integerLabels.hasOwnProperty(stringValue) ? integerLabels[stringValue] : stringValue
+      } else
+        return stringValue
+    }
+
     function onMeasurement( pm) {
       var info = pointIdToInfoMap[ pm.point.id]
       if( info){
         console.log( 'gbEssController.onMeasurement ' + pm.point.id + ' "' + pm.measurement.value + '"')
         // Map the point.name to the standard types (i.e. capacity, standby, charging)
         var value = processValue( info, pm.measurement)
-        if( info.type == PT.Standby) {
-          if( value === 'OffAvailable' || value === 'true')
-            $scope.ceses[ info.cesIndex].standbyOrOnline = 'Standby'
-          else
-            $scope.ceses[ info.cesIndex].standbyOrOnline = 'Online'
-        } else if( info.type == PT.PercentSoc) {
-          $scope.ceses[ info.cesIndex].percentSocMax100 = Math.min( value, 100)
+        var ess = $scope.ceses[ info.cesIndex]
+        if( info.type === PT.PercentSoc) {
+          ess.percentSocMax100 = Math.min( value, 100)
+        } else if( info.type === PT.Status) {
+          //if( ess.model === constants.Models.PP_CA_30) {
+          //  ess.statusRaw = value
+          //  value = uniformStatusFromPPCA30Status(value, ess.power)
+          //  ess.statusLabel = constants.StatusLabels[value]
+          //} else {
+            ess.statusLabel = statusLabel(info, value)
+          //}
+        } else if( info.Type === PT.Power) {
+          //if( ess.model === constants.Models.PP_CA_30) {
+          //  ess.status = uniformStatusFromPPCA30Status(ess.statusRaw, value)
+          //  ess.statusLabel = constants.StatusLabels[ess.status]
+          //}
         }
-        $scope.ceses[ info.cesIndex][ TypeToVarMap[info.type]] = value
-        $scope.ceses[ info.cesIndex].state = getState( $scope.ceses[ info.cesIndex])
+        ess[ TypeToVarMap[info.type]] = value
+        //ess.state = getState( ess)
 
       } else {
         console.error( 'gbEssesController.onMeasurement could not find point.id = ' + pm.point.id)
@@ -237,11 +318,20 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
               point = getPointByType( points, typ)
               if( point) {
                 console.log( 'gbEssesController.getPointsForEquipmentAndSubscribeToMeasurements point: name=' + point.name + ', types = ' + point.types)
-                pointIdToInfoMap[point.id] = {
+                var pointInfo = {
                   'cesIndex': cesIndex,
                   'type': getInterestingType( point.types),
                   'unit': point.unit
                 }
+                if( point.hasOwnProperty('metadata')  && point.metadata.hasOwnProperty('integerLabels') && angular.isObject(point.metadata.integerLabels)) {
+                  pointInfo.statusMetadata = point.metadata
+                  // if(integerLabels.hasOwnProperty(stringValue)) {
+                  //   point.currentMeasurement.valueBeforeApplyingLabel = point.currentMeasurement.value
+                  //   point.currentMeasurement.value = integerLabels[stringValue]
+                  // }
+                }
+
+                pointIdToInfoMap[point.id] = pointInfo
                 pointIds.push( point.id)
               } else {
                 console.error( 'gbEssesController.getPointsForEquipmentAndSubscribeToMeasurements  GET /models/n/points entity[' + eqId + '] does not have point with type ' + typ)
@@ -279,6 +369,9 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
         value = property.value
         if( value.hasOwnProperty('capacity')) {
           ces.capacity = formatCapacity( value.capacity)
+        }
+        if( value.hasOwnProperty('model')) {
+          ces.model = value.model
         }
       }
     }
@@ -356,45 +449,84 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
     }
   }).
 
-  filter('essStateIcon', function() {
-    return function(state) {
-      if( state === 'standby')
-        return '/images/essStandby29x16.png'
-      else if( state === 'charging')
-        return '/images/essCharging29x16.png'
-      else if( state === 'discharging')
-        return '/images/essDischarging29x16.png'
-      else
-        return ''
+  // filter('essStateIcon', function() {
+  //   return function(state) {
+  //     if( state === 'standby')
+  //       return '/images/essStandby29x16.png'
+  //     else if( state === 'charging')
+  //       return '/images/essCharging29x16.png'
+  //     else if( state === 'discharging')
+  //       return '/images/essDischarging29x16.png'
+  //     else
+  //       return ''
+  //   };
+  // }).
+  // filter('essStateIconClass', function() {
+  //   return function(state) {
+  //     if( state === 'standby')
+  //       return 'battery-state-icon fa fa-minus'
+  //     else if( state === 'charging')
+  //       return 'battery-state-icon fa fa-bolt'
+  //     else if( state === 'discharging')
+  //       return 'battery-state-icon fa fa-arrow-down'
+  //     else if( state === 'disconnected')
+  //       return 'battery-state-icon fa fa-times'
+  //     else
+  //       return ''
+  //   };
+  // }).
+  filter('essStatusIconClass', ['gbEssesConstants', function(constants) {
+    return function(status, extraClasses) {
+      var classes = 'battery-state-icon '
+      if (extraClasses !== undefined)
+        classes +=  extraClasses + ' '
+      switch( status) {
+        case constants.Status.Initializing: return classes + 'fa fa-question'
+        case constants.Status.EVDisconnected: return classes + 'fa fa-times'
+        case constants.Status.Standby:
+        case constants.Status.Idle:
+        case constants.Status.IdleUnmanaged: return classes + 'fa fa-minus'
+        case constants.Status.Charging: return classes + 'fa fa-bolt'
+        case constants.Status.ChargingUnmanaged: return classes + 'fa fa-bolt'
+        case constants.Status.TrickleCharging: return classes + 'fa fa-bolt'
+        case constants.Status.Discharging: return classes + 'fa fa-arrow-down'
+        case constants.Status.DischargingUnmanaged: return classes + 'fa fa-arrow-down'
+        case constants.Status.Busy:
+        case constants.Status.Fault: return classes + 'fa fa-minus'
+        case constants.Status.Unknown: return classes + 'fa fa-question'
+        default: return classes + 'fa fa-question'
+      }
     };
-  }).
-  filter('essStateDescription', function() {
-    return function(state) {
-      return state + ' state';
-    };
-  }).
-  filter('essBatterySocChargedClass', function() {
-    return function(soc, state) {
-      var classes = ( soc > 10 ) ? 'battery-soc charged' : 'battery-soc charged alarmed'
-      if( state === 'standby' )
+  }]).
+  // filter('essStateDescription', function() {
+  //   return function(state) {
+  //     return state + ' state';
+  //   };
+  // }).
+  filter('essBatterySocChargedClass', ['gbEssesConstants', function(constants) {
+    return function(soc, status) {
+      var classes = ( soc > 10 && soc !== 0) ? 'battery-soc charged' : 'battery-soc charged alarmed'
+      if( status === constants.Status.Standby || status === constants.Status.Idle || status === constants.Status.IdleUnmanaged)
         classes += ' standby'
       return classes
     };
-  }).
-  filter('essBatterySocUnchargedClass', function() {
-    return function(soc, state) {
+  }]).
+  filter('essBatterySocUnchargedClass', ['gbEssesConstants', function(constants) {
+    return function(soc, status) {
       var classes = null
       if( soc === null || soc === '' )
         classes = 'battery-soc unknown'
-      else if( soc > 10 )
+      else if( status === constants.Status.EVDisconnected)
+        classes = 'battery-soc uncharged storage-unavailable'
+      else if( soc > 10)
         classes = 'battery-soc uncharged'
       else
         classes = 'battery-soc uncharged alarmed'
 
-      if( state === 'standby')
+      if( status === constants.Status.Standby || status === constants.Status.Idle || status === constants.Status.IdleUnmanaged)
         classes += ' standby'
 
       return classes
     };
-  })
+  }])
 
