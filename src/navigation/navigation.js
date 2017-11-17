@@ -801,6 +801,17 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
     //  }
     //]
 
+    /**
+     * Return the IDs for the equipment that this branch represents. If this branch has not equipmentChildren, then
+     * this is [branch.id]. If this branch does have equipmentChildren then it's the child IDs.
+     * @param branch Menu branch
+     * @returns Array of equipment IDs for the branch
+     */
+    function getEquipmentIdsFromBranch(branch) {
+      return branch.equipmentChildren.length === 0 ? [branch.id]
+          : branch.equipmentChildren.map( function( child) { return child.id })
+    }
+
     // When an operator clicks a menu item, the menu item is highlighted and this function is called.
     // This function is specified by the HTML attribute: on-select = "menuSelect(branch)"
     //
@@ -809,7 +820,6 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
 
       if( branch.loading ) {
         console.log('NavTreeController.menuSelect ' + branch.label + ' loading... state=' + branch.state + ', class=' + branch.class + ', microgridId=' + branch.microgridId)
-        //$state.go(navigation.STATE_LOADING)
         return
       }
 
@@ -830,7 +840,8 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
           types:     branch.types,
           name:      branch.name,      // full entity name
           shortName: branch.label,
-          equipmentChildren: branch.equipmentChildren // children that are equipment
+          equipmentChildren: branch.equipmentChildren, // children that are equipment
+          equipmentIds: getEquipmentIdsFromBranch(branch)
         }
       }
 

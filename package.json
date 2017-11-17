@@ -3,7 +3,7 @@
   "name": "greenbus-web-views",
   "version": "0.1.0-SNAPSHOT",
   "homepage": "https://github.com/gec/greenbus-web-views",
-  "license": "Apache-2.0",
+  "license": "(Apache-2.0)",
   "repository": {
     "type": "git",
     "url": "git://github.com/gec/greenbus-web-views"
