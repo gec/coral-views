@@ -83,7 +83,6 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
     $scope.searchText = ''
     $scope.sortColumn = 'name'
     $scope.reverse = false
-    $scope.showHeading = $scope.showHeading | true
     var pointIdToInfoMap = {},
         searchArgs = $location.search(),
         sourceUrl = searchArgs.sourceUrl || null
@@ -454,8 +453,8 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
       replace: true,
       transclude: true,
       scope: {
-        queryEsses: '=?',
-        showHeading: '=?'
+        queryEsses: '@?',
+        showHeading: '@?'
       }, // isolated scope!
       templateUrl: 'greenbus.views.template/ess/essesTable.html',
       controller: 'gbEssesController'
