@@ -1,5 +1,5 @@
 <div>
-    <div class="row">
+    <div class="row" ng-show="showHeading" style="margin-bottom: 1.4em">
         <div class="col-md-5">
             <h3>All Energy Storage</h3>
         </div>
@@ -14,7 +14,7 @@
     </div>
 
 
-    <div ng-cloak style="margin-top: 1.4em">
+    <div ng-cloak>
         <table class="table table-condensed gb-table-2header" style="border-collapse: separate">
             <thead>
             <tr>
@@ -37,7 +37,7 @@
             <tr ng-repeat="ces in ceses | filter:searchText | orderBy:sortColumn:reverse">
                 <td>{{ces.name}}</td>
                 <td class="gb-value">{{ces.power}}</td>
-                <td style="padding-left: 1em;"><i ng-class="ces.status | essStatusIconClass" title="{{ces.statusLabel}}" aria-hidden="true"></i>{{ ces.statusLabel }}</td>
+                <td style="padding-left: 1em;"><!--<i ng-class="ces.status | essStatusIconClass" title="{{ces.statusLabel}}" aria-hidden="true"></i>-->{{ ces.statusLabel }}</td>
                 <td style="width: 60px">
                     <div class="battery-wrapper" title="{{ces.statusLabel}}" >
                         <div class="{{ces.percentSoc | essBatterySocChargedClass: ces.status}}" style="width:{{ces.percentSocMax100}}%"></div>

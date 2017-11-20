@@ -83,6 +83,7 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
     $scope.searchText = ''
     $scope.sortColumn = 'name'
     $scope.reverse = false
+    $scope.showHeading = $scope.showHeading | true
     var pointIdToInfoMap = {},
         searchArgs = $location.search(),
         sourceUrl = searchArgs.sourceUrl || null
@@ -95,14 +96,8 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
     if( ! navigationElement)
       return
 
-    var equipment = navigationElement.equipmentChildren,
-        equipmentIds = [],
-        equipmentIdMap = {},
+    var equipments = navigationElement.equipmentChildren, // [{id: '...', name: '...', shortName: undefined}, ... ]
         cesMapByEquipmentId = {}
-    equipment.forEach( function( eq) {
-      equipmentIdMap[eq.id] = eq
-      equipmentIds.push( eq.id)
-    })
 
 
     var number = $filter('number')
@@ -280,9 +275,10 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
 
 
     // Called after get sourceUrl is successful
-    function getPointsForEquipmentAndSubscribeToMeasurements( ) {
+    function getPointsForEquipmentAndSubscribeToMeasurements( equipments) {
       var cesIndex, pointsUrl,
           pointIds = [],
+          equipmentIds = equipments.map(function(eq) {return eq.id }),
           pointTypesQueryParams = rest.queryParameterFromArrayOrString( 'pointTypes', POINT_TYPES),
           equipmentIdsQueryParams = rest.queryParameterFromArrayOrString('equipmentIds', equipmentIds)
 
@@ -308,9 +304,9 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
         //    }
         //  ]}
 
-        equipmentIds.forEach( function( eqId) {
+        equipments.forEach( function( eq) {
           var point, ces,
-              points = data[eqId],
+              points = data[eq.id],
               cesIndex = $scope.ceses.length
 
           if( points) {
@@ -334,20 +330,20 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
                 pointIdToInfoMap[point.id] = pointInfo
                 pointIds.push( point.id)
               } else {
-                console.error( 'gbEssesController.getPointsForEquipmentAndSubscribeToMeasurements  GET /models/n/points entity[' + eqId + '] does not have point with type ' + typ)
+                console.error( 'gbEssesController.getPointsForEquipmentAndSubscribeToMeasurements  GET /models/n/points entity[' + eq.id + '] does not have point with type ' + typ)
               }
 
             })
-            ces = makeCes( equipmentIdMap[eqId])
-            cesMapByEquipmentId[eqId] = ces
+            ces = makeCes( eq)
+            cesMapByEquipmentId[eq.id] = ces
             $scope.ceses.push( ces)
           } else {
-            console.error( 'gbEssesController.getPointsForEquipmentAndSubscribeToMeasurements  GET /models/n/points did not return UUID=' + eqId)
+            console.error( 'gbEssesController.getPointsForEquipmentAndSubscribeToMeasurements  GET /models/n/points did not return UUID=' + eq.id)
           }
         })
 
         measurement.subscribe( $scope, pointIds, {}, self, onMeasurements)
-        subscribeToEquipmentNameplates()
+        subscribeToEquipmentNameplates(equipments, equipmentIds)
       })
 
     }
@@ -389,7 +385,7 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
               break;
             case 'REMOVED':
               ces.capacity = {}
-              console.error( 'gbEssesController: required property, "nameplate", was REMOVED from the model for ' + equipmentIdMap[property.entityId].name)
+              console.error( 'gbEssesController: required property, "nameplate", was REMOVED from the model for ' + property.entityId)
           }
         } else {
           console.error( 'gbEssesController: got notification of "nameplate" property for unknown equipmentId: ' + property.entityId)
@@ -397,7 +393,7 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
       }
     }
 
-    function subscribeToEquipmentNameplates() {
+    function subscribeToEquipmentNameplates( equipments, equipmentIds) {
 
       var json = {
         name: 'SubscribeToProperties',
@@ -433,7 +429,21 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
     //var url = '/equipmentwithpointsbytype?' + eqTypes + '&' + pointTypes
     //rest.get( sourceUrl, 'equipment', $scope, getPointsForEquipmentAndSubscribeToMeasurements);
 
-    getPointsForEquipmentAndSubscribeToMeasurements()
+    if( $scope.queryEsses) {
+      var childTypes = rest.queryParameterFromArrayOrString( 'childTypes', ['ESS'])
+      var url = '/models/1/equipment/' + microgridId + '/descendants?depth=99&' + childTypes
+      rest.get(url, undefined, $scope).then (
+          function( response) {
+            getPointsForEquipmentAndSubscribeToMeasurements(response.data)
+          },
+          function(response){
+            console.error('gbEssesController.getEsses: rest.get error: ' + JSON.stringify(response))
+          }
+      )
+    } else {
+      getPointsForEquipmentAndSubscribeToMeasurements(equipments)
+    }
+
   }]).
 
 
@@ -443,7 +453,10 @@ angular.module('greenbus.views.ess', ['greenbus.views.measurement', 'greenbus.vi
       // The template HTML will replace the directive.
       replace: true,
       transclude: true,
-      scope: {}, // isolated scope!
+      scope: {
+        queryEsses: '=?',
+        showHeading: '=?'
+      }, // isolated scope!
       templateUrl: 'greenbus.views.template/ess/essesTable.html',
       controller: 'gbEssesController'
     }
