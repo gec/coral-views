@@ -808,7 +808,7 @@ angular.module('greenbus.views.navigation', ['ui.bootstrap', 'ui.router', 'green
      * @returns Array of equipment IDs for the branch
      */
     function getEquipmentIdsFromBranch(branch) {
-      return branch.equipmentChildren.length === 0 ? [branch.id]
+      return branch.equipmentChildren === undefined || branch.equipmentChildren.length === 0 ? [branch.id]
           : branch.equipmentChildren.map( function( child) { return child.id })
     }
 
