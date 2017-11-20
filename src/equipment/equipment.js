@@ -43,12 +43,18 @@ angular.module('greenbus.views.equipment', [ 'ui.router', 'greenbus.views.rest']
     }
     // Point Types
     exports.PT = {
-      LOAD: 'LoadPower',
+      BREAKER_STATUS: 'BreakerStatus', // Closed (true), Open (false)
+      DEMAND_CHARGE_SOURCE: 'DemandChargeSource',
+      ESS_MODE: 'ESSMode',
+      ESS_POWER: 'OutputPower',
       FLOW_DIRECTION: 'FlowDirection',
-      POWER: 'DemandPower',           // Import (+), Export (-)
       FREQUENCY_SOURCE: 'FreqSource',
+      LOAD: 'LoadPower',
+      LOAD_AGGREGATE: 'LoadAggregate',
+      MODE_STATE: 'ModeState',
+      POWER: 'DemandPower',           // Import (+), Export (-)
       POWER_FACTOR: 'PowerFactor',
-      BREAKER_STATUS: 'BreakerStatus' // Closed (true), Open (false)
+      PPM_TARGET_POWER: 'PPMTargetPower'
     }
 
 
@@ -158,7 +164,7 @@ angular.module('greenbus.views.equipment', [ 'ui.router', 'greenbus.views.rest']
               failure.call( callee, data, statusCode)
           }
       )
-  
+
       return true
     }
   
