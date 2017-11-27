@@ -138,7 +138,7 @@ angular.module('greenbus.views.demo').controller('EssesDemoCtrl', function ($sco
       'entityId': id,
       'key': 'nameplate',
       'value': {
-        'manufacture': manufacturer,
+        'manufacturer': manufacturer,
         'model': model,
         'type': 'ESS',
         'SOCMax': 10,
