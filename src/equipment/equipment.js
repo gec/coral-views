@@ -29,32 +29,44 @@ angular.module('greenbus.views.equipment', [ 'ui.router', 'greenbus.views.rest']
 
     var exports = {}
 
-    // Types common to Equipment and Points. Not exported.
-    var CT = {}
-
+    // Common Types - common to Equipment and Points. Not exported.
+    var CT = {
+      AGGREGATE: 'Aggregate',
+      UNKNOWN: 'Unknown'
+    }
     // Equipment Types
     exports.ET = {
-      AGGREGATE: 'Aggregate',
+      AGGREGATE: CT.AGGREGATE,
+      CHP: 'CHP',
       CUSTOMER_BREAKER: 'CustomerBreaker',
       ESS: 'ESS',
+      GRID: 'Grid',
       LOAD: 'Load',
       PCC: 'PCC',
-      POI: 'POI'
+      POI: 'POI',
+      PV: 'PV',
+      UNKNOWN: CT.UNKNOWN
     }
     // Point Types
     exports.PT = {
+      AGGREGATE: CT.AGGREGATE,
       BREAKER_STATUS: 'BreakerStatus', // Closed (true), Open (false)
+      CHP_POWER_AGGREGATE: 'CHPAggregate',
       DEMAND_CHARGE_SOURCE: 'DemandChargeSource',
       ESS_MODE: 'ESSMode',
       ESS_POWER: 'OutputPower',
+      ESS_POWER_AGGREGATE: 'ESSAggregate',
       FLOW_DIRECTION: 'FlowDirection',
       FREQUENCY_SOURCE: 'FreqSource',
       LOAD: 'LoadPower',
       LOAD_AGGREGATE: 'LoadAggregate',
       MODE_STATE: 'ModeState',
       POWER: 'DemandPower',           // Import (+), Export (-)
+      POWER_AGGREGATE: 'DemandPowerAggregate',
       POWER_FACTOR: 'PowerFactor',
-      PPM_TARGET_POWER: 'PPMTargetPower'
+      PPM_TARGET_POWER: 'PPMTargetPower',
+      PV_POWER_AGGREGATE: 'PVAggregate',
+      UNKNOWN: CT.UNKNOWN
     }
 
 
