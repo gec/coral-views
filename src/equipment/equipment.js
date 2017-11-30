@@ -64,7 +64,7 @@ angular.module('greenbus.views.equipment', [ 'ui.router', 'greenbus.views.rest']
       POWER: 'DemandPower',           // Import (+), Export (-)
       POWER_AGGREGATE: 'DemandPowerAggregate',
       POWER_FACTOR: 'PowerFactor',
-      PPM_TARGET_POWER: 'PPMTargetPower',
+      DCM_TARGET_POWER: 'DCMTargetPower',
       PV_POWER_AGGREGATE: 'PVAggregate',
       UNKNOWN: CT.UNKNOWN
     }
