@@ -562,6 +562,18 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
         return measurement
       }
 
+      function measurementWithOptionalMetadataIntegerLabel( point, measurement) {
+        if( point.hasOwnProperty('metadata')  && point.metadata.hasOwnProperty('integerLabels') && angular.isObject(point.metadata.integerLabels)) {
+          var integerLabels = point.metadata.integerLabels,
+              stringValue = measurement.value.toString()
+          if(integerLabels.hasOwnProperty(stringValue)) {
+            measurement.valueBeforeApplyingLabel = measurement.value
+            measurement.value = integerLabels[stringValue]
+          }
+        }
+        return measurement
+      }
+
       function onMeasurements(measurements) {
         measurements.forEach(function(pm) {
           var currentMeasurement,
@@ -587,6 +599,7 @@ angular.module('greenbus.views.schematic', ['greenbus.views.measurement', 'green
             // TODO: if status measurement, check if not one of the symbol's states, then display Unknown state.
             // TODO: if status measurement is invalid quality, show invalid 'X' over center of symbol. Also for questionable quality.
             currentMeasurement = processMeasurement( pm.measurement)
+            currentMeasurement = measurementWithOptionalMetadataIntegerLabel( pointNSymbols.point, currentMeasurement)
             pointNSymbols.point.currentMeasurement = currentMeasurement
             pointNSymbols.equipmentSymbols.forEach(function(symbol) {symbol.currentMeasurement = currentMeasurement})
           } else {
